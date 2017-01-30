@@ -226,7 +226,7 @@ if True:
 	print "2. Make Signatures."
 	Lexicon.MakeSignatures( lxalogfile,outfile_Rebalancing_Signatures,FindSuffixesFlag,Lexicon.MinimumStemLength)
 	
-if True: 
+if False: 
 	print "3. Loose fit."
 	loose_fit(Lexicon )
  
