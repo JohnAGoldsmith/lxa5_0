@@ -17,9 +17,6 @@ from loose_fit import *
 #              /lxa/Signatures.txt etc.
 #              /graphics
 # That is why the next line has the structure it does. You should change this for your own file set-up.
-datafolder 				= "../../data/" + language + "/"
-outfolder     			        = datafolder    + "lxa/"
-infolder 				= datafolder    + 'dx1/'	
 
 
  
@@ -73,10 +70,12 @@ NumberOfCorrections = results.corrections
 g_encoding =  "asci"  # "utf8"
 BreakAtHyphensFlag = True 
 
-#----------------- command line parameters ------------------------------#
+#----------------- Defining directories we are using ------------------------------#
 
 
-
+datafolder 				= "../../data/" + language + "/"
+outfolder     			        = datafolder    + "lxa/"
+infolder 				= datafolder    + 'dx1/'	
 
 graphicsfolder= outfolder + "graphics/"
 if not os.path.exists(graphicsfolder):
@@ -84,9 +83,6 @@ if not os.path.exists(graphicsfolder):
 
 infilename 				= infolder  + shortfilename + ".dx1"
 stemfilename 				= infolder  + shortfilename + "_stems.txt"
-
- 
-
 
 FileObject = dict()
 fileslist = ("Signatures", "FSA", "SigExemplars", "WordToSig", "SigTransforms",
@@ -97,7 +93,7 @@ for item in fileslist:
 	print item
 	FileObject[item] = open (outfolder + item + ".txt", "w")
  
-
+#----------------- Tell the user what we are doing now ------------------------------#
 
 
 formatstring_initial_1 = "{:40s}{:>15s}"
@@ -118,10 +114,6 @@ if g_encoding == "utf8":
 else:
 	infile = open(infilename) 
  
-
- 
-
-
 
 
 
@@ -203,6 +195,7 @@ initialize_files1(Lexicon, "console", language)
 splitEndState = True
 morphology= FSA_lxa(splitEndState)
 
+#----------------- We can control which functions we are working on at the moment. ------------------------------#
 
 if True: 	
 	print "2. Make Signatures."
@@ -449,13 +442,11 @@ while False:
 #---------------------------------------------------------------------------------#	
 #	Close output files
 #---------------------------------------------------------------------------------# 
-  
-FileObject["FSA"].close()
-FileObject["Signatures"].close() 
-FileObject["SigTransforms"].close() 
-FileObject["Log"].close()
-FileObject["SigExtensions"].close()
-FileObject["Suffixes"].close()
+for item in fileslist:
+	print item
+	FileObject[item].close()
+
+ 
 #---------------------------------------------------------------------------------#	
 #	Logging information
 #---------------------------------------------------------------------------------# 
