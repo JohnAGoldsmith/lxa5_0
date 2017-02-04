@@ -71,7 +71,7 @@ def print_signature_list_1(this_file, DisplayList,stemcountcutoff, totalrobustne
             print >> this_file, formatstring2.format(sig, stemcount, robustness,robustnessproportion, runningsumproportion )
     print >> this_file, "-"*60
 # ----------------------------------------------------------------------------------------------------------------------------#
-def print_signature_list_2(this_file, DisplayList,stemcountcutoff, totalrobustness, SignatureToStems, StemCounts, suffix_flag):
+def print_signature_list_2(this_file, DisplayList,stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
     numberofstemsperline = 6
     stemlist = []
     reversedstemlist = []
@@ -96,7 +96,7 @@ def print_signature_list_2(this_file, DisplayList,stemcountcutoff, totalrobustne
         print >> this_file, "\n" + "-"*25
         # ------------------- New -----------------------------------------------------------------------------------
         howmany = 5     
-        print >>this_file, "Average count of top",howmany, " stems:" , AverageCountOfTopStems(howmany, sig, SignatureToStems, StemCounts)
+        print >>this_file, "Average count of top",howmany, " stems:" , AverageCountOfTopStems(howmany, sig, SignatureToStems, StemCorpusCounts)
             
 
         # ------------------------------------------------------------------------------------------------------
@@ -126,6 +126,25 @@ def print_signature_list_2(this_file, DisplayList,stemcountcutoff, totalrobustne
             else:
                     flag = ""
             print >> this_file, formatstring % (item[0], item[1], item[2], flag)
+# ----------------------------------------------------------------------------------------------------------------------------#
+def print_unlikelysignatures(this_file, signatures, ColumnWidth ): 
+
+    print "   Printing unlikely signatures file."
+    runningsum = 0.0
+    formatstring1 = '{0:<70}{1:>10s}'
+    #formatstring2 = '{:<70}{:10d}  '
+    formatstring2 = '{:<70} '
+    print >> this_file, "\n" + "-" * 150
+    print >> this_file, formatstring1.format("Signature", "Stem count" )
+    print >> this_file, "-" * 150      
+    these_signatures_list = signatures.keys()
+    these_signatures_list.sort()
+    for sig  in these_signatures_list:
+        print >> this_file, formatstring2.format(sig )
+    print >> this_file, "-"*60
+
+ 
+
 # ----------------------------------------------------------------------------------------------------------------------------#
 def print_suffixes(outfile, Suffixes ):
         print >>outfile,  "--------------------------------------------------------------"
@@ -367,6 +386,7 @@ def print_words(outfile, logfile, WordToSig,ColumnWidth ):
     maxnumberofsigs = 0
     ambiguity_counts = dict()
     for word in WordToSig:
+        #print "388", word, WordToSig[word]
         ambiguity = len(WordToSig[word])
         if ambiguity not in ambiguity_counts:
             ambiguity_counts[ambiguity] = 0
@@ -420,14 +440,15 @@ def print_signature_extensions(outfile, logfile, DisplayList,SignatureToStems ):
             (AlignedList1, AlignedList2, Differences) = Sig1ExtendsSig2(sig2,sig1,logfile)
             stemcount = len(SignatureToStems[sig2])
             if  AlignedList1 != None:
+                print >>outfile, "Signature extension:"
                 print >>outfile, "{:35s}{:35s}{:35s}".format(AlignedList1, AlignedList2, Differences), 
                 #Make CAlternation:
-                this_alternation = CAlternation(stemcount)
-                for i  in range(len(AlignedList1)):
-                    this_alloform = CAlloform(Differences[i], AlignedList2[i], stemcount)
-                    this_alternation.AddAlloform (this_alloform)
-                print  >>outfile, this_alternation.display()
-                ListOfAlternations.append(this_alternation)
+                #this_alternation = CAlternation(stemcount)
+                #for i  in range(len(AlignedList1)):
+                #    this_alloform = CAlloform(Differences[i], AlignedList2[i], stemcount)
+                #    this_alternation.AddAlloform (this_alloform)
+                #print  >>outfile, this_alternation.display()
+                #ListOfAlternations.append(this_alternation)
 
                 if (False):
                     print >>outfile_SigExtensions, "A", FindSuffixesFlag, "{:35s}{:35s}{:35s}".format(AlignedList1, AlignedList2, Differences)

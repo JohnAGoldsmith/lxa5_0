@@ -8,6 +8,20 @@ from ClassLexicon import *
 import os.path
 from loose_fit import *
 
+
+# Important note to user:
+# My folder structure is this:
+# /linguistica/lxa5_0/lxa5_0.py
+#             /lxa5_1/lxa5_1.py
+# /data/english/dx1/browncorpus.dx1
+#              /lxa/Signatures.txt etc.
+#              /graphics
+# That is why the next line has the structure it does. You should change this for your own file set-up.
+datafolder 				= "../../data/" + language + "/"
+outfolder     			        = datafolder    + "lxa/"
+infolder 				= datafolder    + 'dx1/'	
+
+
  
 # This program looks for extended signatures, which are regular subgraphs among words, where the edges are
 # (high-freq) Delta-Right pairs of words, and where a word may be *split differently* (without penalty!) 
@@ -61,17 +75,8 @@ BreakAtHyphensFlag = True
 
 #----------------- command line parameters ------------------------------#
 
-#if language == "":
-#        readconfig file
-
-  
-
- 
 
 
-datafolder 				= "../../data/" + language + "/"
-outfolder     			        = datafolder    + "lxa/"
-infolder 				= datafolder    + 'dx1/'	
 
 graphicsfolder= outfolder + "graphics/"
 if not os.path.exists(graphicsfolder):
@@ -79,21 +84,18 @@ if not os.path.exists(graphicsfolder):
 
 infilename 				= infolder  + shortfilename + ".dx1"
 stemfilename 				= infolder  + shortfilename + "_stems.txt"
-outfile_Signatures_name 		= outfolder + shortfilename + "_Signatures.txt"  
-outfile_SigTransforms_name 		= outfolder + shortfilename + "_sigtransforms.txt"
-outfile_SigExtensions_name 		= outfolder + shortfilename + "_sigextensions.txt"
-outfile_signature_exemplar_name = outfolder + shortfilename + "_signature_exemplars.txt"
-outfile_stemtowords_name 		= outfolder + shortfilename + "_stemtowords.txt"
-outfile_stemtowords_2_name              = outfolder + shortfilename + "_stemtowords_2.txt" # limited to those suffixes which are among the K-most frequent, for data visualization.
-outfile_FSA_name			= outfolder + shortfilename + "_FSA.txt"
-outfile_log_name 			= outfolder + shortfilename + "_log.txt"
-outfile_WordToSig_name			= outfolder + shortfilename + "_WordToSig.txt"
-outfile_wordparses_name 		= outfolder + shortfilename + "_WordParses.txt"
-outfile_wordlist_name 			= outfolder + shortfilename + "_WordList.txt"
-outfile_wordcount_name 			= outfolder + shortfilename + "_WordCounts.txt"
-outfile_suffix_name 			= outfolder + shortfilename + "_suffixes.txt"
-outfile_rebalancing_name 		= outfolder + shortfilename + "_rebalancing_signatures.txt"
-#outfile_FSA_graphics_name		= graphicsfolder + shortfilename + "_FSA_graphics.png"
+
+ 
+
+
+FileObject = dict()
+fileslist = ("Signatures", "FSA", "SigExemplars", "WordToSig", "SigTransforms",
+	"StemToWords", "StemToWords2", "WordParses", "WordCounts", "SigExtensions", 
+	"Suffixes", "Rebalancing_Signatures",
+	"unlikelysignatures", "Log")
+for item in fileslist:
+	print item
+	FileObject[item] = open (outfolder + item + ".txt", "w")
  
 
 
@@ -106,9 +108,8 @@ if FindSuffixesFlag:
 else:
 	print "Finding prefixes." 
 print  formatstring_initial_1.format("Reading dx file: ", infilename)
-print  formatstring_initial_1.format("Logging to: ", outfile_log_name)
+print  formatstring_initial_1.format("Logging to: ", outfolder )
 print "-"* 100 
-lxalogfile = open(outfile_log_name, "w")
  
 print "language", language
  
@@ -116,28 +117,9 @@ if g_encoding == "utf8":
 	infile = codecs.open(infilename, g_encoding = 'utf-8')
 else:
 	infile = open(infilename) 
-if g_encoding == "utf8":
-	print "yes utf8"
-else:
-	Signatures_outfile      = open (outfile_Signatures_name, mode = 'w')
+ 
 
-
-outfile_Signatures		= open (outfile_Signatures_name,"w")
-outfile_FSA 			= open (outfile_FSA_name,"w")
-outfile_SigExemplars 	        = open (outfile_signature_exemplar_name,"w")
-outfile_WordToSig		= open (outfile_WordToSig_name,"w")
-outfile_SigTransforms           = open (outfile_SigTransforms_name,"w")
-outfile_StemToWords   	        = open (outfile_stemtowords_name,"w") 
-outfile_StemToWords2   	        = open (outfile_stemtowords_2_name,"w") 
-outfile_WordParses   	        = open (outfile_wordparses_name,"w") 
-#outfile_WordList   		= open (outfile_wordlist_name,"w") 
-outfile_WordCounts   		= open (outfile_wordcount_name,"w") 
-outfile_SigExtensions           = open (outfile_SigExtensions_name,"w") 
-outfile_Suffixes   		= open (outfile_suffix_name,"w") 
-outfile_Rebalancing_Signatures  = open (outfile_rebalancing_name,"w") 
-#outfile_FSA_graphics   	= open (outfile_FSA_graphics_name,"w")  
-
-
+ 
 
 
 
@@ -156,7 +138,7 @@ outfile_Rebalancing_Signatures  = open (outfile_rebalancing_name,"w")
 	# StemToWord is a map; its keys are stems.       Its values are *sets* of words.
 	# StemToSig  is a map; its keys are stems.       Its values are individual signatures.
 	# WordToSig  is a Map. its keys are words.       Its values are *lists* of signatures.
-	# StemCounts is a map. Its keys are words. 	 Its values are corpus counts of stems.
+	# StemCorpusCounts is a map. Its keys are words. 	 Its values are corpus counts of stems.
 	# SignatureToStems is a dict: its keys are tuples of strings, and its values are dicts of stems. We don't need both this and Signatures!
 
  
@@ -172,7 +154,6 @@ filelines= infile.readlines()
  
 #this is for a dx1 file:
 for line in filelines:
-	#print line
 	pieces = line.split()	
 	word=pieces[0] 	
 	if word == '#' :
@@ -192,29 +173,30 @@ for line in filelines:
 			if word not in WordCounts:
 				WordCounts[word]=0
 			Lexicon.WordCounts[word]+=count
+			if len(Lexicon.WordCounts) >= results.wordcount:
+				break
 			Lexicon.TotalLetterCountInWords  += len(word)
 	else:	
 		if word not in Lexicon.WordCounts:
 			Lexicon.WordCounts[word]=0 
 		Lexicon.WordCounts[word]  = count
 		Lexicon.TotalLetterCountInWords += len(word)
-	if len(Lexicon.WordCounts) >= numberofwords:
-		break
+		if len(Lexicon.WordCounts) >= results.wordcount:
+			break
  
 	Lexicon.WordList.AddWord(word) 
-
 Lexicon.ReverseWordList =  Lexicon.WordCounts.keys()
 Lexicon.ReverseWordList.sort(key = lambda word:word[::-1])
 Lexicon.WordList.sort()
 print "\n1. Finished reading word list.\n"
-Lexicon.PrintWordCounts(outfile_WordCounts)
+Lexicon.PrintWordCounts(FileObject["WordCounts"])
 Lexicon.Words = Lexicon.WordCounts.keys()
 Lexicon.Words.sort()
  
 
-print >>outfile_Signatures, "# ", language, numberofwords
+print >>FileObject["Signatures"], "# ", language, results.wordcount
 
-initialize_files1(Lexicon, lxalogfile, language)
+initialize_files1(Lexicon, FileObject["Log"], language)
 initialize_files1(Lexicon, "console", language)
 
  
@@ -224,23 +206,27 @@ morphology= FSA_lxa(splitEndState)
 
 if True: 	
 	print "2. Make Signatures."
-	Lexicon.MakeSignatures( lxalogfile,outfile_Rebalancing_Signatures,FindSuffixesFlag,Lexicon.MinimumStemLength)
+	Lexicon.MakeSignatures(FileObject["Log"],FileObject["Rebalancing_Signatures"],FindSuffixesFlag,Lexicon.MinimumStemLength)
 	
+if False: 
+	print "3. Find good signatures inside bad."	
+	Lexicon.FindGoodSignaturesInsideBad()
+
 if False: 
 	print "3. Loose fit."
 	loose_fit(Lexicon )
  
 if True:
 	print "\n4. Printing signatures."
-	Lexicon.printSignatures(lxalogfile, outfile_Signatures, outfile_WordToSig, outfile_StemToWords, outfile_StemToWords2, outfile_SigExtensions,outfile_Suffixes ,g_encoding, FindSuffixesFlag)
+	Lexicon.printSignatures(FileObject["Log"], FileObject["Signatures"],FileObject["unlikelysignatures"], FileObject["WordToSig"], FileObject["StemToWords"], FileObject["StemToWords2"], FileObject["SigExtensions"],FileObject["Suffixes"] ,g_encoding, FindSuffixesFlag)
  
 if False:
 	print "5. Printing signature transforms for each word."
-	printWordsToSigTransforms(Lexicon.SignatureToStems, Lexicon.WordToSig, Lexicon.StemCounts, outfile_SigTransforms, g_encoding, FindSuffixesFlag)
+	printWordsToSigTransforms(Lexicon.SignatureToStems, Lexicon.WordToSig, Lexicon.StemCorpusCounts, FileObject["SigTransforms"], g_encoding, FindSuffixesFlag)
  
 if False:
 	print "6. Slicing signatures."
-	SliceSignatures(Lexicon,  g_encoding, FindSuffixesFlag, lxalogfile	)
+	SliceSignatures(Lexicon,  g_encoding, FindSuffixesFlag, FileObject["Log"]	)
 
 if False:
 	print "7. Adding signatures to the FSA."
@@ -248,17 +234,17 @@ if False:
 
 if False:
 	print "8. Printing the FSA."
-	print >>outfile_FSA, "#", language, shortfilename, numberofwords
-	morphology.printFSA(outfile_FSA) 
+	print >>FileObject[FSA], "#", language, shortfilename, results.wordcount
+	morphology.printFSA(FileObject[FSA]) 
  
 if False :
 	print "9. Printing signatures."
-	printSignatures(Lexicon, outfile_Signatures, outfile_WordToSig, outfile_StemToWords,outfile_Suffixes, g_encoding, FindSuffixesFlag,letterCostOfStems, letterCostOfSignatures)
+	printSignatures(Lexicon, FileObject["Signatures"], FileObject["WordToSig"], FileObject[StemToWords],FileObject[Suffixes], g_encoding, FindSuffixesFlag,letterCostOfStems, letterCostOfSignatures)
 
 if False:
 	print "10. Finding robust peripheral pieces on edges in FSA."
 	for loopno in range( NumberOfCorrections):
-		morphology.find_highest_weight_affix_in_an_edge ( lxalogfile, FindSuffixesFlag)
+		morphology.find_highest_weight_affix_in_an_edge ( FileObject["Log"], FindSuffixesFlag)
 
 if False:
 	print "11. Printing graphs of the FSA."
@@ -287,15 +273,15 @@ if False:
 
 if False:
 	print "11. Printing the FSA."
-	morphology.printFSA(outfile_FSA)
+	morphology.printFSA(FileObject[FSA])
  
 if False:
 	print "12. Parsing all words through FSA."
-	morphology.parseWords(Lexicon.WordToSig.keys(), outfile_WordParses)
+	morphology.parseWords(Lexicon.WordToSig.keys(), FileObject[WordParses])
 	
 if False:	
 	print "13. Printing all the words' parses."
-	morphology.printAllParses(outfile_WordParses)
+	morphology.printAllParses(FileObject[WordParses])
 
 
 if False:
@@ -305,7 +291,7 @@ if False:
 if False:
  
 	# we will remove this. It will be replaced by a function that looks at all cross-edge sharing of morphemes. 
-	print >>outfile_FSA, "Finding common stems across edges."
+	print >>FileObject[FSA], "Finding common stems across edges."
 	HowManyTimesToCollapseEdges = 0
 	for loop in range(HowManyTimesToCollapseEdges): 
 	 	print "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
@@ -464,12 +450,12 @@ while False:
 #	Close output files
 #---------------------------------------------------------------------------------# 
   
-outfile_FSA.close()
-Signatures_outfile.close() 
-outfile_SigTransforms.close() 
-lxalogfile.close()
-outfile_SigExtensions.close()
-outfile_Suffixes.close()
+FileObject["FSA"].close()
+FileObject["Signatures"].close() 
+FileObject["SigTransforms"].close() 
+FileObject["Log"].close()
+FileObject["SigExtensions"].close()
+FileObject["Suffixes"].close()
 #---------------------------------------------------------------------------------#	
 #	Logging information
 #---------------------------------------------------------------------------------# 
@@ -478,5 +464,5 @@ localtime = time.asctime( time.localtime(time.time()) )
 print "Local current time :", localtime
 
  
-lxalogfile.close()
+FileObject["Log"].close()
 #--------------------------------------------------#

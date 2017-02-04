@@ -1,5 +1,25 @@
+def MakeSignatureStringFromAffixDict(affix_dict):
+    affix_list=affix_dict.keys()
+    affix_list.sort()
+    count_of_NULLs = 0
+    for i in range(len(affix_list)):
+        if len(affix_list[i]) == 0:
+                affix_list[i]= "NULL"
+                count_of_NULLs += 1
+    return "=".join(affix_list)
+
+def MakeSignatureListFromSignatureString(sigstring):
+    temp_list = sigstring.split("=")
+    siglist = list()
+    for affix in temp_list:
+        if affix == "NULL":
+            siglist.append("")
+        else:
+            siglist.append(affix)
+    return siglist
+
 def SortSignatureStringByLength(sig):
-        chain = sig.split('-')
+        chain = sig.split('=')
         for itemno in range(len(chain)):
                 if chain[itemno] == "NULL":
                         chain[itemno] = ""
@@ -9,95 +29,122 @@ def SortSignatureStringByLength(sig):
                         chain[itemno] = "NULL"        
         return chain
 
+def FindListWithLongerStrings(chain1, chain2):
+	# assumes that chains are sorted in order of decreasing length
+	# assumes the chains are of the same length
+	if len(chain1) != len(chain2):
+		return -1
+	for no in range(len(chain1)):
+		if len(chain1[no] > len(chain2[no])):
+			return 1
+		elif len(chain2[no]) > len(chain1[no]):
+			return 2
+	return 0
+
+def locallymorerobust(sig1,sig2):
+	list1 = sig1.split('-')
+	list2 = sig2.split('-')	
+	if len(list1) > len(list2):
+		return -1
+	if len(list2)>len(list1):
+		return 1
+	if len(sig1) > len(sig2):
+		return -1
+	if len(sig2) > len (sig1):
+		return 1
+	return 0
+
+
+
+def SortSignaturesByLocalRobustness(siglist): # if sig1 has more affixes than sig2, it is more locally robust; if two sigs have the same number of affixes, the one with more letters in the affixes is more locally
+	siglist.sort(cmp=locallymorerobust)
+	return siglist
+
 # ----------------------------------------------------------------------------------------------------------------------------#
+def FindGoodSignatureInsideAnother(target_affixes_list, siglist):
+	SortSignaturesByLocalRobustness(siglist)
+        #print "68 ", target_affixes_list
+	for sig_string in siglist:
+		these_affixes = set(MakeSignatureListFromSignatureString(sig_string))
+                #print "    71 ", these_affixes
+		if these_affixes.issubset(set(target_affixes_list)):
+                        #print "    73", these_affixes
+			return sig_string
+	return None
+
+
 def Sig1ExtendsSig2(sig1, sig2, outfile):  # for suffix signatures
 	MaxLengthOfDifference = 2
-	list1 = list(sig1 )
-	list2 = list(sig2 )
-	#print >>outfile, "B -------------------", sig1, sig2
+	list1 = SortSignatureStringByLength(sig1)
+	list2 = SortSignatureStringByLength(sig2)
 	if len(list1) != len(list2):
 		#print >>outfile, "C Different lengths"
 		return (None, None, None)
 	if sig1 == sig2:
 		#print >>outfile, "E same signature" 
 		return (None,None,None)
+ 
 	length = len(list1)
-	ThisExtendsThat = dict()
-	for suffixno1 in range(length):  # we make an array of what suffix might possibly extend what suffix
-		suffix1 = list1[suffixno1]
-		ThisExtendsThat[suffixno1] = dict()
-		if suffix1 == "NULL":
-			suffix1_length = 0
-		else:
-			suffix1_length = len(suffix1)
-
-		for suffixno2 in range(length):
+	Sig1_to_Sig2 = dict()
+	Sig2_to_Sig1 = dict()
+	Differences = list()
+	print "\n38", list1, list2
+	for suffixno1 in range(length):  # we make an array of what suffix might possibly extend what suffix=
+		print "  40", list1, list2
+		suffix1 =  list1[suffixno1]
+		suffix1_length = len(list1)
+		if suffix1 == "NULL":  # this must be the last suffix in sig1, and there must be only one suffix left in LongerStrings
+			suffix2 = list2.pop()
+			Sig1_to_Sig2[suffix1] = suffix2
+			Sig2_to_Sig1[suffix2] = suffix1
+			Differences.append(suffix2)
+			break
+		length2 = len(list2)
+		if length2 == 1 and list2[0]=="NULL":
+			Sig1_to_Sig2[suffix1] = "NULL"
+			Sig2_to_Sig1["NULL"] = suffix1
+			Differences.append(suffix1)
+		for suffixno2 in range(length2):
 			suffix2 = list2[suffixno2]
-			if suffix2 == "NULL":
-				suffix2_length = 0
-			else:
-				suffix2_length = len(suffix2) 
-			if suffix1 == suffix2:
-				ThisExtendsThat[suffixno1][suffixno2] = 1
-			elif suffix2_length == 0 and suffix1_length <= MaxLengthOfDifference:
-				ThisExtendsThat[suffixno1][suffixno2] = 1
-			elif suffix1[-1 * suffix2_length:] == suffix2 and abs(suffix1_length - suffix2_length) <= MaxLengthOfDifference:  
-				ThisExtendsThat[suffixno1][suffixno2] = 1
-				#print suffix1,suffix2, suffix1_length, suffix2_length, suffix1_length - suffix2_length
-			else:
-				ThisExtendsThat[suffixno1][suffixno2] = 0
-	for pos in range(length):  # now we try to find a good alignment
-		thisrowcount = sum(ThisExtendsThat[pos].values())
-		if thisrowcount == 1:  # this means only one alignment is permitted, so this is helpful to know.
-			for pos2 in range(length):
-				if ThisExtendsThat[pos][pos2] == 1:
-					that_pos = pos2
-					break
-			for pos3 in range(length):
-				if pos3 != pos:
-					ThisExtendsThat[pos3][that_pos] = 0
+			if suffix2[-1*suffix1_length:] == suffix1:
+				if len(suffix2) - suffix1_length > MaxLengthOfDifference:
+					continue
+				else:
+					if len(suffix2)>len(suffix1):
+						Differences.append(len(suffix2)-len(suffix1))
+					else:
+						Differences.append(len(suffix1)-len(suffixno2))
+					Sig1_to_Sig2[suffix1] = suffix2
+					Sig2_to_Sig1[suffix2] = suffix1
+					print "aligning:", suffix1, suffix2
+ 					del list2[suffixno2]
+ 					break # break from loop on suffixno2
+ 			if suffix1[-1*len(suffix2):] == suffix2:
+				if len(suffix1) - len(suffix2) > MaxLengthOfDifference:
+					continue
+				else:
+					if len(suffix1)>len(suffix2):
+						Differences.append(len(suffix1)-len(suffix2))
+					elif len(suffix2) > len(suffix1):
+						Differences.append(len(suffix2)-len(suffix1))
+					else: 
+						Differences.append("NULL")
+					Sig1_to_Sig2[suffix1] = suffix2
+					Sig2_to_Sig1[suffix2] = suffix1
+					print "aligning:", suffix1, suffix2
+ 					del list2[suffixno2]
+ 					break # break from loop on suffixno2
+ 		print "No affix found to align with ", suffix1
+ 		print "end of loop for :", suffix1
 
-	# at this point, if any row is empty, then alignment is impossible. If any row has two 1's, then alignment is still ambiguous, but this is very unlikely.
-	#for pos1 in range(length):
-	#	for pos2 in range(length):
-	#		print >>outfile, ThisExtendsThat[pos1][pos2],
-	#	print >>outfile
-
-	AlignPossibleFlag = True
+ 
+ 
 	AlignedList1 = list()
 	AlignedList2 = list()
 	Differences = list()
-	for pos in range(length):
-		rowcount = sum(ThisExtendsThat[pos].values())
-		if rowcount == 0:
-			AlignmentPossibleFlag = False
-			#print >>outfile, "G Alignment impossible"
-			break
-		if rowcount == 1:
-			AlignedList1.append(list1[pos])
-			for pos2 in range(length):
-				if ThisExtendsThat[pos][pos2] == 1:
-					AlignedList2.append(list2[pos2])
-					if list2[pos2] == "NULL":
-						sig2_item_length = 0
-					else:
-						sig2_item_length = len(list2[pos2])
-					lengthofdifference = len(list1[pos]) - sig2_item_length
-					if list1[pos] == "NULL" and list2[pos2] == "NULL":
-						Differences.append("")
-					else:
-						Differences.append(list1[pos][:lengthofdifference])
 
-	if AlignPossibleFlag == True:
-		if len(Differences) == len(list1):
-			return (AlignedList1, AlignedList2, Differences)
-		else:
-			return (None, None, None)
-	else:
-		return (None, None, None)
-
-
-
+	print "Sig1ExtendsSig2 in signaturefunctions.py", sig1, sig2, Sig1_to_Sig2, Sig2_to_Sig1
+	return (list1, list2, Differences)
 
 def EvaluateSignatures(Lexicon, outfile):
 	for sig in Lexicon.Signatures:

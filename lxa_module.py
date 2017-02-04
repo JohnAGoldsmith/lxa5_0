@@ -46,7 +46,7 @@ def makeFSM(morphology, Signatures, start, end):
 			if i == len(stemlist):
 				break
 			start[stemlist[i]] = stateDict[signumber]
-		for affix in sig.split('-'):
+		for affix in sig.split(''):
 			stateDict[signumber][affix] = end
 		signumber += 1
 		if signumber > numberOfSignaturesToDisplay:
@@ -332,7 +332,7 @@ def stringdiff(instring1, instring2):
 # ---------------------------------------------------------------------------------------------------------------------------------------------#
 class intrasignaturetable:
 	def setsignature(self, sig):
-		self.affixes = sig.split('-')
+		self.affixes = sig.split('=')
 		self.affixlabels = {}  # use this if we care deeply about the spelling of the morphemes
 		for affix in self.affixes:
 			self.affixlabels[affix] = affix
@@ -582,7 +582,7 @@ class intrasignaturetable:
 # ---------------------------------------------------------#
 # def Expansion(sig,stem):
 #	wordset = set()
-#	affixlist = sig.split('-')
+#	affixlist = sig.split('=')
 #	for affix in affixlist:
 #		if affix == 'NULL':
 #			affix = ''
@@ -620,8 +620,8 @@ def sortfunc1(x, y):
 
 # ---------------------------------------------------------#
 def subsignature(sig1, sig2):
-	sigset1 = set(sig1.split('-'))
-	sigset2 = set(sig2.split('-'))
+	sigset1 = set(sig1.split('='))
+	sigset2 = set(sig2.split('='))
 	if sigset1 <= sigset2:  # subset
 		return True
 	return False
@@ -673,9 +673,9 @@ def StringDifference(str1, str2):
 
 # ----------------------------------------------------------------------------------------------------------------------------#
 def SignatureDifference(sig1, sig2,outfile):  # this finds the best alignments between affixes of a signature, and also gives a measure of the similarity.
-	list1 = list(sig1.split('-'))
+	list1 = list(sig1.split('='))
 	list1.sort()
-	list2 = list(sig2.split('-'))
+	list2 = list(sig2.split('='))
 	list2.sort()
 	reversedFlag = False
 	if (len(list1) > len(list2)):
@@ -911,7 +911,7 @@ def ShiftFinalLetter(StemToWord, StemCounts, stemlist, CommonLastLetter, sig, Fi
 	# ----------------------------------------------------------------------------------------------------------------------------#
 	# print >>outfile, "Shift final letter: ", CommonLastLetter
 	newsig = ''
-	affixlist = sig.split('-')
+	affixlist = sig.split('=')
 	newaffixlist = []
 	listOfAffectedWords = list()
 	for affix in affixlist:
