@@ -16,8 +16,7 @@ from loose_fit import *
 # /data/english/dx1/browncorpus.dx1
 #              /lxa/Signatures.txt etc.
 #              /graphics
-# That is why the next line has the structure it does. You should change this for your own file set-up.
-
+# You can change this to fit your directory structure on line 75 below.
 
  
 # This program looks for extended signatures, which are regular subgraphs among words, where the edges are
