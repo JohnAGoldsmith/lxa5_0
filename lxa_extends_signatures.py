@@ -3,11 +3,11 @@
 def Extends(sig1, sig2, type = "suffix"):
 #----------------------------------------------------------------------------------------------------------------------------#
 	"""
-	This function determines if sig2 extends sig1, meaning that there is a 1 to 1 association 
+	This function determines if sig2 extends sig1, meaning that there is a 1 to 1 association
 	between affixes in the two signatures in which the affix in sig1 is a prefix of the corresponding affix in sig2.
-	We assume at this time that both signatures are "almost suffix-free", meaning that no affix is a suffix of another affix
-	(when the affixes are suffixes), with the possible exception that NULL is a possible suffix (and it is a suffix of all
-	other affixes, of course). 
+	We assume at this time that both signatures are "almost suffix-free",
+	meaning that if we iterate through the affixes in decreasing length, it
+	is never the case that a longer affix will be matched against a string which should have been matched with a shorter affix.
 	"""
 
 
@@ -37,19 +37,15 @@ def Extends(sig1, sig2, type = "suffix"):
 					MatchedSuffixFound = True
 					AffixList1.append(affix1)
 					AffixList2.append(affix2)
-					del affixes2[affixno2]	
+					del affixes2[affixno2]
 					break
  			if MatchedSuffixFound == False:
 				# Here we have looked at all the affixes in AffixList2, and found no alignment could be made:
-				UnmatchedAffix_in_Affixes_1.append(affix1)			 
+				UnmatchedAffix_in_Affixes_1.append(affix1)
 		if len(affixes2) == 1 and NullAffixFound:
-			AffixList1.append("NULL") 
+			AffixList1.append("NULL")
 			AffixList2.append(affixes2[0])
 		else:
 			return False;
 		print >>outfile, "Extends", AffixList1, AffixList2
-		return (AffixList1, AffixList2);			
-				
-		
-
-
+		return (AffixList1, AffixList2);

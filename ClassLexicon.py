@@ -71,7 +71,7 @@ class CLexicon:
         self.Prefixes = {}
         self.MinimumStemsInaSignature =2
         self.MinimumStemLength = 5
-        self.MaximumAffixLength =15
+        self.MaximumAffixLength =5
         self.MaximumNumberOfAffixesInASignature = 100
         self.NumberOfAnalyzedWords = 0
         self.LettersInAnalyzedWords = 0
