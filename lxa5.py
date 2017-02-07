@@ -87,8 +87,8 @@ stemfilename 				= infolder  + shortfilename + "_stems.txt"
 FileObject = dict()
 fileslist = ("Signatures", "FSA", "SigExemplars", "WordToSig", "SigTransforms",
 	"StemToWords", "StemToWords2", "WordParses", "WordCounts", "SigExtensions",
-	"Suffixes", "Rebalancing_Signatures",
-	"unlikelysignatures", "Log")
+	"Suffixes", "Rebalancing_Signatures","Subsignatures",
+	"UnlikelySignatures", "Log")
 for item in fileslist:
 	print item
 	FileObject[item] = open (outfolder + item + ".txt", "w")
@@ -199,7 +199,7 @@ morphology= FSA_lxa(splitEndState)
 
 if True:
 	print "2. Make Signatures."
-	Lexicon.MakeSignatures(FileObject["Log"],FileObject["Rebalancing_Signatures"],FindSuffixesFlag,Lexicon.MinimumStemLength)
+	Lexicon.MakeSignatures(FileObject["Log"],FileObject["Rebalancing_Signatures"],FileObject["UnlikelySignatures"],FileObject["Subsignatures"],FindSuffixesFlag,Lexicon.MinimumStemLength)
 
 if False:
 	print "3. Find good signatures inside bad."
@@ -211,7 +211,7 @@ if False :
 
 if True:
 	print "\n4. Printing signatures."
-	Lexicon.printSignatures(FileObject["Log"], FileObject["Signatures"],FileObject["unlikelysignatures"], FileObject["WordToSig"], FileObject["StemToWords"], FileObject["StemToWords2"], FileObject["SigExtensions"],FileObject["Suffixes"] ,g_encoding, FindSuffixesFlag)
+	Lexicon.printSignatures(FileObject["Log"], FileObject["Signatures"],FileObject["UnlikelySignatures"], FileObject["WordToSig"], FileObject["StemToWords"], FileObject["StemToWords2"], FileObject["SigExtensions"],FileObject["Suffixes"] ,g_encoding, FindSuffixesFlag)
 
 if False:
 	print "5. Printing signature transforms for each word."

@@ -70,7 +70,7 @@ class CLexicon:
         self.Suffixes={}
         self.Prefixes = {}
         self.MinimumStemsInaSignature =2
-        self.MinimumStemLength = 5
+        self.MinimumStemLength = 2
         self.MaximumAffixLength =5
         self.MaximumNumberOfAffixesInASignature = 100
         self.NumberOfAnalyzedWords = 0
@@ -88,7 +88,7 @@ class CLexicon:
 ## -------                                                      ------- #
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-    def MakeSignatures(self, lxalogfile,outfile_Rebalancing_Signatures, FindSuffixesFlag, MinimumStemLength):
+    def MakeSignatures(self, lxalogfile,outfile_Rebalancing_Signatures, outfile_unlikelysignatures, outfile_subsignatures, FindSuffixesFlag, MinimumStemLength):
 # ----------------------------------------------------------------------------------------------------------------------------#
         formatstring1 =  "  {:50s}{:>10,}"
         formatstring2 =  "  {:50s}"
@@ -134,7 +134,7 @@ class CLexicon:
         # the analyses that were not handled by the Good Signature. 
 
         print  formatstring1.format("3. Looking for good signatures inside bad ones.", len(self.SignatureStringsToStems))  
-        self.FindGoodSignaturesInsideBad(FindSuffixesFlag)   
+        self.FindGoodSignaturesInsideBad(outfile_subsignatures, FindSuffixesFlag );   
 
         print formatstring2.format("4. Thinning out stems with too few affixes:" )     
         N = 1
@@ -193,6 +193,13 @@ class CLexicon:
             WordToSig """
         self.StemCorpusCounts = dict()
         # This creates StemToWord; StemToAffixes; Affixes; 
+        self.Affixes = dict()
+        self.SignatureStringsToStems = dict()
+        self.StemToSignature = dict()
+        self.StemCorpusCounts = dict()
+        self.StemToWord = dict()
+        self.WordToSig = dict()
+        self.StemToAffix = dict()
         if FindSuffixesFlag:
             for stem, affix in self.Parses:
                 if stem not in self.StemToWord:
@@ -210,12 +217,10 @@ class CLexicon:
                 self.StemToSignature[stem] = signature_string
                 self.StemCorpusCounts[stem] = 0
                 for word in self.StemToWord[stem]:
-                    #print "223", word
                     if word not in self.WordToSig:
                         self.WordToSig[word] = list()
                     if signature_string not in self.WordToSig[word]:
                         self.WordToSig[word].append(signature_string)
-                    #print "226", self.WordToSig[word]
                     self.StemToWord[stem][word] = 1
                     self.StemCorpusCounts[stem] += self.WordCounts[word]
                 if signature_string not in self.SignatureStringsToStems:
@@ -379,7 +384,11 @@ class CLexicon:
             count=0
             MinimumNumberOfStemsInSignaturesCheckedForRebalancing = 5
             SortedListOfSignatures = sorted(self.SignatureStringsToStems.items(), lambda x, y: cmp(len(x[1]), len(y[1])),
-                                            reverse=True)        
+                                            reverse=True) 
+            maximumlengthofsignature = 0
+            for (sig_string,wordlist) in SortedListOfSignatures:
+                if len(sig_string) > maximumlengthofsignature:
+                    maximumlengthofsignature = len(sig_string)                                                    
             for (sig_string,wordlist) in SortedListOfSignatures:
                 sig_list = MakeSignatureListFromSignatureString(sig_string) 
                 numberofstems=len(self.SignatureStringsToStems[sig_string])
@@ -387,13 +396,15 @@ class CLexicon:
                 if numberofstems <MinimumNumberOfStemsInSignaturesCheckedForRebalancing:                
                     print >>outfile, "       Too few stems to shift material from suffixes", sig_string, numberofstems    
                     continue
-                print >>outfile, "{:20s} count: {:4d} ".format(sig_string,   numberofstems),
+                #print >>outfile, "{:20s} count: {:4d} ".format(sig_string,   numberofstems),
                 shiftingchunk, shiftingchunkcount  = TestForCommonEdge(self.SignatureStringsToStems[sig_string], outfile, threshold, FindSuffixesFlag) 
 
                 if shiftingchunkcount > 0:
-                    print >>outfile,"{:5s} count: {:5d}".format(shiftingchunk,   shiftingchunkcount)
+                    print >>outfile, sig_string, " "* (maximumlengthofsignature-len(sig_string)), 
+                    print >>outfile,"Stem count: {:4d} {:5s} count: {:5d}".format(  numberofstems,shiftingchunk,   shiftingchunkcount)
                 else:
-                    print >>outfile, "no chunk to shift"  
+                    print >>outfile, sig_string, " "* (maximumlengthofsignature-len(sig_string)), 
+                    print >>outfile, "Stem count: {:4d}.".format(  numberofstems) 
                 if len(shiftingchunk) >0: 
                     count +=1                
                     chunklength = len(shiftingchunk)
@@ -404,8 +415,6 @@ class CLexicon:
                         else:
                             newaffix = affix + shiftingchunk
                         newsignature.append(newaffix)
-                    formatstring = "{:30s} {:10s}    Number of stems {:5d} Number of shifters {:5d}"
-                    print >>outfile, formatstring.format(sig_string, shiftingchunk,   numberofstems, shiftingchunkcount)
 
                     if shiftingchunkcount >= numberofstems * threshold  :
                         ChangeFlag = True
@@ -417,19 +426,19 @@ class CLexicon:
                             else:
                                 if stem[:chunklength] != shiftingchunk:
                                     continue
-
-                            if FindSuffixesFlag:     
+                            
+                            if FindSuffixesFlag:
+                                newstem = stem[:len(stem)-chunklength]     
                                 for affix in sig_list:
-                                    del self.Parses[(stem,affix)]               
-                                newstem = stem[:len(stem)-chunklength]
-                                newaffix = shiftingchunk + affix
-                                self.Parses[(newstem,newaffix)]  = 1
+                                    del self.Parses[(stem,affix)] 
+                                    newaffix = shiftingchunk + affix
+                                    self.Parses[(newstem,newaffix)]  = 1
                             else:
+                                newstem = stem[chunklength:]
                                 for affix in sig_list:
                                     del self.Parses[(affix,stem)]   
-                                newstem = stem[chunklength:]
-                                newaffix = affix + shiftingchunk 
-                                self.Parses[(newaffix, newstem)]  = 1
+                                    newaffix = affix + shiftingchunk 
+                                    self.Parses[(newaffix, newstem)]  = 1
                             
                         
             outfile.flush()
@@ -491,7 +500,7 @@ class CLexicon:
         print_stems(outfile_stemtowords, outfile_stemtowords2, self.StemToWord, self.StemToSignature, self.WordCounts, suffix_list)
 
         # print the stems of each signature:
-        print_signature_list_2(outfile_signatures, DisplayList, stemcountcutoff,totalrobustness, self.SignatureStringsToStems, self.StemCorpusCounts, FindSuffixesFlag)
+        print_signature_list_2(outfile_signatures, lxalogfile, DisplayList, stemcountcutoff,totalrobustness, self.SignatureStringsToStems, self.StemCorpusCounts, FindSuffixesFlag)
 
         # print WORDS of each signature:
         print_words(outfile_wordstosigs, lxalogfile, self.WordToSig,ColumnWidth )  
@@ -504,9 +513,10 @@ class CLexicon:
         #print_signature_extensions(outfile_SigExtensions, lxalogfile, DisplayList, self.SignatureStringsToStems)  
  
 # ----------------------------------------------------------------------------------------------------------------------------#
-    def FindGoodSignaturesInsideBad(self, FindSuffixesFlag):
+    def FindGoodSignaturesInsideBad(self, outfile, FindSuffixesFlag):
 # ----------------------------------------------------------------------------------------------------------------------------#
         GoodSignatures = list()
+        Transactions = list()
         for sig_string in self.SignatureStringsToStems:
             sig_list = MakeSignatureListFromSignatureString(sig_string)    
             if len(self.SignatureStringsToStems[sig_string]) > self.MinimumStemsInaSignature:
@@ -516,7 +526,11 @@ class CLexicon:
             if sig_string in GoodSignatures:
                 continue
             good_sig =  FindGoodSignatureInsideAnother(sig_list, GoodSignatures)
+            transaction = dict()
+            Transactions.append(transaction)
+            transaction["sig"] = sig_string
             if (good_sig):
+                transaction["subsig"] = good_sig
                 good_sig_list = MakeSignatureListFromSignatureString(good_sig)
                 for stem in self.SignatureStringsToStems[sig_string]:
                     for affix in good_sig_list:
@@ -531,6 +545,7 @@ class CLexicon:
                 unlikelysignature.sort()
                 unlikelysignature = '='.join(unlikelysignature)
                 self.UnlikelySignatureStringsToStems[unlikelysignature] = dict()
+                transaction["badsig"] = unlikelysignature
                 for stem in self.SignatureStringsToStems[sig_string]:
                     self.UnlikelySignatureStringsToStems[unlikelysignature][stem] = 1
                     for affix in remaining_affixes:
@@ -541,11 +556,34 @@ class CLexicon:
                         del self.Parses[bad_parse]
 
             else:
+                transaction["badsig"] = sig_string
                 for stem in self.SignatureStringsToStems[sig_string]:
                     for affix in sig_list:
                         bad_parse = (stem,affix)
                         del self.Parses[bad_parse]
+        Successes = list()
+        maxlength = 0
+        for transaction in Transactions:
+            if "subsig" in transaction  and len(transaction["subsig"]) > maxlength:
+                maxlength = len(transaction["subsig"])
 
+        for transaction in Transactions:
+            if "subsig" in transaction:
+                sig_list = MakeSignatureListFromSignatureString(transaction["subsig"])
+                if len(sig_list) < 2:
+                    continue    
+                Successes.append(transaction)
+        #Successes.sort(key = lambda L:len(L["subsig"])  )
+        Successes.sort(key = lambda L:L["subsig"] )
+
+        maxlength = 0
+        for transaction in Successes:
+            if len(transaction["subsig"]) > maxlength:
+                maxlength = len(transaction["subsig"])
+
+        for transaction in Successes:
+                print >> outfile, transaction["subsig"] + " "* (maxlength - len(transaction["subsig"])) + transaction["badsig"]
+             
         self.AssignSignaturesToEachStem(FindSuffixesFlag)
 
 ## -------                                                      ------- #
