@@ -8,7 +8,7 @@ from ClassLexicon import *
 import os.path
 from loose_fit import *
 from extending_signatures import *
-
+from dataviz import *
 
 # Important note to user:
 # My folder structure is this:
@@ -209,13 +209,17 @@ if False :
 	print "3. Finding sets of extending signatures."
 	extending_signatures(Lexicon, FileObject["SigExtensions"] )
 
+if True :
+	print "3.1 Creating data structure for radviz."
+	signature_by_stem_data  = signature_by_stem_data(Lexicon)
+
 if True:
 	print "\n4. Printing signatures."
 	Lexicon.printSignatures(FileObject["Log"], FileObject["Signatures"],FileObject["UnlikelySignatures"], FileObject["WordToSig"], FileObject["StemToWords"], FileObject["StemToWords2"], FileObject["SigExtensions"],FileObject["Suffixes"] ,g_encoding, FindSuffixesFlag)
 
 if False:
 	print "5. Printing signature transforms for each word."
-	printWordsToSigTransforms(Lexicon.SignatureToStems, Lexicon.WordToSig, Lexicon.StemCorpusCounts, FileObject["SigTransforms"], g_encoding, FindSuffixesFlag)
+	(SignatureStemList, SigDataDict) = printWordsToSigTransforms(Lexicon.SignatureToStems, Lexicon.WordToSig, Lexicon.StemCorpusCounts, FileObject["SigTransforms"], g_encoding, FindSuffixesFlag)
 
 if False:
 	print "6. Slicing signatures."
