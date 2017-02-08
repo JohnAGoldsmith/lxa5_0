@@ -9,7 +9,6 @@ def signature_by_stem_data  (Lexicon):
 		SignatureStemList[sig_string] = list()
 		for stem in Lexicon.SignatureStringsToStems[sig_string]:
 			SignatureStemList[sig_string].append(stem)
-			#print sig_string, stem 
 
 		SigDataDict[sig_string]= dict()    
 		for affix in sig_list:
@@ -17,7 +16,6 @@ def signature_by_stem_data  (Lexicon):
 			for stem in SignatureStemList[sig_string]:
 				word = stem + affix
 				SigDataDict[sig_string][affix].append (Lexicon.WordCounts[word])
-				#print word, stem, affix, Lexicon.WordCounts[word]		
 	return (SignatureStemList, SigDataDict)
 						
 						

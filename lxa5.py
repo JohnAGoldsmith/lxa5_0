@@ -211,7 +211,9 @@ if False :
 
 if True :
 	print "3.1 Creating data structure for radviz."
-	signature_by_stem_data  = signature_by_stem_data(Lexicon)
+	(SignatureStemList, SigDataDict) = signature_by_stem_data(Lexicon)
+	for sig in SignatureStemList:
+		print "\n", sig, "\n",  SignatureStemList[sig],"\n", SigDataDict[sig]
 
 if True:
 	print "\n4. Printing signatures."
@@ -219,7 +221,7 @@ if True:
 
 if False:
 	print "5. Printing signature transforms for each word."
-	(SignatureStemList, SigDataDict) = printWordsToSigTransforms(Lexicon.SignatureToStems, Lexicon.WordToSig, Lexicon.StemCorpusCounts, FileObject["SigTransforms"], g_encoding, FindSuffixesFlag)
+	printWordsToSigTransforms(Lexicon.SignatureToStems, Lexicon.WordToSig, Lexicon.StemCorpusCounts, FileObject["SigTransforms"], g_encoding, FindSuffixesFlag)
 
 if False:
 	print "6. Slicing signatures."
