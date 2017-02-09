@@ -54,9 +54,9 @@ NumberOfCorrections = 0
 FindSuffixesFlag=True
 
 parser = argparse.ArgumentParser(description='Compute morphological analysis.')
-parser.add_argument('-l', action="store", dest= "language", help = "name of language")
-parser.add_argument('-w', action="store", dest= "wordcount", help = "number of words to read", default = 5000)
-parser.add_argument('-f', action="store", dest= "filename", help = "name of file to read", default="defaultfilename")
+parser.add_argument('-l', action="store", dest= "language", help = "name of language", default="english")
+parser.add_argument('-w', action="store", dest= "wordcount", help = "number of words to read", default = 10000)
+parser.add_argument('-f', action="store", dest= "filename", help = "name of file to read", default="browncorpus")
 parser.add_argument('-c', action="store", dest= "corrections", help = "number of corrections to make",default=0)
 
 results = parser.parse_args()
