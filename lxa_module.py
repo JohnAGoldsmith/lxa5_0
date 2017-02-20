@@ -1,8 +1,7 @@
 import math
 import os
 import sys
-from ClassLexicon import *
- 
+import  ClassLexicon
 
 # from fsm import State, Transducer, get_graph
 
@@ -14,23 +13,6 @@ from ClassLexicon import *
 	 WordToSig is a Map. its keys are words.       Its values are *lists* of signatures.
 	 StemCounts is a map. Its keys are words. 	Its values are corpus counts of stems.
 """  # ---------------------------------------------------------------------------------------------------------------------------------------------#
-
-
-def list_to_string(mylist):
-	outstring = ""
-	if mylist == None:
-		return None
-	sep = '-'
-	for i in range(len(mylist)):
-		if mylist[i] == None:
-			outstring += "@"
-		else:
-			outstring += mylist[i]
-		if i < len(mylist) - 1:
-			outstring += sep
-	# print outstring
-	return outstring
-
 
 # ------------------- New -----------------------------------------------------------------------------------
 def makeFSM(morphology, Signatures, start, end):

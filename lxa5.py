@@ -7,7 +7,6 @@ import argparse
 from ClassLexicon import *
 import os.path
 from loose_fit import *
-from extending_signatures import *
 from dataviz import *
 
 # Important note to user:
@@ -58,31 +57,24 @@ parser.add_argument('-l', action="store", dest= "language", help = "name of lang
 parser.add_argument('-w', action="store", dest= "wordcount", help = "number of words to read", default = 10000)
 parser.add_argument('-f', action="store", dest= "filename", help = "name of file to read", default="browncorpus")
 parser.add_argument('-c', action="store", dest= "corrections", help = "number of corrections to make",default=0)
+parser.add_argument('-d', action="store", dest= "data_folder", help = "data directory",default="../../data/")
 
 results = parser.parse_args()
 language = results.language
 numberofwords	 = results.wordcount
 shortfilename = results.filename
 NumberOfCorrections = results.corrections
-
-
-
-g_encoding =  "asci"  # "utf8"
-BreakAtHyphensFlag = True
-
-#----------------- Defining directories we are using ------------------------------#
-
-
-datafolder 				= "../../data/" + language + "/"
-outfolder     			        = datafolder    + "lxa/"
+datafolder 				= results.data_folder +  language + "/"
+outfolder     			= datafolder    + "lxa/"
 infolder 				= datafolder    + 'dx1/'
-
+infilename 				= infolder  + shortfilename + ".dx1"
 graphicsfolder= outfolder + "graphics/"
 if not os.path.exists(graphicsfolder):
 	os.makedirs(graphicsfolder)
 
-infilename 				= infolder  + shortfilename + ".dx1"
-stemfilename 				= infolder  + shortfilename + "_stems.txt"
+g_encoding =  "asci"  # "utf8"
+BreakAtHyphensFlag = True
+
 
 FileObject = dict()
 fileslist = ("Signatures", "FSA", "SigExemplars", "WordToSig", "SigTransforms",
@@ -90,7 +82,7 @@ fileslist = ("Signatures", "FSA", "SigExemplars", "WordToSig", "SigTransforms",
 	"Suffixes", "Rebalancing_Signatures","Subsignatures",
 	"UnlikelySignatures", "Log")
 for item in fileslist:
-	print item
+	#print item
 	FileObject[item] = open (outfolder + item + ".txt", "w")
 
 #----------------- Tell the user what we are doing now ------------------------------#
@@ -203,13 +195,13 @@ if True:
 
 if False:
 	print "3. Find good signatures inside bad."
-	Lexicon.FindGoodSignaturesInsideBad()
+	Lexicon.FindGoodSignaturesInsideBad(FileObject["Subsignatures"], True)
 
-if False :
+if True :
 	print "3. Finding sets of extending signatures."
 	extending_signatures(Lexicon, FileObject["SigExtensions"] )
 
-if True :
+if False :
 	print "3.1 Creating data structure for radviz."
 	(SignatureStemList, SigDataDict) = signature_by_stem_data(Lexicon)
 	for sig in SignatureStemList:
