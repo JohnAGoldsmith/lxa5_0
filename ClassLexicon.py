@@ -134,7 +134,7 @@ class CLexicon:
         # the analyses that were not handled by the Good Signature. 
 
         print  formatstring1.format("3. Looking for good signatures inside bad ones.", len(self.SignatureStringsToStems))  
-        self.FindGoodSignaturesInsideBad(outfile_subsignatures, FindSuffixesFlag );   
+        self.FindGoodSignaturesInsideBad(outfile_subsignatures, FindSuffixesFlag=True );
 
         print formatstring2.format("4. Thinning out stems with too few affixes:" )     
         N = 1
@@ -262,17 +262,15 @@ class CLexicon:
                         span = min(len(word), len(previousword), maximum_stem_length)
                     else:
                         span = min(len(word), len(previousword))
-                    for i in range(span):
-                        if word[i] != previousword[i]: #will a stem be found in the very first word?
+                    for j in range(span):
+                        if word[j] != previousword[j]: #will a stem be found in the very first word?
                             differencefoundflag = True
-                            stem = word[:i]
+                            stem = word[:j]
                             if len(stem) >= minimum_stem_length :
                                 if stem not in Protostems:
                                     Protostems[stem] = 1
                                 else:
                                     Protostems[stem] += 1
-                                if word=="conjurer":
-                                    print "417", stem, word, previousword
                             previousword = word
                             break
                     if differencefoundflag:
