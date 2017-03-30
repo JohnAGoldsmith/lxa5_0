@@ -1,6 +1,6 @@
 
 #----------------------------------------------------------------------------------------------------------------------------#
-def Extends(sig1, sig2, type = "suffix"):
+def Extends(sig1, sig2, outfile, type = "suffix"):
 #----------------------------------------------------------------------------------------------------------------------------#
 	"""
 	This function determines if sig2 extends sig1, meaning that there is a 1 to 1 association
@@ -13,8 +13,8 @@ def Extends(sig1, sig2, type = "suffix"):
 
  	AffixList1 = list()
 	AffixList2 = list()
-	affixes1= sig1.split("-")
-	affixes2 = sig2.split("-")
+	sig_list_1 = sig1.MakeSignatureListFromSignatureString( )
+	sig_list_2 = sig2.spMakeSignatureListFromSignatureString( )
 	if len(affixes1) != len(affixes2):
 		return False
  	NullAffixFound = False

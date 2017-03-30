@@ -51,23 +51,29 @@ wordcount = 0
 shortfilename = ""
 NumberOfCorrections = 0
 FindSuffixesFlag=True
+datatype = "DX1"
 
 parser = argparse.ArgumentParser(description='Compute morphological analysis.')
 parser.add_argument('-l', action="store", dest= "language", help = "name of language", default="english")
-parser.add_argument('-w', action="store", dest= "wordcount", help = "number of words to read", default = 10000)
+parser.add_argument('-w', action="store", dest= "wordcountlimit", help = "number of words to read", default = 10000)
 parser.add_argument('-f', action="store", dest= "filename", help = "name of file to read", default="browncorpus")
 parser.add_argument('-c', action="store", dest= "corrections", help = "number of corrections to make",default=0)
 parser.add_argument('-d', action="store", dest= "data_folder", help = "data directory",default="../../data/")
 
 results = parser.parse_args()
 language = results.language
-numberofwords	 = results.wordcount
+wordcountlimit	 = results.wordcountlimit
 shortfilename = results.filename
 NumberOfCorrections = results.corrections
 datafolder 				= results.data_folder +  language + "/"
 outfolder     			= datafolder    + "lxa/"
 infolder 				= datafolder    + 'dx1/'
-infilename 				= infolder  + shortfilename + ".dx1"
+if shortfilename[-4:] == ".txt":
+	datatype = "CORPUS"
+	infilename = datafolder + shortfilename
+else:
+	datatype == "DX1"
+	infilename 				= infolder  + shortfilename + ".dx1"
 graphicsfolder= outfolder + "graphics/"
 if not os.path.exists(graphicsfolder):
 	os.makedirs(graphicsfolder)
@@ -95,7 +101,10 @@ if FindSuffixesFlag:
 	print "Finding suffixes."
 else:
 	print "Finding prefixes."
-print  formatstring_initial_1.format("Reading dx file: ", infilename)
+if datatype == "DX1":
+	print  formatstring_initial_1.format("Reading dx file: ", infilename)
+else:
+	print formatstring_initial_1.format("Reading corpus: ", infilename)
 print  formatstring_initial_1.format("Logging to: ", outfolder )
 print "-"* 100
 
@@ -136,39 +145,68 @@ Lexicon = CLexicon( )
 filelines= infile.readlines()
 
 
-#this is for a dx1 file:
-for line in filelines:
-	pieces = line.split()
-	word=pieces[0]
-	if word == '#' :
-		continue
-	if word.isalpha() == False:
-		continue
-	if len(pieces) > 1:
-		count = int(pieces[1])
-	else:
-		count =1
-	word = word.lower()
-	if (BreakAtHyphensFlag and '-' in word):
-		words = word.split('-')
-		for word in words:
-			if word.isalpha() == False:
-				continue
-			if word not in WordCounts:
-				WordCounts[word]=0
-			Lexicon.WordCounts[word]+=count
-			if len(Lexicon.WordCounts) >= results.wordcount:
+if datatype == "DX1":
+	for line in filelines:
+		pieces = line.split()
+		word=pieces[0]
+		if word == '#' :
+			continue
+		if ++word.isalpha() == False:
+			continue
+		if len(pieces) > 1:
+			count = int(pieces[1])
+		else:
+			count =1
+		word = word.lower()
+		if (BreakAtHyphensFlag and '-' in word):
+			words = word.split('-')
+			for word in words:
+				if word.isalpha() == False:
+					continue
+				if word not in WordCounts:
+					WordCounts[word]=0
+				Lexicon.WordCounts[word]+=count
+				if len(Lexicon.WordCounts) >= results.wordcount:
+					break
+				Lexicon.TotalLetterCountInWords  += len(word)
+		else:
+			if word not in Lexicon.WordCounts:
+				Lexicon.WordCounts[word]=0
+			Lexicon.WordCounts[word]  = count
+			Lexicon.TotalLetterCountInWords += len(word)
+			if len(Lexicon.WordCounts) >= results.wordcountlimit:
 				break
-			Lexicon.TotalLetterCountInWords  += len(word)
-	else:
-		if word not in Lexicon.WordCounts:
-			Lexicon.WordCounts[word]=0
-		Lexicon.WordCounts[word]  = count
-		Lexicon.TotalLetterCountInWords += len(word)
-		if len(Lexicon.WordCounts) >= results.wordcount:
-			break
 
-	Lexicon.WordList.AddWord(word)
+		Lexicon.WordList.AddWord(word)
+else:
+	tokencount= 0
+	typecount = 0
+	for line in filelines:
+		if tokencount > wordcountlimit:
+			break
+		for token in line.split():
+			if token[0]=='$' or  token[0]=='(' or  token[0]==',' or  token[0]=='-' or  token[0]=='\\' or  token[0]=='(' or  token[0]=='1' or  token[0]=='2':
+				token=token[1:]
+			if len(token) == 0:
+				continue;
+			if token[-1]=='.' or  token[-1]=='!' or  token[-1]==','  or  token[-1]==';'  or  token[-1]==': ' or  token[-1]=='?' or  token[-1]==')' or  token[-1]==']':
+				token=token[:-1]
+			if len(token) == 0:
+				continue
+			if token.isalpha() == False:
+				continue
+ 			if token in Lexicon.WordCounts:
+				Lexicon.WordCounts[token] += 1
+				tokencount += 1
+			else:
+				Lexicon.WordCounts[token] = 1
+				tokencount += 1
+				typecount +=1
+				Lexicon.TotalLetterCountInWords  += len(token)
+			Lexicon.WordList.AddWord(token)
+
+
+
 Lexicon.ReverseWordList =  Lexicon.WordCounts.keys()
 Lexicon.ReverseWordList.sort(key = lambda word:word[::-1])
 Lexicon.WordList.sort()
@@ -178,7 +216,7 @@ Lexicon.Words = Lexicon.WordCounts.keys()
 Lexicon.Words.sort()
 
 
-print >>FileObject["Signatures"], "# ", language, results.wordcount
+print >>FileObject["Signatures"], "# ", language, wordcountlimit
 
 initialize_files1(Lexicon, FileObject["Log"], language)
 initialize_files1(Lexicon, "console", language)

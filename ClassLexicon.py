@@ -450,7 +450,7 @@ class CLexicon:
 # ----------------------------------------------------------------------------------------------------------------------------#
 
         print "   Print signatures from within Lexicon class."
-        # 1  Create a list of signatures, sorted by number of stems in each. DisplayList is that list. Its triples have the signature, the number of stems, and the signature's robustness.
+        # 1  Create a list of signatures, sorted by number of stems in each. DisplayList is that list. Its 4-tuples   have the signature, the number of stems, and the signature's robustness, and a sample stem
 
         ColumnWidth = 35
         stemcountcutoff = self.MinimumStemsInaSignature
@@ -461,20 +461,23 @@ class CLexicon:
         for sig, stems in SortedListOfSignatures:
             if len(stems) < stemcountcutoff:
                 continue;
-            DisplayList.append((sig, len(stems), getrobustness(sig, stems)))
+            #print 464, sig, stems
+            if sig in self.SignatureStringsToStems:
+                stems = self.SignatureStringsToStems[sig].keys()
+                DisplayList.append((sig, len(stems), getrobustness(sig, stems), stems[0]))
         DisplayList.sort
 
         singleton_signatures = 0
         doubleton_signatures = 0
 
-        for sig, stemcount, robustness in DisplayList:
+        for sig, stemcount, robustness, stem in DisplayList:
             if stemcount == 1:
                 singleton_signatures += 1
             elif stemcount == 2:
                 doubleton_signatures += 1
 
         totalrobustness = 0
-        for sig, stemcount, robustness in DisplayList:
+        for sig, stemcount, robustness, stem in DisplayList:
             totalrobustness += robustness
 
         initialize_files(self, outfile_signatures,singleton_signatures,doubleton_signatures,DisplayList ) 

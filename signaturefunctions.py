@@ -186,7 +186,7 @@ def FindSignatureDifferences(SortedListOfSignatureStrings, outfile):
     for signo1 in range(len(SortedListOfSignatureStrings)):
         sigS_1 = SortedListOfSignatureStrings[signo1]
         sigL_1 = MakeSignatureListFromSignatureString(sigS_1)
-        print " 186 ", sigL_1
+        #print " 186 ", sigL_1
         print >>outfile, "182 Find Sig Diffs", signo1, sigS_1, sigL_1
         if len(sigL_1) < 2:
             continue

@@ -54,21 +54,21 @@ def initialize_files(this_lexicon, this_file,singleton_signatures,doubleton_sign
 def print_signature_list_1(this_file, DisplayList,stemcountcutoff, totalrobustness):
     print "   Printing signature file."
     runningsum = 0.0
-    formatstring1 = '{0:<70}{1:>10s} {2:>15s} {3:>25s} {4:>20s} '
-    formatstring2 = '{:<70}{:10d} {:15d} {:25.3%} {:20.3%}'
+    formatstring1 = '{0:25}{1:>10s} {2:>15s} {3:>25s} {4:>20s}{5:>20s} '
+    formatstring2 = '{0:<25}{1:10d} {2:15d} {3:25.3%} {4:20.3%}{5:>20s}'
     print >> this_file, "\n" + "-" * 150
-    print >> this_file, formatstring1.format("Signature", "Stem count", "Robustness", "Proportion of robustness", "Running sum")
+    print >> this_file, formatstring1.format("Signature", "Stem count", "Robustness", "Proportion of robustness", "Running sum", "Example")
     print >> this_file, "-" * 150      
     DisplayList = sorted(DisplayList, lambda x, y: cmp(x[2], y[2]), reverse=True)
      
-    for sig, stemcount, robustness in DisplayList:
+    for sig, stemcount, robustness, stem in DisplayList:
         runningsum+=robustness
         if stemcount < stemcountcutoff:
             break;
         else:
             robustnessproportion = float(robustness) / totalrobustness
             runningsumproportion = runningsum/totalrobustness
-            print >> this_file, formatstring2.format(sig, stemcount, robustness,robustnessproportion, runningsumproportion )
+            print >> this_file, formatstring2.format(sig, stemcount, robustness,robustnessproportion, runningsumproportion,stem )
     print >> this_file, "-"*60
 # ----------------------------------------------------------------------------------------------------------------------------#
 def print_signature_list_2(this_file, lxalogfile, DisplayList,stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
@@ -77,7 +77,7 @@ def print_signature_list_2(this_file, lxalogfile, DisplayList,stemcountcutoff, t
     reversedstemlist = []
     count = 0
     print >> this_file, "*** Stems in each signature"
-    for sig, stemcount, robustness in DisplayList:
+    for sig, stemcount, robustness, stem in DisplayList:
         #if encoding == "utf8":
         #        print >> this_file, "\n"+"="*45 , sig, "\n"
         #else:
@@ -94,6 +94,28 @@ def print_signature_list_2(this_file, lxalogfile, DisplayList,stemcountcutoff, t
                     n = 0
                     print >> this_file
         print >> this_file, "\n" + "-"*25
+
+
+
+        stemlist.sort(key = lambda stem: StemCorpusCounts[stem])
+        longeststemlength = 0
+        for stem in stemlist:
+            if len(stem) > longeststemlength:
+                longeststemlength = len(stem)
+        columnwidth = longeststemlength
+        numberofcolumns = 4
+        colno=0
+        for stem in stemlist:
+            stemcount = str(StemCorpusCounts[stem])
+            print >>this_file, stem, " "*(columnwidth-len(stem)), stemcount, " "*(5-len(stemcount)),
+            colno += 1
+            if colno==numberofcolumns:
+                colno=0
+                print >>this_file
+
+
+        print >> this_file, "\n" + "-"*25
+
         # ------------------- New -----------------------------------------------------------------------------------
         howmany = 5     
         print >>this_file, "Average count of top",howmany, " stems:" , AverageCountOfTopStems(howmany, sig, SignatureToStems, StemCorpusCounts, lxalogfile)
