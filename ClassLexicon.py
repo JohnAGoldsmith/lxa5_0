@@ -220,7 +220,7 @@ class CLexicon:
                     if word not in self.WordToSig:
                         self.WordToSig[word] = list()
                     if signature_string not in self.WordToSig[word]:
-                        self.WordToSig[word].append(signature_string)
+                        self.WordToSig[word].append((stem,signature_string))
                     self.StemToWord[stem][word] = 1
                     self.StemCorpusCounts[stem] += self.WordCounts[word]
                 if signature_string not in self.SignatureStringsToStems:

@@ -444,7 +444,7 @@ def print_words(outfile, logfile, WordToSig,ColumnWidth ):
         print >> outfile, '{0:<30}'.format(word), ":",
         for n in range(len(WordToSig[word])):               
             #sig = MakeStringFromSignature(WordToSig[word][n], ColumnWidth)
-            sig = WordToSig[word][n]
+            stem, sig = WordToSig[word][n]
             print >> outfile, sig + " " * (ColumnWidth - len(sig)),
         print >> outfile
 

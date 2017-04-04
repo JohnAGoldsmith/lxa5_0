@@ -8,6 +8,7 @@ from ClassLexicon import *
 import os.path
 from loose_fit import *
 from dataviz import *
+import dynamics
 
 # Important note to user:
 # My folder structure is this:
@@ -39,7 +40,7 @@ import string
 import copy
 from collections import defaultdict
 from lxa_module import *
-from signatures import *
+#from signatures import *
 from fsa import *
 
 #--------------------------------------------------------------------##
