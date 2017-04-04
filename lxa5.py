@@ -232,6 +232,9 @@ if True:
 	print "2. Make Signatures."
 	Lexicon.MakeSignatures(FileObject["Log"],FileObject["Rebalancing_Signatures"],FileObject["UnlikelySignatures"],FileObject["Subsignatures"],FindSuffixesFlag,Lexicon.MinimumStemLength)
 
+if True and datatype=="CORPUS":
+	dynamics(Lexicon, corpus)
+
 if False:
 	print "3. Find good signatures inside bad."
 	Lexicon.FindGoodSignaturesInsideBad(FileObject["Subsignatures"], True)

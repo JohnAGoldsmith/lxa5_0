@@ -670,6 +670,8 @@ class CSignature:
         self.count += 3
         self.StemCount = 1
         self.LetterSize = len(signature_string) - len(self.Affixes)
+        self.Stems = dict()  # key is stem and value is corpus count of the stem
+        self.StemToWordCount = dict() # key is stem and value is a dict; key of that dict is an affix and value is corpus count of that stem+affix
 
     def Display(self):
         returnstring = ""
