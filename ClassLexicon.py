@@ -54,6 +54,7 @@ class CWordList:
 ## -------                                                      ------- #
 class CLexicon:
     def __init__(self):
+        self.Corpus = list()
         self.Parses = dict()
         self.WordList = CWordList()
         self.Words = list()
@@ -70,6 +71,7 @@ class CLexicon:
         self.Suffixes={}
         self.Prefixes = {}
         self.MinimumStemsInaSignature =2
+        self.MinimumAffixesInaSignature = 2
         self.MinimumStemLength = 2
         self.MaximumAffixLength =5
         self.MaximumNumberOfAffixesInASignature = 100
@@ -211,8 +213,17 @@ class CLexicon:
                 if affix not in self.Suffixes:
                     self.Suffixes[affix] = 0
                 self.Suffixes[affix] += 1
+            StemsToDelete = list()
+            for stem in self.StemToWord:
+                if len(self.StemToAffix[stem]) < self.MinimumAffixesInaSignature:
+                    StemsToDelete.append(stem)
+            for stem in StemsToDelete:
+                del self.StemToWord[stem]
+                del self.StemToAffix[stem]
             # Now we create signatures: StemToSignature; WordToSig; StemToWord, SignatureStringsToStems
+
             for stem in self.StemToAffix:
+
                 signature_string = MakeSignatureStringFromAffixDict(self.StemToAffix[stem])
                 self.StemToSignature[stem] = signature_string
                 self.StemCorpusCounts[stem] = 0
@@ -226,10 +237,12 @@ class CLexicon:
                 if signature_string not in self.SignatureStringsToStems:
                     self.SignatureStringsToStems[signature_string]= dict()
                 self.SignatureStringsToStems[signature_string][stem] = 1
+
                  
 # ----------------------------------------------------------------------------------------------------------------------------#
 # ----------------------------------------------------------------------------------------------------------------------------#
-    def RemoveSignaturesWithTooFewStems(self):            
+ #This is apparently not used anymore.
+    def RemoveSignaturesWithTooFewStems(self):
         for sig in self.SignatureStringsToStems: 
             if len(self.SignatureStringsToStems[sig]) < self.MinimumStemsInaSignature:
                 for stem in self.SignatureStringsToStems[sig]:

@@ -2,6 +2,16 @@
 
 # -------------      Some short utility functions ---------------------------------------
 
+def AddAffixToSigString(affix, sigstring):
+    sigset = set(sigstring.split("="))
+    if affix == "":
+        affix = "NULL"
+    sigset.add(affix)
+    affixlist = list(sigset)
+    affixlist.sort()
+    sep = '='
+    return sep.join(affixlist)
+
 def MakeSignatureStringFromAffixDict(affix_dict):
     affix_list=affix_dict.keys()
     affix_list.sort()
