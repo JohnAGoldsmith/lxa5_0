@@ -1,47 +1,26 @@
 # -*- coding: <utf-16> -*-
 unicode = True
-import sys
-import codecs
-import pygraphviz as pgv
 import argparse
-from ClassLexicon import *
-import os.path
-from loose_fit import *
-from dataviz import *
-from dynamics import *
-
-# Important note to user:
-# My folder structure is this:
-# /linguistica/lxa5_0/lxa5_0.py
-#             /lxa5_1/lxa5_1.py
-# /data/english/dx1/browncorpus.dx1
-#              /lxa/Signatures.txt etc.
-#              /graphics
-# You can change this to fit your directory structure on line 75 below.
-
-
-# This program looks for extended signatures, which are regular subgraphs among words, where the edges are
-# (high-freq) Delta-Right pairs of words, and where a word may be *split differently* (without penalty!)
-# in different Delta-Right pairs: e.g., "moves" is part of the pair (move/move-s) and also of the pair
-# (mov-es/mov-ing).
-# 	Prototyping for bootstrapping of Lxa5
-# 	Accepts name of input file as command-line argument.
-# --------------------------------------------------------------------##
-#		Main program begins on line 174
-# --------------------------------------------------------------------##
-
-import time
+import codecs
+import codecs  # for utf8
+import copy
 import datetime
 import operator
-import sys
 import os
-import codecs  # for utf8
+import os.path
+import pygraphviz as pgv
 import string
-import copy
+import sys
+import sys
+import time
 from collections import defaultdict
-from lxa_module import *
-# from signatures import *
+
+from ClassLexicon import *
+from dataviz import *
+from dynamics import *
 from fsa import *
+from loose_fit import *
+from lxa_module import *
 
 # --------------------------------------------------------------------##
 #		user modified variables
@@ -123,9 +102,6 @@ if g_encoding == "utf8":
 else:
     infile = open(infilename)
 
-
-
-
 # -------------------------------------------------------------------------------------------------------#
 # -------------------------------------------------------------------------------------------------------#
 # 					Main part of program		   			   	#
@@ -148,6 +124,7 @@ Lexicon = CLexicon()
 #		read wordlist (dx1)
 # --------------------------------------------------------------------##
 
+verboseflag = True
 filelines = infile.readlines()
 
 if datatype == "DX1":
@@ -156,8 +133,10 @@ if datatype == "DX1":
         word = pieces[0]
         if word == '#':
             continue
-        if ++word.isalpha() == False:
-            continue
+        #if ++word.isalpha() == False:
+        #    if verboseflag:
+        #        print "Eliminating ", word, "because he has a non-alphabetic character."
+            #continue
         if len(pieces) > 1:
             count = int(pieces[1])
         else:
@@ -166,16 +145,18 @@ if datatype == "DX1":
         if (BreakAtHyphensFlag and '-' in word):
             words = word.split('-')
             for word in words:
-                if word.isalpha() == False:
-                    continue
-                if word not in WordCounts:
-                    WordCounts[word] = 0
+                #if word.isalpha() == False:
+                #    continue
+                if word not in Lexicon.WordCounts:
+                    Lexicon.WordBiographies[word] = list()
+                    Lexicon.WordCounts[word] = 0
                 Lexicon.WordCounts[word] += count
-                if len(Lexicon.WordCounts) >= results.wordcount:
+                if len(Lexicon.WordCounts) >= wordcountlimit:
                     break
                 Lexicon.TotalLetterCountInWords += len(word)
         else:
             if word not in Lexicon.WordCounts:
+                Lexicon.WordBiographies[word] = list()
                 Lexicon.WordCounts[word] = 0
             Lexicon.WordCounts[word] = count
             Lexicon.TotalLetterCountInWords += len(word)
@@ -183,11 +164,12 @@ if datatype == "DX1":
                 break
 
         Lexicon.WordList.AddWord(word)
+        Lexicon.WordBiographies[word] = list()
 else:
     tokencount = 0
     typecount = 0
     for line in filelines:
-        #print "189", tokencount, wordcountlimit
+        # print "189", tokencount, wordcountlimit
         if tokencount - wordcountlimit > 0:
             break
         for token in line.split():
@@ -205,14 +187,15 @@ else:
                 Lexicon.WordCounts[token] += 1
                 tokencount += 1
             else:
+                Lexicon.WordBiographies[word] = list()
                 Lexicon.WordCounts[token] = 1
                 tokencount += 1
                 typecount += 1
                 Lexicon.TotalLetterCountInWords += len(token)
             Lexicon.WordList.AddWord(token)
             Lexicon.Corpus.append(token)
-
-
+            Lexicon.WordBiographies[word] = list()
+4
 Lexicon.ReverseWordList = Lexicon.WordCounts.keys()
 Lexicon.ReverseWordList.sort(key=lambda word: word[::-1])
 Lexicon.WordList.sort()
@@ -238,7 +221,7 @@ if True:
     Lexicon.MakeSignatures(FileObject["Log"], FileObject["Rebalancing_Signatures"], FileObject["UnlikelySignatures"],
                            FileObject["Subsignatures"], FindSuffixesFlag, Lexicon.MinimumStemLength)
 
-if True and datatype == "CORPUS":
+if False and datatype == "CORPUS":
     Dynamics(Lexicon)
 
 if False:
@@ -277,16 +260,16 @@ if False:
     "6. Slicing signatures."
     SliceSignatures(Lexicon, g_encoding, FindSuffixesFlag, FileObject["Log"])
 
-if False:
+if True:
     print
     "7. Adding signatures to the FSA."
-    AddSignaturesToFSA(Lexicon, Lexicon.SignatureToStems, morphology, FindSuffixesFlag)
+    AddSignaturesToFSA(Lexicon, Lexicon.SignatureStringsToStems, morphology, FindSuffixesFlag)
 
-if False:
+if True:
     print
     "8. Printing the FSA."
-    print >> FileObject[FSA], "#", language, shortfilename, results.wordcount
-    morphology.printFSA(FileObject[FSA])
+    print >> FileObject["FSA"], "#", language, shortfilename, wordcountlimit
+    morphology.printFSA(FileObject["FSA"])
 
 if False:
     print
@@ -300,7 +283,7 @@ if False:
     for loopno in range(NumberOfCorrections):
         morphology.find_highest_weight_affix_in_an_edge(FileObject["Log"], FindSuffixesFlag)
 
-if False:
+if True:
     print
     "11. Printing graphs of the FSA."
     for state in morphology.States:
@@ -425,12 +408,17 @@ if False:
 
 morphology_copy = morphology.MakeCopy()
 
-initialParseChain = list()
+initialParseChain = ParseChain()
 CompletedParses = list()
 IncompleteParses = list()
 word = ""
-while False:
+while True:
     word = raw_input('Inquire about a word: ')
+
+    if word in Lexicon.WordBiographies:
+        for line in Lexicon.WordBiographies[word]:
+            print line
+
     if word == "exit":
         break
     if word == "State":
@@ -481,13 +469,16 @@ while False:
         while True:
             stateno = raw_input("Graph state number:")
 
+#   ---------------  New section: Parsing in the FSA ------------------------ #
+
+
     del CompletedParses[:]
     del IncompleteParses[:]
-    del initialParseChain[:]
+    del initialParseChain.my_chain[:]
     startingParseChunk = parseChunk("", word)
     startingParseChunk.toState = morphology.startState
 
-    initialParseChain.append(startingParseChunk)
+    initialParseChain.my_chain. append(startingParseChunk)
     IncompleteParses.append(initialParseChain)
     while len(IncompleteParses) > 0:
         CompletedParses, IncompleteParses = morphology.lparse(CompletedParses, IncompleteParses)
@@ -495,7 +486,7 @@ while False:
     "no analysis found."
 
     for parseChain in CompletedParses:
-        for thisParseChunk in parseChain:
+        for thisParseChunk in parseChain.my_chain:
             if (thisParseChunk.edge):
                 print
                 "\t", thisParseChunk.morph,
@@ -505,7 +496,7 @@ while False:
     for parseChain in CompletedParses:
         print
         "\tStates: ",
-        for thisParseChunk in parseChain:
+        for thisParseChunk in parseChain.my_chain:
             if (thisParseChunk.edge):
                 print
                 "\t", thisParseChunk.fromState.index,
@@ -516,7 +507,7 @@ while False:
     for parseChain in CompletedParses:
         print
         "\tEdges: ",
-        for thisParseChunk in parseChain:
+        for thisParseChunk in parseChain.my_chain:
             if (thisParseChunk.edge):
                 print
                 "\t", thisParseChunk.edge.index,

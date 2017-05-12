@@ -1,4 +1,5 @@
 import pygraphviz as pgv
+
 from ClassLexicon import ParseChain
 from ClassLexicon import parseChunk
 
@@ -434,6 +435,7 @@ class FSA_lxa:
             thisedge.addLabels(leftlist)
             thatedge = self.addEdge(newMiddleState, myEndState, False)
             thatedge.addLabels(rightlist)
+
         else:
             thisedge = self.addEdge(self.startState, newMiddleState, False)
             thisedge.addLabels(leftlist)
@@ -1411,6 +1413,7 @@ class FSA_lxa:
     def lparse(self, CompletedParses, IncompleteParses):
         # -----------------------------------------------------------------------------#
         currentParseChain = IncompleteParses.pop()
+        print currentParseChain.Display()
         # print "------------------"
         # print "length of current parsechain",  len(currentParseChain.my_chain)
         currentParseChunk = currentParseChain.my_chain[-1]
