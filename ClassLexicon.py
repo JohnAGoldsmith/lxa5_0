@@ -14,6 +14,24 @@ from signaturefunctions import *
 # StemCorpusCounts is a map. Its keys are words.   Its values are corpus counts of stems.
 # SignatureStringsToStems is a dict: its keys are tuples of strings, and its values are dicts of stems.
 
+
+
+def splitsignature(signature, maxlength):
+    affixes = signature.split('=')
+    line = list()
+    length = 0
+    outlist = list()
+    for affix in affixes:
+        line.append(affix)
+        length += len(affix) + 1
+        if length > maxlength:
+            outlist.append("=".join(line) + "...")
+            line = list()
+            length = 0
+    outlist.append("=".join(line))
+    return outlist
+
+
 class CWordList:
     def __init__(self):
         self.mylist = list()
@@ -760,6 +778,8 @@ class CLexicon:
 
     # print_signature_extensions(outfile_SigExtensions, lxalogfile, DisplayList, self.SignatureStringsToStems)
 
+
+
     # ----------------------------------------------------------------------------------------------------------------------------#
     def FindGoodSignaturesInsideBad(self, outfile, FindSuffixesFlag, verboseflag, Step):
         # ----------------------------------------------------------------------------------------------------------------------------#
@@ -774,8 +794,9 @@ class CLexicon:
 
         GoodSignatures = list()
         Transactions = list()
-
-        for sig_string in self.SignatureStringsToStems:
+        SignatureList = self.SignatureStringsToStems.keys()
+        SignatureList.sort()
+        for sig_string in SignatureList:
             #print "784", sig_string
             sig_list = MakeSignatureListFromSignatureString(sig_string)
             #print "786", sig_list
@@ -784,7 +805,12 @@ class CLexicon:
                 if verboseflag:
                     contentlist.append (sig_string)
             elif verboseflag:
-                contentlist.append(" "*20 + sig_string)
+                if len(sig_string) < 50 :
+                    contentlist.append(" "*20 + sig_string)
+                else:
+                    sig_list = splitsignature(sig_string,40)
+                    for item in sig_list:
+                        contentlist.append(" "*20 + item )
         if verboseflag:
             contentlist.append("\n\n Working on bad signatures\n ")
 
