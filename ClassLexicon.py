@@ -97,18 +97,13 @@ class CLexicon:
         self.Suffixes = {}
         self.Prefixes = {}
         self.WordBiographies=dict()
+        self.SignatureBiographies=dict()
         self.MinimumStemsInaSignature = 5
         self.MinimumAffixesInaSignature = 2
         self.MinimumStemLength = 5
         self.MaximumAffixLength = 5
         self.MaximumNumberOfAffixesInASignature = 100
-        #self.NumberOfAnalyzedWords = 0
-        #self.LettersInAnalyzedWords = 0
-        #self.NumberOfUnanalyzedWords = 0
-        #self.LettersInUnanalyzedWords = 0
-        #self.TotalLetterCountInWords = 0
-        #self.LettersInStems = 0
-        #self.AffixLettersInSignatures = 0
+
         self.TotalRobustInSignatures = 0
 
         self.total_word_count = 0
@@ -357,23 +352,26 @@ class CLexicon:
 
 
 
-            if verboseflag:
-                filename = "6_stems_and_their_affix_sets.txt"
+        if verboseflag:
+                filename = "6_assigning_signatures.txt"
                 headerlist = [ "6. Assign a single signature to each stem."]
                 contentlist = list()
 
                 formatstring = "{0:20s}  {1:15s} {2:20s}{3:10s}"
                 formatstring1 = "{0:32s}"
 
-            stemlist = self.StemToAffix.keys()
-            stemlist.sort()
+        stemlist = self.StemToAffix.keys()
+        stemlist.sort()
 
-            if verboseflag:
+        if verboseflag:
                 print "     Assign a single signature to each stem"
-            for stem in stemlist:
+        for stem in stemlist:
                 signature_string = MakeSignatureStringFromAffixDict(self.StemToAffix[stem])
                 self.StemToSignature[stem] = signature_string
                 self.StemCorpusCounts[stem] = 0
+                if signature_string not in self.SignatureBiographies:
+                    self.SignatureBiographies[signature_string] = list()
+                    self.SignatureBiographies[signature_string].append ("  Created at first opportunity, in AssignSignaturesToEachStem.")
                 for word in self.StemToWord[stem]:
                     if word not in self.WordToSig:
                         self.WordToSig[word] = list()
@@ -385,9 +383,12 @@ class CLexicon:
                 if signature_string not in self.SignatureStringsToStems:
                     self.SignatureStringsToStems[signature_string] = dict()
                 self.SignatureStringsToStems[signature_string][stem] = 1
-            if verboseflag:
-                print "     End of assigning a signature to each stem."
 
+
+        if verboseflag:
+            print "     End of assigning a signature to each stem."
+        if verboseflag:
+                print_report(filename, headerlist, contentlist)
 
             # ----------------------------------------------------------------------------------------------------------------------------#
             # ----------------------------------------------------------------------------------------------------------------------------#
@@ -793,7 +794,7 @@ class CLexicon:
         # ----------------------------------------------------------------------------------------------------------------------------#
         if verboseflag:
 
-            filename = "6_good_signatures_inside_bad.txt"
+            filename = "7_good_signatures_inside_bad.txt"
             headerlist = [ "Find good signatures inside bad ones."]
             contentlist = list()
             linelist = list()

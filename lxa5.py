@@ -423,6 +423,10 @@ while True:
         for line in Lexicon.WordBiographies[word]:
             print line
 
+    if word in Lexicon.SignatureBiographies:
+        for line in Lexicon.SignatureBiographies[word]:
+            print "sigs: ", line
+
     if word == "exit":
         break
     if word == "State":

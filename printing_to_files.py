@@ -57,7 +57,7 @@ def initialize_filesdeprecated(this_lexicon, this_file, language):
 def initialize_files(this_lexicon, this_file, singleton_signatures, doubleton_signatures, DisplayList):
     formatstring_console = "   {:45s}{:10,d}"
     if this_file == "console":
-        print   
+        print
         print  formatstring_console.format("Number of words (corpus count): ", this_lexicon.total_word_count)
         print  formatstring_console.format("Total letter count in words ", this_lexicon.word_letter_count)
         print  formatstring_console.format("Number of signatures: ", len(this_lexicon.SignatureStringsToStems))
