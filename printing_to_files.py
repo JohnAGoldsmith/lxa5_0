@@ -23,32 +23,33 @@ def print_report(filename, headerlist, contentlist):
 
 
 
-def initialize_files1(this_lexicon, this_file, language):
+def initialize_filesdeprecated(this_lexicon, this_file, language):
     formatstring_initfiles1 = "{:40s}{:>15d}"
     formatstring_initfiles2 = "{:40s}{:>15s}"
     formatstring_initfiles3 = "{:40s}{:15.2f}"
     if this_file == "console":
+        print "Initialization."
         print formatstring_initfiles2.format("Language: ", language)
-        print formatstring_initfiles1.format("Total words:", len(this_lexicon.WordList.mylist))
-        print formatstring_initfiles1.format("Minimum Stem Length", this_lexicon.MinimumStemLength)
+        print formatstring_initfiles1.format("Total words:",         this_lexicon.total_word_count)
+        print formatstring_initfiles1.format("Minimum Stem Length",  this_lexicon.MinimumStemLength)
         print formatstring_initfiles1.format("Maximum Affix Length", this_lexicon.MaximumAffixLength)
         print formatstring_initfiles1.format("Minimum Number of stems in signature: ",
-                                             this_lexicon.MinimumStemsInaSignature)
-        print formatstring_initfiles1.format("Total letter count in words: ", this_lexicon.TotalLetterCountInWords)
-        print formatstring_initfiles3.format("Average letters per word: ",
-                                             3.0)  # (float(this_lexicon.TotalLetterCountInWords))/len(this_lexicon.WordList.mylist))
+                                                                     this_lexicon.MinimumStemsInaSignature)
+        print formatstring_initfiles1.format("Total letter count in words: ", this_lexicon.word_letter_count)
+        if this_lexicon.total_word_count > 0:
+            print formatstring_initfiles3.format("Average letters per word: ", this_lexicon.word_letter_count/ float(this_lexicon.total_word_count) )
     else:
-        print >> this_file, "{:40s}{:>15s}".format("Language: ", language)
-        print >> this_file, "{:40s}{:10,d}".format("Total words:", len(this_lexicon.WordList.mylist))
-        print >> this_file, "{:40s}{:>10,}".format("Minimum Stem Length", this_lexicon.MinimumStemLength)
-        print >> this_file, "{:40s}{:>10,}".format("Maximum Affix Length", this_lexicon.MaximumAffixLength)
-        print >> this_file, "{:40s}{:>10,}".format("Minimum Number of stems in signature: ",
-                                                   this_lexicon.MinimumStemsInaSignature)
-        print >> this_file, "{:40s}{:10,d}".format("Total letter count in words: ",
-                                                   this_lexicon.TotalLetterCountInWords)
-        print >> this_file, "{:40s}{:10.2f}".format("Average letters per word: ",
-                                                    float(this_lexicon.TotalLetterCountInWords) / len(
-                                                        this_lexicon.WordList.mylist))
+        print >>this_file, "\nInitialization."
+        print >> this_file, formatstring_initfiles2.format("Language: ", language)
+        print >> this_file, formatstring_initfiles1.format("Total words:",         this_lexicon.total_word_count)
+        print >> this_file, formatstring_initfiles1.format("Minimum Stem Length",  this_lexicon.MinimumStemLength)
+        print >> this_file, formatstring_initfiles1.format("Maximum Affix Length", this_lexicon.MaximumAffixLength)
+        print >> this_file, formatstring_initfiles1.format("Minimum Number of stems in signature: ",
+                                                                                   this_lexicon.MinimumStemsInaSignature)
+        print >> this_file, formatstring_initfiles1.format("Total letter count in words: ",
+                                                                                    this_lexicon.word_letter_count)
+        if this_lexicon.total_word_count > 0:
+            print >> this_file, "{:40s}{:10.2f}".format("Average letters per word: ", this_lexicon.word_letter_count/ float(this_lexicon.total_word_count))
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
@@ -56,33 +57,36 @@ def initialize_files1(this_lexicon, this_file, language):
 def initialize_files(this_lexicon, this_file, singleton_signatures, doubleton_signatures, DisplayList):
     formatstring_console = "   {:45s}{:10,d}"
     if this_file == "console":
-        print  formatstring_console.format("Number of words: ", len(this_lexicon.WordList.mylist))
-        print  formatstring_console.format("Total letter count in words ", this_lexicon.TotalLetterCountInWords)
-        print  formatstring_console.format("Number of signatures: ", len(DisplayList))
-        print  formatstring_console.format("Number of singleton signatures: ", singleton_signatures)
-        print  formatstring_console.format("Number of doubleton signatures: ", doubleton_signatures)
-        print  formatstring_console.format("Total number of letters in stems: ", this_lexicon.LettersInStems)
-        print  formatstring_console.format("Total number of affix letters: ", this_lexicon.AffixLettersInSignatures)
+        print   
+        print  formatstring_console.format("Number of words (corpus count): ", this_lexicon.total_word_count)
+        print  formatstring_console.format("Total letter count in words ", this_lexicon.word_letter_count)
+        print  formatstring_console.format("Number of signatures: ", len(this_lexicon.SignatureStringsToStems))
+        print  formatstring_console.format("Number of singleton signatures (one stem): ", singleton_signatures)
+        print  formatstring_console.format("Number of doubleton signatures (two stems): ", doubleton_signatures)
+        print  formatstring_console.format("Total number of letters in stems: ", this_lexicon.total_letters_in_stems)
+        print  formatstring_console.format("Total number of affix letters in signatures: ", this_lexicon.total_affix_length_in_signatures)
         print  formatstring_console.format("Total letters in signatures: ",
-                                           this_lexicon.LettersInStems + this_lexicon.AffixLettersInSignatures)
-        print  formatstring_console.format("Number of analyzed words ", this_lexicon.NumberOfAnalyzedWords)
+                                           this_lexicon.total_letters_in_stems + this_lexicon.total_affix_length_in_signatures)
+        print  formatstring_console.format("Number of analyzed words ", this_lexicon.number_of_analyzed_words)
+
         print  formatstring_console.format("Total number of letters in analyzed words ",
-                                           this_lexicon.LettersInAnalyzedWords)
+                                           this_lexicon.total_letters_in_analyzed_words)
     else:
-        print  >> this_file, "{:45s}{:10,d}".format("Number of words: ", len(this_lexicon.WordList.mylist))
+        print >> this_file, "\nInitialization"
+        print  >> this_file, "{:45s}{:10,d}".format("Number of words (corpus count): ", len(this_lexicon.WordList.mylist))
         print   >> this_file, "{:45s}{:10,d}".format("Total letter count in words ",
-                                                     this_lexicon.TotalLetterCountInWords)
+                                                     this_lexicon.word_letter_count)
         print   >> this_file, "{:45s}{:10,d}".format("Number of signatures: ", len(DisplayList))
-        print   >> this_file, "{:45s}{:10,d}".format("Number of singleton signatures: ", singleton_signatures)
-        print   >> this_file, "{:45s}{:10,d}".format("Number of doubleton signatures: ", doubleton_signatures)
-        print   >> this_file, "{:45s}{:10,d}".format("Total number of letters in stems: ", this_lexicon.LettersInStems)
+        print   >> this_file, "{:45s}{:10,d}".format("Number of singleton signatures (one stem): ", singleton_signatures)
+        print   >> this_file, "{:45s}{:10,d}".format("Number of doubleton signatures (two stems): ", doubleton_signatures)
+        print   >> this_file, "{:45s}{:10,d}".format("Total number of letters in stems: ", this_lexicon.total_letters_in_stems)
         print   >> this_file, "{:45s}{:10,d}".format("Total number of affix letters: ",
-                                                     this_lexicon.AffixLettersInSignatures)
+                                                     this_lexicon.total_affix_length_in_signatures)
         print   >> this_file, "{:45s}{:10,d}".format("Total letters in signatures: ",
-                                                     this_lexicon.LettersInStems + this_lexicon.AffixLettersInSignatures)
-        print   >> this_file, "{:45s}{:10,d}".format("Number of analyzed words ", this_lexicon.NumberOfAnalyzedWords)
+                                                     this_lexicon.total_letters_in_stems + this_lexicon.total_affix_length_in_signatures)
+        print   >> this_file, "{:45s}{:10,d}".format("Number of analyzed words ", this_lexicon.number_of_analyzed_words)
         print   >> this_file, "{:45s}{:10,d}".format("Total number of letters in analyzed words ",
-                                                     this_lexicon.LettersInAnalyzedWords)
+                                                     this_lexicon.total_letters_in_analyzed_words)
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#

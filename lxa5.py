@@ -155,13 +155,13 @@ if datatype == "DX1":
                 Lexicon.WordCounts[word] += count
                 if len(Lexicon.WordCounts) >= wordcountlimit:
                     break
-                Lexicon.TotalLetterCountInWords += len(word)
+                #Lexicon.TotalLetterCountInWords += len(word)
         else:
             if word not in Lexicon.WordCounts:
                 Lexicon.WordBiographies[word] = list()
                 Lexicon.WordCounts[word] = 0
             Lexicon.WordCounts[word] = count
-            Lexicon.TotalLetterCountInWords += len(word)
+            #Lexicon.TotalLetterCountInWords += len(word)
             if len(Lexicon.WordCounts) >= results.wordcountlimit:
                 break
 
@@ -199,7 +199,7 @@ else:
             Lexicon.WordList.AddWord(token)
             Lexicon.Corpus.append(token)
             Lexicon.WordBiographies[word] = list()
-4
+
 Lexicon.ReverseWordList = Lexicon.WordCounts.keys()
 Lexicon.ReverseWordList.sort(key=lambda word: word[::-1])
 Lexicon.WordList.sort()
@@ -211,8 +211,8 @@ Lexicon.Words.sort()
 
 print >> FileObject["Signatures"], "# ", language, wordcountlimit
 
-initialize_files1(Lexicon, FileObject["Log"], language)
-initialize_files1(Lexicon, "console", language)
+initialize_files(Lexicon, FileObject["Log"], 0,0, language)
+initialize_files(Lexicon, "console", 0,0, language)
 
 splitEndState = True
 morphology = FSA_lxa(splitEndState)

@@ -102,14 +102,21 @@ class CLexicon:
         self.MinimumStemLength = 5
         self.MaximumAffixLength = 5
         self.MaximumNumberOfAffixesInASignature = 100
-        self.NumberOfAnalyzedWords = 0
-        self.LettersInAnalyzedWords = 0
-        self.NumberOfUnanalyzedWords = 0
-        self.LettersInUnanalyzedWords = 0
-        self.TotalLetterCountInWords = 0
-        self.LettersInStems = 0
-        self.AffixLettersInSignatures = 0
+        #self.NumberOfAnalyzedWords = 0
+        #self.LettersInAnalyzedWords = 0
+        #self.NumberOfUnanalyzedWords = 0
+        #self.LettersInUnanalyzedWords = 0
+        #self.TotalLetterCountInWords = 0
+        #self.LettersInStems = 0
+        #self.AffixLettersInSignatures = 0
         self.TotalRobustInSignatures = 0
+
+        self.total_word_count = 0
+        self.word_letter_count = 0
+        self.total_letters_in_stems = 0
+        self.total_letters_in_analyzed_words = 0
+        self.total_affix_length_in_signatures = 0
+        self.number_of_analyzed_words =  0
 
     ## -------                                                      ------- #
     ##              Central signature computation                   ------- #
@@ -124,7 +131,8 @@ class CLexicon:
         formatstring1 = "  {:50s}{:>10,}"
         formatstring2 = "  {:50s}"
         formatstring3 = "{:40s}{:10,d}"
-        print formatstring2.format("The MakeSignatures function")
+        if verboseflag:
+            print formatstring2.format("The MakeSignatures function")
 
         # Protostems are candidate stems made during the algorithm, but not kept afterwards.
         Protostems = dict()
@@ -137,9 +145,9 @@ class CLexicon:
         # Lexicon.TotalLetterCountInWords = 0
 
         self.TotalRobustnessInSignatures = 0
-        self.LettersInStems = 0
+        #self.LettersInStems = 0
         self.TotalLetterCostOfAffixesInSignatures = 0
-        self.LettersInStems = 0
+        #self.LettersInStems = 0
         self.TotalLetterCostOfAffixesInSignatures = 0
         if FindSuffixesFlag:
             Affixes = self.Suffixes
@@ -151,40 +159,45 @@ class CLexicon:
         Step = 1
         maximumstemlength = 100
         self.FindProtostems(self.WordList.mylist, Protostems, self.MinimumStemLength, FindSuffixesFlag,verboseflag,Step,maximumstemlength)
-        print formatstring1.format("1. Finished finding proto-stems.", len(Protostems))
+        if verboseflag:
+            print formatstring1.format("1. Finished finding proto-stems.", len(Protostems))
 
         # 2 and 3 --------------------------------------------------------------------
         Step = 2
         self.AssignAffixesAndWordsToStems(Protostems, FindSuffixesFlag,Step,verboseflag )
-        print formatstring1.format("2 and 3. Finished finding affixes for protostems.",
+        if verboseflag:
+            print formatstring1.format("   Finished finding affixes for protostems.",
                                    len(self.Suffixes) + len(self.Prefixes))
-        # file 2 is fine
-        # file 3 is fine.
+
         # problem already exists, of having both NULL and null with emerge? not on 3 parse pair list though.???
         # --------------------------------------------------------------------
         # 4  Assign signatures to each stem This is in a sense the most important step.        -------
         Step = 3
         self.AssignSignaturesToEachStem(FindSuffixesFlag,verboseflag,Step)
-        print  formatstring1.format("4. Finished first pass of finding stems, affixes, and signatures.",
+        if verboseflag:
+            print  formatstring1.format("4. Finished first pass of finding stems, affixes, and signatures.",
                                     len(self.SignatureStringsToStems))
+        self.Compute_Lexicon_Size()
         # --------------------------------------------------------------------
         # 3  Find good signatures inside signatures that don't have enough stems to be their own signatures.
         # We make a temporary list of signatures called GoodSignatures, which have enough stems. 
         # We check all sigs in SignaturesToStems to see if they have enough stems. If they do not,
         # we look to see if we can find a Good Signature inside it. If not, we delete it; and we delete
         # the analyses that were not handled by the Good Signature. 
-
-        print  formatstring1.format("3. Looking for good signatures inside bad ones.", len(self.SignatureStringsToStems))
+        if verboseflag:
+            print  formatstring1.format("3. Looking for good signatures inside bad ones.", len(self.SignatureStringsToStems))
 
         Step += 1
         self.FindGoodSignaturesInsideBad(outfile_subsignatures, FindSuffixesFlag,verboseflag, Step);
 
-        print formatstring2.format("4. Thinning out stems with too few affixes:")
+        if verboseflag:
+            print formatstring2.format("4. Thinning out stems with too few affixes.")
         N = 1
         Step += 1
         self.RemoveAllSignaturesWithOnly_N_affixes(N,verboseflag, Step)
-        print formatstring2.format("4. Finished; we will reassign signature structure.")
-        print formatstring2.format("6. Recompute signature structure.")
+        if verboseflag:
+            print formatstring2.format("5. Finished; we will reassign signature structure.")
+            print formatstring2.format("6. Recompute signature structure.\n     <----------------------------------------->")
         Step += 1
         self.AssignSignaturesToEachStem(FindSuffixesFlag, verboseflag,Step)
 
@@ -193,7 +206,8 @@ class CLexicon:
         # We look for a stem-final sequence that appears on all or almost all the stems, and shift it to affixes.
         # Make changes in Lexicon.SignatureStringsToStems, and .StemToSig, and .WordToSig, and .StemToWord, and .StemToAffix  and signature_tuples....
 
-        print formatstring2.format("5. Find shift stem/affix boundary when appropriate.")
+        if verboseflag:
+            print formatstring2.format("5. Find shift stem/affix boundary when appropriate.")
         threshold = 0.80
 
         if False:
@@ -205,24 +219,23 @@ class CLexicon:
 
         # --------------------------------------------------------------------
         # 5  ------- compute robustness
-        self.ComputeRobustness()
+        self.Compute_Lexicon_Size()
         print  formatstring2.format("6. Computed robustness")
 
         # 6  ------- Print
         print >> lxalogfile, formatstring3.format("Number of analyzed words", self.NumberOfAnalyzedWords)
         print >> lxalogfile, formatstring3.format("Number of unanalyzed words", self.NumberOfUnanalyzedWords)
-        print >> lxalogfile, formatstring3.format("Letters in stems", self.LettersInStems)
-        print >> lxalogfile, formatstring3.format("Letters in affixes", self.AffixLettersInSignatures)
+        print >> lxalogfile, formatstring3.format("Letters in stems", self.total_letters_in_stems)
+        print >> lxalogfile, formatstring3.format("Letters in affixes", self.total_affix_length_in_signatures)
         print >> lxalogfile, formatstring3.format("Total robustness in signatures", self.TotalRobustnessInSignatures)
 
         return
 
     # ----------------------------------------------------------------------------------------------------------------------------#
-    # ----------------------------------------------------------------------------------------------------------------------------#
     def RemoveAllSignaturesWithOnly_N_affixes(self, N, verboseflag, Step):
         ListOfStemsToRemove = list()
         if verboseflag:
-            print "\n\n Removing all signatures with only", N, "affixes."
+            print "     Removing all signatures with only", N, "affixes."
         for stem in self.StemToAffix:
             if len(self.StemToAffix[stem]) <= N:
                 ListOfStemsToRemove.append(stem)
@@ -233,7 +246,7 @@ class CLexicon:
             del self.StemToWord[stem]
             del self.StemToAffix[stem]
         if verboseflag:
-            print "End of removing signatures with too few affixes."
+            print "     End of removing signatures with too few affixes."
         # ----------------------------------------------------------------------------------------------------------------------------#
         # -------------------------------------------------------verboseflag,Step---------------------------------------------------------------------#
 
@@ -271,7 +284,7 @@ class CLexicon:
 
 
         if verboseflag:
-            print "Assign affix sets to each stem: Part 1\n Find affixes for each protostem"
+            print "  3. Assign affix sets to each stem.\n     Find affixes for each protostem"
         ParseList = list()
 
 
@@ -356,7 +369,7 @@ class CLexicon:
             stemlist.sort()
 
             if verboseflag:
-                print "\n\nPart 2\nAssign a single signature to each stem\n"
+                print "     Assign a single signature to each stem"
             for stem in stemlist:
                 signature_string = MakeSignatureStringFromAffixDict(self.StemToAffix[stem])
                 self.StemToSignature[stem] = signature_string
@@ -373,7 +386,7 @@ class CLexicon:
                     self.SignatureStringsToStems[signature_string] = dict()
                 self.SignatureStringsToStems[signature_string][stem] = 1
             if verboseflag:
-                print "\nEnd of assigning a signature to each stem."
+                print "     End of assigning a signature to each stem."
 
 
             # ----------------------------------------------------------------------------------------------------------------------------#
@@ -408,7 +421,7 @@ class CLexicon:
             contentlist = list()
             formatstring = "{0:20s} Comparison span: {1:4s} {2:20s} {3:20s}."
 
-            print "Finding protostems.", "Maximum stem length: ", maximum_stem_length
+            print "  1. Finding protostems.", "Maximum stem length: ", maximum_stem_length
             formatstring2 = "{0:15s} {1:15s}"
             formatstring1 = "{0:20s} {1:5n} {2:20s}{3:32s}"
         previousword = ""
@@ -528,7 +541,7 @@ class CLexicon:
     def AssignAffixesAndWordsToStems(self, Protostems, FindSuffixesFlag,Step, verboseflag = False):
         # This function creates the pairs in Parses. Most words have multiple appearances.
         if verboseflag:
-            print "Assign affixes and words to stems."
+            print "  2. Assign affixes and words to stems."
             filename = "2_All_initial_word_splits.txt"
             headerlist = [ "Assign affixes and words to stems"]
             contentlist = list()
@@ -779,7 +792,7 @@ class CLexicon:
     def FindGoodSignaturesInsideBad(self, subsignaturesfile, FindSuffixesFlag, verboseflag, Step):
         # ----------------------------------------------------------------------------------------------------------------------------#
         if verboseflag:
-            print "Find good signatures inside bad.."
+
             filename = "6_good_signatures_inside_bad.txt"
             headerlist = [ "Find good signatures inside bad ones."]
             contentlist = list()
@@ -958,26 +971,50 @@ class CLexicon:
             frequency[affix] = counts[affix] / total
             # print "{:12s}{:10.2f}   ".format(affix, frequency[affix]),
             # print
+  # ----------------------------------------------------------------------------------------------------------------------------#
 
-    def ComputeRobustness(self):
-        self.NumberOfAnalyzedWords = len(self.WordToSig)
-        self.NumberOfUnanalyzedWords = self.WordList.GetCount() - self.NumberOfAnalyzedWords
+
+
+    # ----------------------------------------------------------------------------------------------------------------------------#
+    def Compute_Lexicon_Size(self):
+        reportlist = list()
+        formatstring = "{0:20s}{1:20s}"
+        reportlist.append ("Information from Lexicon")
+
+
+        self.total_word_count = len(self.WordCounts)
+
+        self.word_letter_count = 0
+        for word in self.WordCounts:
+            self.word_letter_count += len(word)
+
+        self.number_of_analyzed_words =  len(self.WordToSig)
+
+
+        self.total_letters_in_analyzed_words = 0
+        for word in self.WordToSig:
+            self.total_letters_in_analyzed_words += len(word)
+
+        self.total_affix_length_in_signatures = 0
+        self.total_letters_in_stems = 0
+
+
         for sig in self.SignatureStringsToStems:
-            numberofaffixes = len(sig)
-            mystems = self.SignatureStringsToStems[sig]
-            numberofstems = len(mystems)
-            AffixListLetterLength = 0
+
             for affix in sig:
                 if affix == "NULL":
                     continue
-                AffixListLetterLength += len(affix)
+                self.total_affix_length_in_signatures += len(affix)
             StemListLetterLength = 0
-            for stem in mystems:
-                StemListLetterLength += len(stem)
+            for stem in self.SignatureStringsToStems[sig]:
+                self.total_letters_in_stems += len(stem)
 
-            self.TotalRobustnessInSignatures += getrobustness(mystems, sig)
-            self.AffixLettersInSignatures += AffixListLetterLength
+            tempstemlength = 0
 
+
+            #self.TotalRobustnessInSignatures += getrobustness(mystems, sig)
+            #self.AffixLettersInSignatures += AffixListLetterLength
+        return reportlist
 
 class Word:
     def __init__(self, key):
