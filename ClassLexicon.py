@@ -99,7 +99,7 @@ class CLexicon:
         self.WordBiographies=dict()
         self.MinimumStemsInaSignature = 5
         self.MinimumAffixesInaSignature = 2
-        self.MinimumStemLength = 3
+        self.MinimumStemLength = 5
         self.MaximumAffixLength = 5
         self.MaximumNumberOfAffixesInASignature = 100
         self.NumberOfAnalyzedWords = 0
@@ -296,7 +296,7 @@ class CLexicon:
                     self.Suffixes[affix] = 0
                 self.Suffixes[affix] += 1
                 #print "\n258", word , stem, affix
-                self.WordBiographies[word].append(str(Step) + " This split:" + stem + "=" + affix)
+                self.WordBiographies[word].append(str(Step) + " 4 This split:" + stem + "=" + affix)
 
             if verboseflag:
                     stemlist = self.StemToWord.keys()
@@ -330,7 +330,7 @@ class CLexicon:
             for stem in StemsToDelete:
                 #print "we are deleting this stem:", stem
                 for word in self.StemToWord[stem]:
-                    self.WordBiographies[word].append(" This stem was deleted: " + stem)
+                    self.WordBiographies[word].append(str(Step) + "5  This stem was deleted: " + stem)
                 del self.StemToWord[stem]
                 del self.StemToAffix[stem]
 
@@ -357,16 +357,9 @@ class CLexicon:
 
             if verboseflag:
                 print "\n\nPart 2\nAssign a single signature to each stem\n"
-            #for stem in self.StemToAffix:
             for stem in stemlist:
-                  # we go through this three times. the first time emerge is fine; but the 2nd and 3rd it's bad.
-                #print "314", stem, (self.StemToAffix[stem]) # emerge is OK here.
                 signature_string = MakeSignatureStringFromAffixDict(self.StemToAffix[stem])
-
-                #print "315", stem, (self.StemToAffix[stem]), signature_string
                 self.StemToSignature[stem] = signature_string
-                #if verboseflag:
-                #    print formatstring2.format( stem, signature_string)
                 self.StemCorpusCounts[stem] = 0
                 for word in self.StemToWord[stem]:
                     if word not in self.WordToSig:
@@ -375,10 +368,10 @@ class CLexicon:
                         self.WordToSig[word].append((stem, signature_string))
                     self.StemToWord[stem][word] = 1
                     self.StemCorpusCounts[stem] += self.WordCounts[word]
+                    self.WordBiographies[word].append(str(Step) + " In signature " + signature_string)
                 if signature_string not in self.SignatureStringsToStems:
                     self.SignatureStringsToStems[signature_string] = dict()
                 self.SignatureStringsToStems[signature_string][stem] = 1
-                #print "332", signature_string
             if verboseflag:
                 print "\nEnd of assigning a signature to each stem."
 
@@ -582,7 +575,7 @@ class CLexicon:
                             if verboseflag:
                                 reportline = formatstring.format(word,stem,suffix, " suffix is good.")
                                 contentlist.append(reportline)
-                            self.WordBiographies[word].append(str(Step) + " The split "+stem+ " / " + suffix + " is good.")
+                            self.WordBiographies[word].append(str(Step) + " 2 The split "+stem+ "=" + suffix + " is good.")
                             self.Parses[(stem, suffix)] = 1
                             if stem in self.WordCounts:
                                 self.Parses[(stem, "NULL")] = 1
@@ -616,7 +609,7 @@ class CLexicon:
                     word = stem
                 else:
                     word = stem + affix
-                self.WordBiographies[word].append(str(Step) + " "+ item[0] + " " + item[1])
+                self.WordBiographies[word].append(str(Step) + " 2.5 "+ item[0] + "=" + item[1])
             templist.sort()
             for item in templist:
                     contentlist.append(item)
@@ -709,7 +702,7 @@ class CLexicon:
 
     # --------------------------------------------------------------------------------------------------------------------------#
     def printSignatures(self, lxalogfile, outfile_signatures, outfile_unlikelysignatures, outfile_wordstosigs,
-                        outfile_stemtowords, outfile_stemtowords2, outfile_SigExtensions, outfile_suffixes, encoding,
+                        outfile_stemtowords, outfile_stemtowords2, outfile_SigExtensions, outfile_suffixes, outfile_words, encoding,
                         FindSuffixesFlag):
         # ----------------------------------------------------------------------------------------------------------------------------#
 
@@ -773,6 +766,8 @@ class CLexicon:
         # print unlikely signatures:
         print_unlikelysignatures(outfile_unlikelysignatures, self.UnlikelySignatureStringsToStems, ColumnWidth)
 
+        # print words, with unanalyzed words indicated
+        print_all_words(outfile_words, self.WordCounts, self.WordToSig,)
 
         # print signature extensions:
 
@@ -781,7 +776,7 @@ class CLexicon:
 
 
     # ----------------------------------------------------------------------------------------------------------------------------#
-    def FindGoodSignaturesInsideBad(self, outfile, FindSuffixesFlag, verboseflag, Step):
+    def FindGoodSignaturesInsideBad(self, subsignaturesfile, FindSuffixesFlag, verboseflag, Step):
         # ----------------------------------------------------------------------------------------------------------------------------#
         if verboseflag:
             print "Find good signatures inside bad.."
@@ -797,10 +792,10 @@ class CLexicon:
         SignatureList = self.SignatureStringsToStems.keys()
         SignatureList.sort()
         for sig_string in SignatureList:
-            #print "784", sig_string
+
             sig_list = MakeSignatureListFromSignatureString(sig_string)
-            #print "786", sig_list
-            if len(self.SignatureStringsToStems[sig_string]) > self.MinimumStemsInaSignature:
+            number_of_stems = len(self.SignatureStringsToStems[sig_string])
+            if number_of_stems >= self.MinimumStemsInaSignature:
                 GoodSignatures.append(sig_string)
                 if verboseflag:
                     contentlist.append (sig_string)
@@ -814,34 +809,38 @@ class CLexicon:
         if verboseflag:
             contentlist.append("\n\n Working on bad signatures\n ")
 
-
-        for sig_string in self.SignatureStringsToStems.keys():
-
-            sig_list = MakeSignatureListFromSignatureString(sig_string)
-            if verboseflag:
-                contentlist.append(sig_string + " " +  "=".join(sig_list))
+        formatstring = "{0:20s}:{1:50s}"
+        for sig_string in SignatureList:
             if sig_string in GoodSignatures:
                 continue
-            good_sig = FindGoodSignatureInsideAnother(sig_list, GoodSignatures)
-            #print "800", sig_list, good_sig
-            for affix in sig_list:
-                if len(affix) == 0:
-                    print "803", sig_list
-                    print self.SignatureStringsToStems[sig_string]
+            sig_list = MakeSignatureListFromSignatureString(sig_string)
+            #if verboseflag:
+            #    contentlist.append(sig_string )
+            #if sig_string in GoodSignatures:
+            #    continue
+            good_sig_list = FindGoodSignatureListFromInsideAnother(sig_list, GoodSignatures)
+            good_sig_string = "=".join(good_sig_list)
             transaction = dict()
             Transactions.append(transaction)
             transaction["sig"] = sig_string
-            if (good_sig):
-                transaction["subsig"] = good_sig
-                good_sig_list = MakeSignatureListFromSignatureString(good_sig)
+            if (good_sig_list):
+                if verboseflag:
+                    contentlist.append(formatstring.format(good_sig_string,sig_string ))
+                transaction["subsig"] = good_sig_string
+                #good_sig_list = MakeSignatureListFromSignatureString(good_sig)
                 for stem in self.SignatureStringsToStems[sig_string]:
                     for affix in good_sig_list:
-                        #print  "812", good_sig_list, affix
                         if FindSuffixesFlag:
                             good_parse = (stem, affix)
                         else:
                             good_parse = (affix, stem)
-                        self.Parses[good_parse] = 1
+                        if affix == 'NULL':
+                            word = stem
+                        else:
+                            word = stem+affix
+                        self.WordBiographies[word].append("6 Shifted from " + sig_string + " to " + good_sig_string )
+                        if verboseflag:
+                            contentlist.append(stem + " " + affix + " shifted from " + sig_string + " to " + good_sig_string)
 
                 remaining_affixes = set(sig_list) - set(good_sig_list)
 
@@ -851,29 +850,51 @@ class CLexicon:
                 self.UnlikelySignatureStringsToStems[unlikelysignature] = dict()
                 transaction["badsig"] = unlikelysignature
                 for stem in self.SignatureStringsToStems[sig_string]:
-
                     self.UnlikelySignatureStringsToStems[unlikelysignature][stem] = 1
                     for affix in remaining_affixes:
-
                         if FindSuffixesFlag:
                             if affix == "":
                                 affix = "NULL"
-
                             bad_parse = (stem, affix)
+                            if affix == "NULL":
+                                word = stem
+                            else:
+                                word = stem + affix
+                            self.WordBiographies[word].append("6 This split is eliminated: " + stem + "=" + affix +"("+ str(number_of_stems) + ")")
+                            self.WordBiographies[word].append("6 Only this signature retained:" + good_sig_string)
                         else:
                             bad_parse = (affix, stem)
                         del self.Parses[bad_parse]
 
+
             else:
                 transaction["badsig"] = sig_string
-                #print "839", sig_string
+                if verboseflag:
+                    contentlist.append(formatstring.format("Nothing found in " , sig_string ))
+                #print "873",  sig_string # **
                 for stem in self.SignatureStringsToStems[sig_string]:
+                    #print "Class 875" , stem # ***
                     for affix in sig_list:
+                        if affix == "NULL":
+                            word = stem
+                        else:
+                            word = stem + affix
                         if len(affix)==0:
                             bad_parse=(stem, "NULL")
                         else:
                             bad_parse = (stem, affix)
+                        #print "885", stem, affix, "length of affix:", len(affix)
+
                         del self.Parses[bad_parse]
+                        if affix == "NULL":
+                            affix_t = ""
+                        else:
+                            affix_t = affix
+                        self.WordBiographies[word].append(str(Step) + " 6 Bad signature eliminated: "+ sig_string + " hence *" + stem + "=" + affix_t +"  (stem count: "+ str(number_of_stems) + ")")
+                        if verboseflag:
+                            line = formatstring.format(sig_string,  "  stem: " + stem + ", affix: " + affix)
+                            contentlist.append(line)
+                            line=""
         Successes = list()
         maxlength = 0
         for transaction in Transactions:
@@ -898,7 +919,7 @@ class CLexicon:
                 maxlength = len(transaction["subsig"])
 
         for transaction in Successes:
-            print >> outfile, transaction["subsig"] + " " * (maxlength - len(transaction["subsig"])) + transaction[
+            print >> subsignaturesfile, transaction["subsig"] + " " * (maxlength - len(transaction["subsig"])) + transaction[
                 "badsig"]
 
         self.AssignSignaturesToEachStem(FindSuffixesFlag,verboseflag,Step)

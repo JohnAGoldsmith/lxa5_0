@@ -22,6 +22,9 @@ from fsa import *
 from loose_fit import *
 from lxa_module import *
 
+
+
+
 # --------------------------------------------------------------------##
 #		user modified variables
 # --------------------------------------------------------------------##
@@ -65,7 +68,7 @@ FileObject = dict()
 fileslist = ("Signatures", "FSA", "SigExemplars", "WordToSig", "SigTransforms",
              "StemToWords", "StemToWords2", "WordParses", "WordCounts", "SigExtensions",
              "Suffixes", "Rebalancing_Signatures", "Subsignatures",
-             "UnlikelySignatures", "Log")
+             "UnlikelySignatures", "Log","Words")
 for item in fileslist:
     # print item
     FileObject[item] = open(outfolder + item + ".txt", "w")
@@ -84,11 +87,9 @@ else:
     print
     "Finding prefixes."
 if datatype == "DX1":
-    print
-    formatstring_initial_1.format("Reading dx file: ", infilename)
+    print     formatstring_initial_1.format("Reading dx file: ", infilename)
 else:
-    print
-    formatstring_initial_1.format("Reading corpus: ", infilename)
+    print     formatstring_initial_1.format("Reading corpus: ", infilename)
 print
 formatstring_initial_1.format("Logging to: ", outfolder)
 print
@@ -131,7 +132,8 @@ if datatype == "DX1":
     for line in filelines:
         pieces = line.split()
         word = pieces[0]
-        if word == '#':
+        if '#' in word:
+            print "We cannot accept a word with # in it.", word
             continue
         #if ++word.isalpha() == False:
         #    if verboseflag:
@@ -185,8 +187,10 @@ else:
                 continue
             if token in Lexicon.WordCounts:
                 Lexicon.WordCounts[token] += 1
+                print "191" , token
                 tokencount += 1
             else:
+                print "193", token
                 Lexicon.WordBiographies[word] = list()
                 Lexicon.WordCounts[token] = 1
                 tokencount += 1
@@ -247,7 +251,7 @@ if True:
     "\n4. Printing signatures."
     Lexicon.printSignatures(FileObject["Log"], FileObject["Signatures"], FileObject["UnlikelySignatures"],
                             FileObject["WordToSig"], FileObject["StemToWords"], FileObject["StemToWords2"],
-                            FileObject["SigExtensions"], FileObject["Suffixes"], g_encoding, FindSuffixesFlag)
+                            FileObject["SigExtensions"], FileObject["Suffixes"], FileObject["Words"], g_encoding, FindSuffixesFlag)
 
 if False:
     print

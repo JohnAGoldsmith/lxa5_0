@@ -176,16 +176,17 @@ def EvaluateSignatures(Lexicon, outfile):
 #     Important functions, called from main file
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def FindGoodSignatureInsideAnother(target_affixes_list, siglist):
-    SortSignaturesByLocalRobustness(siglist)
+def FindGoodSignatureListFromInsideAnother(target_affixes_list, siglist):
+    #SortSignaturesByLocalRobustness(siglist)
     # print "68 ", target_affixes_list
+    good_affixes_set = set()
     for sig_string in siglist:
         these_affixes = set(MakeSignatureListFromSignatureString(sig_string))
-        # print "    71 ", these_affixes
         if these_affixes.issubset(set(target_affixes_list)):
-            # print "    73", these_affixes
-            return sig_string
-    return None
+            good_affixes_set.update(these_affixes)
+    sig_list = list(good_affixes_set)
+    sig_list.sort()
+    return sig_list
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
