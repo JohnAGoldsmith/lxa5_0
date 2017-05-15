@@ -5,8 +5,11 @@ def Dynamics(lex):
     corpus = lex.Corpus
     Signatures = dict()
     StemToSig = dict()
-    FormatString1 = "{0:15s} {1:12s} {2:6s} "
-    FormatString2 = "{0:10s}  {1:15s} "
+ 
+    FormatString4 = "{0:15s} {1:15s} {2:6s} {3:20s}  "
+    FormatString5 = "{0:15s} {1:15s} {2:6s} {3:10s}{4:10s}  "
+    FormatString7 = "{0:15s} {1:15s} {2:6s} {3:10s}{4:10s} {5:10s} {6:10s}  "
+    FormatString7a = "{0:15s} {1:15s} {2:6s} {3:10s}{4:10s}            {5:10s} {6:10s}  "
     page_1 = CPage()
     for word in corpus:
 
@@ -22,97 +25,68 @@ def Dynamics(lex):
             else:
                 affix = word[-1 * affixlength:]
 
-            #print "(", stem, affix, ") [", knownsig_str, "]",
-            print FormatString1.format(word, stem, affix),
-            # Consider each analysis of the current word (analysis = stem plus signature).
-            # First, if the stem has already appeared during this function:
-            if stem in StemToSig:
-                #print "Known stem.",
-                # this notation sig_1 means that it is a reference to a CSignature object
-                sig_1 = StemToSig[stem]
-                #print "from (", sig_1.ReturnSignatureString(), ")",
-                sig1_str = sig_1.ReturnSignatureString()
-                #print FormatString2.format("Known stem", sig1_str),
+            #print FormatString1.format(word, stem, affix),
+            if stem in StemToSig:                            
+                sig_1 = StemToSig[stem]                
+                sig1_str = sig_1.ReturnSignatureString()         
                 if sig_1.ContainsAffix(affix):
-                    #print "Old word.",
-                    print FormatString2.format("Known word", " "),
+                    print FormatString4.format(word, stem, affix, "Known word."  )
                     sig_1.IncrementObservedWord(stem, affix)
-                    #sig_1.Display()
                     page_1.NewWord = word
                     page_1.GainingSignature = sig_1
                     page_1.LosingSignature = None
 
                 else:
-                    # or else the stem has NOT been seen yet in this analysis (i.e., with this suffix)
-                    print FormatString2.format("Known stem", sig1_str),
-                    print " Current sig:", sig1_str, ".",
+                    
                     newsig_str = AddAffixToSigString(affix, sig1_str)
-                    print "New sig: (", newsig_str, ").",
-                    print
                     if newsig_str not in Signatures:
-                        # if that signature does not currently exist:
-                        # print "New signature.",
                         NewSig_5 = CSignature(newsig_str)
                         StemToSig[stem] = NewSig_5
                         Signatures[newsig_str] = NewSig_5
 
                         # add stem to this sig
-                        # make sure this sig has all the right affixes for this stem
                         NewSig_5.AddStem(stem)
                         NewSig_5.AddWord(stem, affix)
-                        print StemToSig[stem].StemsToAffixToCorpusCount[stem]
                         page_1.NewWord = word
                         page_1.GainingSignature = NewSig_5
                         page_1.LosingSignature = sig_1
                         sig_1.RemoveStem(stem)
-                        #                        del  sig_1.StemsToAffixToCorpusCount[stem]
-                        FormatString3 = "new sig ({0:15})"
-                        print FormatString3.format(NewSig_5)
-                        #print "    new sig: ", NewSig_5.Display()
-                        print "    old sig: ", sig_1.Display()
+                        print FormatString7a.format(word, stem, affix, "old sig:", sig1_str, "new sig:", newsig_str)
 
                     # or if that  signature does currently exist
                     else:
-                        print "    This is a known signature.",
+                        print FormatString7.format(word, stem, affix, "old sig:", sig1_str, "known sig:", newsig_str)
                         sig_2 = Signatures[newsig_str]
                         MoveStem(stem, affix, sig_1, sig_2)
                         page_1.LosingSignature = None
                         page_1.GainingSignature = sig_2
                         StemToSig[stem] = sig_2
+                        print FormatString7.format(word, stem, affix, "old sig:", sig1_str, "known sig:", newsig_str)
+
+
 
             # Or else the stem has not  been seen yet in this function:
             else:
-                print "New stem.",
                 # we need a singleton siganature for this stem.   "affix" here *means* a singleton signature consisting of this affix.
                 if affix in Signatures:
-                    #print "Old sig: {", affix, ")"
-                    print FormatString2.format("New sig", sig_4.Affixes_string)
-                    # if the singleton signature of this affix exists:
                     sig_3 = Signatures[affix]
-                    # print "    63 affix string in sig:", affix,  sig_3.Affixes_string
                     sig_3.StemsToAffixToCorpusCount[stem] = dict()
                     sig_3.StemsToAffixToCorpusCount[stem][affix] = 1
                     sig_3.LifetimeCorpusCount += 1
                     page_1.LosingSignature = None
                     page_1.GainingSignature = sig_3
                     StemToSig[stem] = sig_3
-                    sig_3.Display()
+                    print FormatString5.format(word, stem, affix, "New stem. Old mono-sig:", affix)
                 else:
                     # the singleton signature did not yet exist:
                     sig_4 = CSignature(affix)
                     sig_4.AddStem(stem)
                     sig_4.AddWord(stem, affix)
-                    #print "New sig:: (", sig_4.Affixes_string, ")"
-                    print FormatString2.format("New sig:", sig_4.Affixes_string)
+                    print FormatString5.format(word, stem, affix, "New stem. New mono-sig:", affix)
                     Signatures[affix] = sig_4
                     StemToSig[stem] = sig_4
-                    sig_4.Display()
-                    # print "    70 Now we have sig-affixes: (", StemToSig[stem].Affixes_string, ") and stems", sig_4.ReturnStems()
                     page_1.LosingSignature = None
                     page_1.GainingSignature = sig_4
-
-                    # page_1.UpdatePage(wordno)
-                    # output_list = page_1.CreateSVG()
 
     for sig in Signatures.keys():
         Signatures[sig].Display()

@@ -187,18 +187,18 @@ else:
                 continue
             if token in Lexicon.WordCounts:
                 Lexicon.WordCounts[token] += 1
-                print "191" , token
+                #print "191" , token
                 tokencount += 1
             else:
-                print "193", token
-                Lexicon.WordBiographies[word] = list()
+                #print "193", token
+                Lexicon.WordBiographies[token] = list()
                 Lexicon.WordCounts[token] = 1
                 tokencount += 1
                 typecount += 1
-                Lexicon.TotalLetterCountInWords += len(token)
+                #Lexicon.TotalLetterCountInWords += len(token)
             Lexicon.WordList.AddWord(token)
             Lexicon.Corpus.append(token)
-            Lexicon.WordBiographies[word] = list()
+            Lexicon.WordBiographies[token] = list()
 
 Lexicon.ReverseWordList = Lexicon.WordCounts.keys()
 Lexicon.ReverseWordList.sort(key=lambda word: word[::-1])
@@ -225,7 +225,8 @@ if True:
     Lexicon.MakeSignatures(FileObject["Log"], FileObject["Rebalancing_Signatures"], FileObject["UnlikelySignatures"],
                            FileObject["Subsignatures"], FindSuffixesFlag, Lexicon.MinimumStemLength)
 
-if False and datatype == "CORPUS":
+if True and datatype == "CORPUS":
+    print "229  dynamics"
     Dynamics(Lexicon)
 
 if False:
@@ -237,6 +238,10 @@ if False:
     print
     "3. Finding sets of extending signatures."
     extending_signatures(Lexicon, FileObject["SigExtensions"])
+
+if True:
+    print "Finding pairs of signatures that share words."
+    FindSignatureChains(Lexicon)
 
 if False:
     print
@@ -420,6 +425,8 @@ while True:
     word = raw_input('Inquire about a word: ')
 
     if word in Lexicon.WordBiographies:
+
+        print "428"
         for line in Lexicon.WordBiographies[word]:
             print line
 
@@ -491,7 +498,7 @@ while True:
     while len(IncompleteParses) > 0:
         CompletedParses, IncompleteParses = morphology.lparse(CompletedParses, IncompleteParses)
     if len(CompletedParses) == 0: print
-    "no analysis found."
+    "no analysffound."
 
     for parseChain in CompletedParses:
         for thisParseChunk in parseChain.my_chain:

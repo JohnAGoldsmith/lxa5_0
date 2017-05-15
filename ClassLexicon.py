@@ -92,6 +92,7 @@ class CLexicon:
         self.StemToSignature = {}  # value is a string with hyphens
         self.SignatureStringsToStems = {}
         self.UnlikelySignatureStringsToStems = {}
+        self.RemovedSignatureList = list()
         self.UnlikelyStems = {}
         self.StemCorpusCounts = {}
         self.Suffixes = {}
@@ -100,7 +101,7 @@ class CLexicon:
         self.SignatureBiographies=dict()
         self.MinimumStemsInaSignature = 5
         self.MinimumAffixesInaSignature = 2
-        self.MinimumStemLength = 5
+        self.MinimumStemLength = 4
         self.MaximumAffixLength = 5
         self.MaximumNumberOfAffixesInASignature = 100
 
@@ -371,7 +372,7 @@ class CLexicon:
                 self.StemCorpusCounts[stem] = 0
                 if signature_string not in self.SignatureBiographies:
                     self.SignatureBiographies[signature_string] = list()
-                    self.SignatureBiographies[signature_string].append ("  Created at first opportunity, in AssignSignaturesToEachStem.")
+                    self.SignatureBiographies[signature_string].append ("Created at first opportunity, in AssignSignaturesToEachStem.")
                 for word in self.StemToWord[stem]:
                     if word not in self.WordToSig:
                         self.WordToSig[word] = list()
@@ -575,6 +576,7 @@ class CLexicon:
                         #    contentlist.append("514 "+stem)
                     else:
                         stem = word[-1 * i:]
+                    #print "579", word, stem
                     if stem in Protostems:
                         if FindSuffixesFlag:
                             suffix = word[i:]
@@ -798,7 +800,7 @@ class CLexicon:
             headerlist = [ "Find good signatures inside bad ones."]
             contentlist = list()
             linelist = list()
-            formatstring = "{0:20s}   {1:20s} {2:10s} {3:20s}"
+
             contentlist.append("Good signature              Bad signature")
 
         GoodSignatures = list()
@@ -806,11 +808,11 @@ class CLexicon:
         SignatureList = self.SignatureStringsToStems.keys()
         SignatureList.sort()
         for sig_string in SignatureList:
-
             sig_list = MakeSignatureListFromSignatureString(sig_string)
             number_of_stems = len(self.SignatureStringsToStems[sig_string])
             if number_of_stems >= self.MinimumStemsInaSignature:
                 GoodSignatures.append(sig_string)
+                self.SignatureBiographies[sig_string].append("Validated, with stem count:" + str(number_of_stems))
                 if verboseflag:
                     contentlist.append (sig_string)
             elif verboseflag:
@@ -823,7 +825,10 @@ class CLexicon:
         if verboseflag:
             contentlist.append("\n\n Working on bad signatures\n ")
 
-        formatstring = "{0:20s}:{1:50s}"
+        formatstring1 = "Bad: {0:20s} Corrected: {1:50s}"
+        formatstring2 = "     {0:10s}={1:6s} shifted from {2:20s} to {3:15s}"
+        formatstring3=  "{0:20s} {1:30s}"
+        formatstring4 = "     Removing  signature: {0:30} stem: {1:20s}  affix: {2:20s}"
         for sig_string in SignatureList:
             if sig_string in GoodSignatures:
                 continue
@@ -834,12 +839,19 @@ class CLexicon:
             #    continue
             good_sig_list = FindGoodSignatureListFromInsideAnother(sig_list, GoodSignatures)
             good_sig_string = "=".join(good_sig_list)
+
             transaction = dict()
             Transactions.append(transaction)
             transaction["sig"] = sig_string
+            number_of_stems == len(self.SignatureStringsToStems[sig_string])
+            if good_sig_string == sig_string:
+                stem_count = len(self.SignatureStringsToStems[sig_string])
+                self.SignatureBiographies[sig_string].append("Low count ("+ str(stem_count) +   " but OK because it is a composite sig.")
+                continue;
             if (good_sig_list):
+                self.SignatureBiographies[sig_string].append("Removed and replaced by: "+ good_sig_string)
                 if verboseflag:
-                    contentlist.append(formatstring.format(good_sig_string,sig_string ))
+                    contentlist.append(formatstring1.format(sig_string,good_sig_string ))
                 transaction["subsig"] = good_sig_string
                 #good_sig_list = MakeSignatureListFromSignatureString(good_sig)
                 for stem in self.SignatureStringsToStems[sig_string]:
@@ -854,13 +866,14 @@ class CLexicon:
                             word = stem+affix
                         self.WordBiographies[word].append("6 Shifted from " + sig_string + " to " + good_sig_string )
                         if verboseflag:
-                            contentlist.append(stem + " " + affix + " shifted from " + sig_string + " to " + good_sig_string)
+                            contentlist.append(formatstring2.format(stem ,affix , sig_string,  good_sig_string))
 
                 remaining_affixes = set(sig_list) - set(good_sig_list)
 
                 unlikelysignature = list(remaining_affixes)
                 unlikelysignature.sort()
                 unlikelysignature = '='.join(unlikelysignature)
+                self.RemovedSignatureList.append(unlikelysignature)
                 self.UnlikelySignatureStringsToStems[unlikelysignature] = dict()
                 transaction["badsig"] = unlikelysignature
                 for stem in self.SignatureStringsToStems[sig_string]:
@@ -882,9 +895,11 @@ class CLexicon:
 
 
             else:
+                self.SignatureBiographies[sig_string].append("Bad signature by count, entirely deleted.")
+                self.RemovedSignatureList.append(sig_string)
                 transaction["badsig"] = sig_string
                 if verboseflag:
-                    contentlist.append(formatstring.format("Nothing found in " , sig_string ))
+                    contentlist.append(formatstring3.format("Nothing found in " , sig_string ))
                 #print "873",  sig_string # **
                 for stem in self.SignatureStringsToStems[sig_string]:
                     #print "Class 875" , stem # ***
@@ -906,7 +921,7 @@ class CLexicon:
                             affix_t = affix
                         self.WordBiographies[word].append(str(Step) + " 6 Bad signature eliminated: "+ sig_string + " hence *" + stem + "=" + affix_t +"  (stem count: "+ str(number_of_stems) + ")")
                         if verboseflag:
-                            line = formatstring.format(sig_string,  "  stem: " + stem + ", affix: " + affix)
+                            line = formatstring4.format(sig_string,  stem, affix)
                             contentlist.append(line)
                             line=""
         Successes = list()

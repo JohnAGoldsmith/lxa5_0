@@ -526,3 +526,30 @@ def PullOffSuffix(sig_target, shift, StemToWord, Signatures, outfile):
         del Signatures[sig_target]
     # ----------------------------------------------------------------------------------------------------------------------------#
     return (StemToWord, Signatures)
+
+
+
+
+# ----------------------------------------------------------------------------------------------------------------------------#
+def FindSignatureChains(lexicon):
+    # ----------------------------------------------------------------------------------------------------------------------------#
+# "Chain" here simply refers to inclusion of words under 2 or more signatures. e.g. Null=s contains some words that are also in ed-ing-ings .
+    signature_containments = dict()
+    wordtosig=lexicon.WordToSig
+    for word in wordtosig:
+        if wordtosig[word]  and len(wordtosig[word]) >1:
+            sigs = wordtosig[word]
+            for i in range(len(sigs)-1):
+                for j in range(i+1,len(sigs)):
+                    sigpair=(sigs[i][1],sigs[j][1])
+                    if sigpair not in signature_containments:
+                        signature_containments[sigpair] = 1
+                    else:
+                        signature_containments[sigpair] += 1
+    formatstring = "{{0:10s} {1:5d {2:15s} {3:5d}}"
+    for pair, count in sorted(signature_containments.iteritems(), key = lambda (k,v) : (v,k)):
+        sigstring1 = pair[0]
+        sigstring2 = pair[1]
+        #count1 = sigstring1 * len()
+        #print pair[0], pair[0] * len(lexicon)           count, pair[1]
+
