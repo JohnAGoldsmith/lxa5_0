@@ -47,27 +47,27 @@ parser.add_argument('-f', action="store", dest="filename", help="name of file to
 parser.add_argument('-c', action="store", dest="corrections", help="number of corrections to make", default=0)
 parser.add_argument('-d', action="store", dest="data_folder", help="data directory", default="../../data/")
 
-results = parser.parse_args()
-language = results.language
-wordcountlimit = int(results.wordcountlimit)
-shortfilename = results.filename
-NumberOfCorrections = results.corrections
+results                 = parser.parse_args()
+language                = results.language
+wordcountlimit          = int(results.wordcountlimit)
+shortfilename           = results.filename
+NumberOfCorrections     = results.corrections
 
 # --------------------------------------------------------------------##
-#		Determine folders for input, output
+#	Determine folders for input, output; initialize output files
 # --------------------------------------------------------------------##
 
 
-datafolder = results.data_folder + language + "/"
-outfolder = datafolder + "lxa/"
-infolder = datafolder + 'dx1/'
+datafolder      = results.data_folder + language + "/"
+outfolder       = datafolder + "lxa/"
+infolder        = datafolder + 'dx1/'
 if shortfilename[-4:] == ".txt":
     datatype = "CORPUS"
     infilename = datafolder + shortfilename
 else:
     datatype == "DX1"
-    infilename = infolder + shortfilename + ".dx1"
-graphicsfolder = outfolder + "graphics/"
+    infilename  = infolder + shortfilename + ".dx1"
+graphicsfolder  = outfolder + "graphics/"
 if not os.path.exists(graphicsfolder):
     os.makedirs(graphicsfolder)
 

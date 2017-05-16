@@ -1444,7 +1444,6 @@ class FSA_lxa:
                         newParseChunk = parseChunk(label, "", edge)
                         CopyOfCurrentParseChain.Append(newParseChunk)
                         CompletedParses.append(CopyOfCurrentParseChain)
-                    # print "1366 Completed parse with a real affix."
                     # print CopyOfCurrentParseChain.Display()
                     else:
                         # print "Good edge found, its to state is", edge.toState.index

@@ -560,7 +560,7 @@ class CLexicon:
                             print "\n" + " " * 4,
                 word = wordlist[i]
                 WordAnalyzedFlag = False
-                for i in range(len(word), MinimumStemLength - 1, -1):  # the first was len(word) - 1
+                for i in range(len(word), MinimumStemLength - 1, -1):  
                     if FindSuffixesFlag:
                         stem = word[:i]
                     else:
