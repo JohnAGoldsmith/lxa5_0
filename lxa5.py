@@ -25,6 +25,9 @@ from lxa_module import *
 
 
 
+
+
+
 # --------------------------------------------------------------------##
 #		user modified variables
 # --------------------------------------------------------------------##
@@ -135,10 +138,6 @@ if datatype == "DX1":
         if '#' in word:
             print "We cannot accept a word with # in it.", word
             continue
-        #if ++word.isalpha() == False:
-        #    if verboseflag:
-        #        print "Eliminating ", word, "because he has a non-alphabetic character."
-            #continue
         if len(pieces) > 1:
             count = int(pieces[1])
         else:
@@ -214,6 +213,11 @@ splitEndState = True
 morphology = FSA_lxa(splitEndState)
 
 # ----------------- We can control which functions we are working on at the moment. ------------------------------#
+#
+#       This is the developer's way of deciding which functions s/he wishes to explore....
+
+
+
 
 if True:
     print
