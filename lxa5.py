@@ -32,17 +32,13 @@ from read_data import *
 #		user modified variables
 # --------------------------------------------------------------------##
 
-language = ""
-wordcount = 0
-shortfilename = ""
-NumberOfCorrections = 0
+verboseflag = True
 FindSuffixesFlag = True
-datatype = "DX1"
 
 # --------------------------------------------------------------------##
 #		parse command line arguments
 # --------------------------------------------------------------------##
-
+datatype = None
 
 parser = argparse.ArgumentParser(description='Compute morphological analysis.')
 parser.add_argument('-l', action="store", dest="language", help="name of language", default="english")
@@ -108,8 +104,7 @@ else:
     print     formatstring_initial_1.format("Reading corpus: ", infilename)
 print
 formatstring_initial_1.format("Logging to: ", outfolder)
-print
-"-" * 100
+print "-" * 100
 
  
 
@@ -135,42 +130,42 @@ Lexicon = CLexicon()
 #		read wordlist (dx1)
 # --------------------------------------------------------------------##
 
-
-
-
 if g_encoding == "utf8":
     infile = codecs.open(infilename, g_encoding='utf-8')
 else:
     infile = open(infilename)
 
-
-verboseflag = True
-
 filelines = infile.readlines()
 
 read_data(datatype,filelines,Lexicon,BreakAtHyphensFlag,wordcountlimit)
 
-
-
-
-
 Lexicon.ReverseWordList = Lexicon.WordCounts.keys()
 Lexicon.ReverseWordList.sort(key=lambda word: word[::-1])
 Lexicon.WordList.sort()
-print
-"\n1. Finished reading word list.\n"
+print "\n1. Finished reading word list.\n"
+
+
+# --------------------------------------------------------------------##
+#		Initialize some output files
+# --------------------------------------------------------------------##
+
 Lexicon.PrintWordCounts(FileObject["WordCounts"])
 Lexicon.Words = Lexicon.WordCounts.keys()
 Lexicon.Words.sort()
-
 print >> FileObject["Signatures"], "# ", language, wordcountlimit
-
 initialize_files(Lexicon, FileObject["Log"], 0,0, language)
 initialize_files(Lexicon, "console", 0,0, language)
+
+# --------------------------------------------------------------------##
+#		For finite state automaton
+# --------------------------------------------------------------------##
 
 splitEndState = True
 morphology = FSA_lxa(splitEndState)
 
+
+
+# ---------------------------------------------------------------------------------------------------------------##
 # ----------------- We can control which functions we are working on at the moment. ------------------------------#
 #
 #       This is the developer's way of deciding which functions s/he wishes to explore....
@@ -296,77 +291,10 @@ if False:
     "14. Now look for common morphemes across different edges."
     morphology.findCommonMorphemes(lxalogfile)
 
-if False:
-
+if False:    
     # we will remove this. It will be replaced by a function that looks at all cross-edge sharing of morphemes.
-    print >> FileObject[FSA], "Finding common stems across edges."
-    HowManyTimesToCollapseEdges = 0
-    for loop in range(HowManyTimesToCollapseEdges):
-        print
-        "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-        print
-        "Loop number", loop
-        print
-        "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-        (commonEdgePairs, EdgeToEdgeCommonMorphs) = morphology.findCommonStems(lxalogfile)
-
-        if len(commonEdgePairs) == 0:
-            print
-            "There are no more pairs of edges to consider."
-            break
-        edge1, edge2 = commonEdgePairs[0]
-        state1 = edge1.fromState
-        state2 = edge2.fromState
-        state3 = edge1.toState
-        state4 = edge2.toState
-        print
-        "\n\nWe are considering merging edge ", edge1.index, "(", edge1.fromState.index, "->", edge1.toState.index, ") and  edge", edge2.index, "(", edge2.fromState.index, "->", edge2.toState.index, ")"
-
-        print
-        "Printed graph", str(loop), "before_merger"
-        graph = morphology.createDoublePySubgraph(state1, state2)
-        graph.layout(prog='dot')
-        filename = graphicsfolder + str(loop) + '_before_merger' + str(state1.index) + "-" + str(state2.index) + '.png'
-        graph.draw(filename)
-
-        if state1 == state2:
-            print
-            "The from-States are identical"
-            state_changed_1 = state1
-            state_changed_2 = state2
-            morphology.mergeTwoStatesCommonMother(state3, state4)
-            morphology.EdgePairsToIgnore.append((edge1, edge2))
-
-        elif state3 == state4:
-            print
-            "The to-States are identical"
-            state_changed_1 = state3
-            state_changed_2 = state4
-            morphology.mergeTwoStatesCommonDaughter(state1, state2)
-            morphology.EdgePairsToIgnore.append((edge1, edge2))
-
-        elif morphology.mergeTwoStatesCommonMother(state1, state2):
-            print
-            "Now we have merged two sister edges from line 374 **********"
-            state_changed_1 = state1
-            state_changed_2 = state2
-            morphology.EdgePairsToIgnore.append((edge1, edge2))
-
-
-        elif morphology.mergeTwoStatesCommonDaughter((state3, state4)):
-            print
-            "Now we have merged two daughter edges from line 377 **********"
-            state_changed_1 = state3
-            state_changed_2 = state4
-            morphology.EdgePairsToIgnore.append((edge1, edge2))
-
-        graph = morphology.createPySubgraph(state1)
-        graph.layout(prog='dot')
-        filename = graphicsfolder + str(loop) + '_after_merger_' + str(state_changed_1.index) + "-" + str(
-            state_changed_2.index) + '.png'
-        print
-        "Printed graph", str(loop), "after_merger"
-        graph.draw(filename)
+    morphology.EdgeMergers(FileObject[FSA], HowManyTimesToCollapseEdges)
+     
 
 # ------------------------------------------------------------------------------------------#
 # ------------------------------------------------------------------------------------------#
@@ -400,9 +328,14 @@ while True:
             print "sigs: ", line
 
 
-
     if word == "exit":
         break
+        
+# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
+
+        
+        
     if word == "State":
         while True:
             stateno = raw_input("State number:")

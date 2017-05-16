@@ -1481,5 +1481,86 @@ class FSA_lxa:
         # for parsechain in CompletedParses:
         # print "in parseword:", parsechain.Display()
 
-        # print "completing parse of this word -------------------------------------------------------------------------------------"
+        # print "completing parse of this word ----------------------------------------------------------------------------"
         return CompletedParses
+        
+    # -----------------------------------------------------------------------------#
+    def EdgeMergers(self,outfile, HowManyTimesToCollapseEdges):
+    # -----------------------------------------------------------------------------#
+            print >> FileObject[FSA], "Finding common stems across edges."
+            HowManyTimesToCollapseEdges = 0
+            for loop in range(HowManyTimesToCollapseEdges):
+                print
+                "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+                print
+                "Loop number", loop
+                print
+                "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+                (commonEdgePairs, EdgeToEdgeCommonMorphs) = morphology.findCommonStems(lxalogfile)
+
+                if len(commonEdgePairs) == 0:
+                    print
+                    "There are no more pairs of edges to consider."
+                    break
+                edge1, edge2 = commonEdgePairs[0]
+                state1 = edge1.fromState
+                state2 = edge2.fromState
+                state3 = edge1.toState
+                state4 = edge2.toState
+                print
+                "\n\nWe are considering merging edge ", edge1.index, "(", edge1.fromState.index, "->", edge1.toState.index, ") and  edge", edge2.index, "(", edge2.fromState.index, "->", edge2.toState.index, ")"
+
+                print "Printed graph", str(loop), "before_merger"
+                graph = morphology.createDoublePySubgraph(state1, state2)
+                graph.layout(prog='dot')
+                filename = graphicsfolder + str(loop) + '_before_merger' + str(state1.index) + "-" + str(state2.index) + '.png'
+                graph.draw(filename)
+
+                if state1 == state2:
+                    print
+                    "The from-States are identical"
+                    state_changed_1 = state1
+                    state_changed_2 = state2
+                    morphology.mergeTwoStatesCommonMother(state3, state4)
+                    morphology.EdgePairsToIgnore.append((edge1, edge2))
+
+                elif state3 == state4:
+                    print
+                    "The to-States are identical"
+                    state_changed_1 = state3
+                    state_changed_2 = state4
+                    morphology.mergeTwoStatesCommonDaughter(state1, state2)
+                    morphology.EdgePairsToIgnore.append((edge1, edge2))
+
+                elif morphology.mergeTwoStatesCommonMother(state1, state2):
+                    print
+                    "Now we have merged two sister edges from line 374 **********"
+                    state_changed_1 = state1
+                    state_changed_2 = state2
+                    morphology.EdgePairsToIgnore.append((edge1, edge2))
+
+
+                elif morphology.mergeTwoStatesCommonDaughter((state3, state4)):
+                    print
+                    "Now we have merged two daughter edges from line 377 **********"
+                    state_changed_1 = state3
+                    state_changed_2 = state4
+                    morphology.EdgePairsToIgnore.append((edge1, edge2))
+
+                graph = morphology.createPySubgraph(state1)
+                graph.layout(prog='dot')
+                filename = graphicsfolder + str(loop) + '_after_merger_' + str(state_changed_1.index) + "-" + str(
+                    state_changed_2.index) + '.png'
+                print
+                "Printed graph", str(loop), "after_merger"
+                graph.draw(filename)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
