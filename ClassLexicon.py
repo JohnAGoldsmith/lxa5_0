@@ -159,7 +159,7 @@ class CLexicon:
             print formatstring1.format("1. Finished finding proto-stems.", len(Protostems))
 
         # 2 and 3 --------------------------------------------------------------------
-        Step = 2
+        Step += 1
         self.AssignAffixesAndWordsToStems(Protostems, FindSuffixesFlag,Step,verboseflag )
         if verboseflag:
             print formatstring1.format("   Finished finding affixes for protostems.",
@@ -168,7 +168,7 @@ class CLexicon:
         # problem already exists, of having both NULL and null with emerge? not on 3 parse pair list though.???
         # --------------------------------------------------------------------
         # 4  Assign signatures to each stem This is in a sense the most important step.        -------
-        Step = 3
+        Step += 1
         self.AssignSignaturesToEachStem(FindSuffixesFlag,verboseflag,Step)
         if verboseflag:
             print  formatstring1.format("4. Finished first pass of finding stems, affixes, and signatures.",
@@ -288,25 +288,20 @@ class CLexicon:
             for stem,affix in self.Parses:
                 ParseList.append((stem,affix))
             ParseList.sort(key=lambda (x,y) : x+" "+y)
-            #for stem, affix in self.Parses:
             for stem,affix in ParseList:
                 if stem not in self.StemToWord:
-
                     self.StemToWord[stem] = dict()
                     self.StemToAffix[stem] = dict()
                 if affix == "NULL":
                     word = stem
                 else:
                     word = stem + affix
-
                 self.StemToWord[stem][word] = 1
                 self.StemToAffix[stem][affix] = 1
                 if affix not in self.Suffixes:
                     self.Suffixes[affix] = 0
                 self.Suffixes[affix] += 1
-                #print "\n258", word , stem, affix
-                self.WordBiographies[word].append(str(Step) + " 4 This split:" + stem + "=" + affix)
-
+                self.WordBiographies[word].append(str(Step) + " This split:" + stem + "=" + affix)
             if verboseflag:
                     stemlist = self.StemToWord.keys()
                     stemlist.sort()
@@ -315,8 +310,6 @@ class CLexicon:
                         affixset.sort()
                         reportline = formatstring2.format(stem, "=".join(affixset) )
                         contentlist.append(reportline)
-
-
             if verboseflag:
                 print_report(filename, headerlist, contentlist)
 
@@ -326,10 +319,8 @@ class CLexicon:
                 headerlist = [ "Delete bad protostems"]
                 contentlist = list()
 
-
+        Step += 1
         if FindSuffixesFlag:
-
-
             StemsToDelete = list()
             for stem in self.StemToWord:
                 if len(self.StemToAffix[stem]) < self.MinimumAffixesInaSignature:
@@ -337,9 +328,8 @@ class CLexicon:
                     if verboseflag:
                         contentlist.append(formatstring3.format(stem, "too few affixes in sig.", self.StemToAffix[stem]))
             for stem in StemsToDelete:
-                #print "we are deleting this stem:", stem
                 for word in self.StemToWord[stem]:
-                    self.WordBiographies[word].append(str(Step) + "5  This stem was deleted: " + stem)
+                    self.WordBiographies[word].append(str(Step) + " This stem was deleted: " + stem)
                 del self.StemToWord[stem]
                 del self.StemToAffix[stem]
 
@@ -352,7 +342,7 @@ class CLexicon:
  # Now we create signatures: StemToSignature; WordToSig; StemToWord, SignatureStringsToStems
 
 
-
+        Step += 1
         if verboseflag:
                 filename = "6_assigning_signatures.txt"
                 headerlist = [ "6. Assign a single signature to each stem."]
@@ -542,6 +532,8 @@ class CLexicon:
 
     def AssignAffixesAndWordsToStems(self, Protostems, FindSuffixesFlag,Step, verboseflag = False):
         # This function creates the pairs in Parses. Most words have multiple appearances.
+        # Step = 2.
+
         if verboseflag:
             print "  2. Assign affixes and words to stems."
             filename = "2_All_initial_word_splits.txt"
@@ -549,7 +541,8 @@ class CLexicon:
             contentlist = list()
             linelist = list()
             formatstring = "{0:20s}   {1:20s} {2:10s} {3:20s}"
-        wordlist = self.WordList.mylist
+        wordlist = list(self.WordCounts.keys())
+        wordlist.sort()
         MinimumStemLength = self.MinimumStemLength
         MaximumAffixLength = self.MaximumAffixLength
         column_no = 0
@@ -565,18 +558,13 @@ class CLexicon:
                         if column_no % NumberOfColumns == 0:
                             column_no = 0
                             print "\n" + " " * 4,
-                word = wordlist[i].Key
-                #if verboseflag:
-                #            contentlist.append("510 "+word)
+                word = wordlist[i]
                 WordAnalyzedFlag = False
                 for i in range(len(word), MinimumStemLength - 1, -1):  # the first was len(word) - 1
                     if FindSuffixesFlag:
                         stem = word[:i]
-                        #if verboseflag:
-                        #    contentlist.append("514 "+stem)
                     else:
                         stem = word[-1 * i:]
-                    #print "579", word, stem
                     if stem in Protostems:
                         if FindSuffixesFlag:
                             suffix = word[i:]
@@ -591,7 +579,7 @@ class CLexicon:
                             if verboseflag:
                                 reportline = formatstring.format(word,stem,suffix, " suffix is good.")
                                 contentlist.append(reportline)
-                            self.WordBiographies[word].append(str(Step) + " 2 The split "+stem+ "=" + suffix + " is good.")
+                            self.WordBiographies[word].append(str(Step) + " The split "+stem+ "=" + suffix + " is good.")
                             self.Parses[(stem, suffix)] = 1
                             if stem in self.WordCounts:
                                 self.Parses[(stem, "NULL")] = 1
@@ -606,8 +594,9 @@ class CLexicon:
             if verboseflag:
                 print_report(filename, headerlist, contentlist)
 
-
+        Step += 1      
         if verboseflag:
+
             filename = "3_parse_pairs.txt"
             headerlist = [ "List of parse pairs"]
             contentlist = list()
@@ -625,7 +614,7 @@ class CLexicon:
                     word = stem
                 else:
                     word = stem + affix
-                self.WordBiographies[word].append(str(Step) + " 2.5 "+ item[0] + "=" + item[1])
+                self.WordBiographies[word].append(str(Step) + " "+ item[0] + "=" + item[1])
             templist.sort()
             for item in templist:
                     contentlist.append(item)

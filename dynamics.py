@@ -1,7 +1,7 @@
 from signaturefunctions import *
 
 
-def Dynamics(lex):
+def Dynamics(lex, outfile_Dynamics):
     corpus = lex.Corpus
     Signatures = dict()
     StemToSig = dict()
@@ -15,7 +15,6 @@ def Dynamics(lex):
 
         if word not in lex.WordToSig:
             continue
-        #print  "\n\n>> ", word,
         siglist_for_word = lex.WordToSig[word]
 
         for (stem, knownsig_str) in siglist_for_word:
@@ -25,12 +24,11 @@ def Dynamics(lex):
             else:
                 affix = word[-1 * affixlength:]
 
-            #print FormatString1.format(word, stem, affix),
             if stem in StemToSig:                            
                 sig_1 = StemToSig[stem]                
                 sig1_str = sig_1.ReturnSignatureString()         
                 if sig_1.ContainsAffix(affix):
-                    print FormatString4.format(word, stem, affix, "Known word."  )
+                    print >>outfile_Dynamics, FormatString4.format(word, stem, affix, "Known word."  )
                     sig_1.IncrementObservedWord(stem, affix)
                     page_1.NewWord = word
                     page_1.GainingSignature = sig_1
@@ -51,17 +49,17 @@ def Dynamics(lex):
                         page_1.GainingSignature = NewSig_5
                         page_1.LosingSignature = sig_1
                         sig_1.RemoveStem(stem)
-                        print FormatString7a.format(word, stem, affix, "old sig:", sig1_str, "new sig:", newsig_str)
+                        print >>outfile_Dynamics, FormatString7a.format(word, stem, affix, "old sig:", sig1_str, "new sig:", newsig_str)
 
                     # or if that  signature does currently exist
                     else:
-                        print FormatString7.format(word, stem, affix, "old sig:", sig1_str, "known sig:", newsig_str)
+                        print >>outfile_Dynamics,FormatString7.format(word, stem, affix, "old sig:", sig1_str, "known sig:", newsig_str)
                         sig_2 = Signatures[newsig_str]
                         MoveStem(stem, affix, sig_1, sig_2)
                         page_1.LosingSignature = None
                         page_1.GainingSignature = sig_2
                         StemToSig[stem] = sig_2
-                        print FormatString7.format(word, stem, affix, "old sig:", sig1_str, "known sig:", newsig_str)
+                        print >>outfile_Dynamics, FormatString7.format(word, stem, affix, "old sig:", sig1_str, "known sig:", newsig_str)
 
 
 
@@ -76,13 +74,13 @@ def Dynamics(lex):
                     page_1.LosingSignature = None
                     page_1.GainingSignature = sig_3
                     StemToSig[stem] = sig_3
-                    print FormatString5.format(word, stem, affix, "New stem. Old mono-sig:", affix)
+                    print >>outfile_Dynamics, FormatString5.format(word, stem, affix, "New stem. Old mono-sig:", affix)
                 else:
                     # the singleton signature did not yet exist:
                     sig_4 = CSignature(affix)
                     sig_4.AddStem(stem)
                     sig_4.AddWord(stem, affix)
-                    print FormatString5.format(word, stem, affix, "New stem. New mono-sig:", affix)
+                    print >>outfile_Dynamics, FormatString5.format(word, stem, affix, "New stem. New mono-sig:", affix)
                     Signatures[affix] = sig_4
                     StemToSig[stem] = sig_4
                     page_1.LosingSignature = None

@@ -68,7 +68,7 @@ FileObject = dict()
 fileslist = ("Signatures", "FSA", "SigExemplars", "WordToSig", "SigTransforms",
              "StemToWords", "StemToWords2", "WordParses", "WordCounts", "SigExtensions",
              "Suffixes", "Rebalancing_Signatures", "Subsignatures",
-             "UnlikelySignatures", "Log","Words")
+             "UnlikelySignatures", "Log","Words", "Dynamics")
 for item in fileslist:
     # print item
     FileObject[item] = open(outfolder + item + ".txt", "w")
@@ -171,7 +171,6 @@ else:
     tokencount = 0
     typecount = 0
     for line in filelines:
-        # print "189", tokencount, wordcountlimit
         if tokencount - wordcountlimit > 0:
             break
         for token in line.split():
@@ -187,15 +186,12 @@ else:
                 continue
             if token in Lexicon.WordCounts:
                 Lexicon.WordCounts[token] += 1
-                #print "191" , token
                 tokencount += 1
             else:
-                #print "193", token
                 Lexicon.WordBiographies[token] = list()
                 Lexicon.WordCounts[token] = 1
                 tokencount += 1
                 typecount += 1
-                #Lexicon.TotalLetterCountInWords += len(token)
             Lexicon.WordList.AddWord(token)
             Lexicon.Corpus.append(token)
             Lexicon.WordBiographies[token] = list()
@@ -227,7 +223,7 @@ if True:
 
 if True and datatype == "CORPUS":
     print "229  dynamics"
-    Dynamics(Lexicon)
+    Dynamics(Lexicon,FileObject["Dynamics"])
 
 if False:
     print
@@ -425,14 +421,22 @@ while True:
     word = raw_input('Inquire about a word: ')
 
     if word in Lexicon.WordBiographies:
-
-        print "428"
         for line in Lexicon.WordBiographies[word]:
             print line
+        print "------------------------"
+        print "1. Finding protostems.  "    
+        print "2. Find first parsing into proto-stems plus affixes."
+        print "3. Roll out the list of parse pairs."
+        print "4. Assign affixes to each protostem, stem-to-word (1)."
+        print "5. Delete signatures with too few stems. (2)."
+        print "6. Assign a unique signature to each stem. (3)."
+
 
     if word in Lexicon.SignatureBiographies:
         for line in Lexicon.SignatureBiographies[word]:
             print "sigs: ", line
+
+
 
     if word == "exit":
         break
