@@ -86,8 +86,12 @@ def Dynamics(lex, outfile_Dynamics):
                     page_1.LosingSignature = None
                     page_1.GainingSignature = sig_4
 
-    for sig in Signatures.keys():
-        Signatures[sig].Display()
+    siglist = list(Signatures.keys())
+    siglist.sort(key =lambda x: Signatures[x].LifetimeCorpusCount )
+
+
+    for sig in siglist:
+        Signatures[sig].Display(outfile_Dynamics)
 
 
 class CPage:
@@ -169,24 +173,25 @@ class CSignature:
         self.StemsToAffixToCorpusCount[stem_str][affix_str] += 1
         self.LifetimeCorpusCount += 1
 
-    def Display(self):
-        DisplaySignatureFlag = False
+    def Display(self, outfile):
+        DisplaySignatureFlag = True
         if DisplaySignatureFlag == False:
             return
         tab = 4
         columnsize = 10
-        print "\n    ---------------------------------------------------------------"
-        print "    >>sig: ", self.Affixes_string, "Stability: ", self.ReturnStability(), "Current corpus count", self.CurrentCorpusCount(), "Lifetime corpus count", self.LifetimeCorpusCount
-        print " " * (tab + columnsize),
+        formatstring1= "{0:20s}\nStability: {1:1.3f} \nCurrent corpus count: {2:4d} Lifetime: {3:4d}"
+        print >>outfile, "\n    ---------------------------------------------------------------"
+        print >>outfile, formatstring1.format(self.Affixes_string,  self.ReturnStability(), self.CurrentCorpusCount(),  self.LifetimeCorpusCount)
+        print >>outfile, " " * (tab + columnsize),
         for affix in self.Affixes_string.split("="):
-            print  "{:>10s}".format(affix),
-        print
+            print >>outfile,  "{:>10s}".format(affix),
+        print >>outfile
         for stem in self.StemsToAffixToCorpusCount.keys():
-            print " " * tab + stem + " " * (columnsize - len(stem)),
+            print >>outfile, " " * tab + stem + " " * (columnsize - len(stem)),
             for affix in self.Affixes_string.split("="):
-                print  "{:10d}".format(self.StemsToAffixToCorpusCount[stem][affix]),
-            print
-        print "    ---------------------------------------------------------------"
+                print >>outfile,  "{:10d}".format(self.StemsToAffixToCorpusCount[stem][affix]),
+            print>>outfile
+        print >>outfile, "    ---------------------------------------------------------------"
 
 
 def MoveStem(stem, new_affix, from_sig, to_sig):
