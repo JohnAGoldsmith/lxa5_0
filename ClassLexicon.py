@@ -91,6 +91,7 @@ class CLexicon:
         self.StemToAffix = {}  # value is a Dict whose keys are affixes.
         self.StemToSignature = {}  # value is a string with hyphens
         self.SignatureStringsToStems = {}
+        self.UnexplainedContinuations = {}
         self.UnlikelySignatureStringsToStems = {}
         self.RemovedSignatureList = list()
         self.UnlikelyStems = {}
@@ -101,7 +102,7 @@ class CLexicon:
         self.SignatureBiographies=dict()
         self.MinimumStemsInaSignature = 5
         self.MinimumAffixesInaSignature = 2
-        self.MinimumStemLength = 4
+        self.MinimumStemLength = 3
         self.MaximumAffixLength = 5
         self.MaximumNumberOfAffixesInASignature = 100
 
@@ -569,6 +570,10 @@ class CLexicon:
                         if FindSuffixesFlag:
                             suffix = word[i:]
                             if len(suffix) > MaximumAffixLength:
+                                if stem not in self.UnexplainedContinuations:
+                                        self.UnexplainedContinuations[stem] = list()
+                                self.UnexplainedContinuations[stem].append(suffix)
+                                 
                                 self.WordBiographies[word].append(str(Step) + " The split "+stem+ " / " + suffix + "bad; suffix too long.")
                                 if verboseflag:
                                     reportline = formatstring.format(word,stem,suffix, "suffix too long.")
@@ -707,7 +712,7 @@ class CLexicon:
 
     # --------------------------------------------------------------------------------------------------------------------------#
     def printSignatures(self, lxalogfile, outfile_signatures, outfile_unlikelysignatures, outfile_wordstosigs,
-                        outfile_stemtowords, outfile_stemtowords2, outfile_SigExtensions, outfile_suffixes, outfile_words, encoding,
+                        outfile_stemtowords, outfile_stemtowords2, outfile_SigExtensions, outfile_suffixes, outfile_unexplained, outfile_words, encoding,
                         FindSuffixesFlag):
         # ----------------------------------------------------------------------------------------------------------------------------#
 
@@ -772,7 +777,10 @@ class CLexicon:
         print_unlikelysignatures(outfile_unlikelysignatures, self.UnlikelySignatureStringsToStems, ColumnWidth)
 
         # print words, with unanalyzed words indicated
-        print_all_words(outfile_words, self.WordCounts, self.WordToSig,)
+        print_all_words(outfile_words, self.WordCounts, self.WordToSig)
+
+        # print unexplained suffixes
+        print_all_unexplained_continuations(outfile_unexplained, self.UnexplainedContinuations)
 
         # print signature extensions:
 
@@ -941,6 +949,23 @@ class CLexicon:
                 "badsig"]
 
         self.AssignSignaturesToEachStem(FindSuffixesFlag,verboseflag,Step)
+
+
+
+
+    # ----------------------------------------------------------------------------------------------------------------------------#
+  # def Lexicon.SummarizePostStemMaterial(FindSuffixFlag, FileObject["Remains"]):
+    # ----------------------------------------------------------------------------------------------------------------------------#
+ 
+
+
+
+
+
+
+
+
+
 
     ## -------                                                      ------- #
     ##              Utility functions                               ------- #

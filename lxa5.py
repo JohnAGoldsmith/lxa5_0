@@ -81,7 +81,7 @@ FileObject = dict()
 fileslist = ("Signatures", "FSA", "SigExemplars", "WordToSig", "SigTransforms",
              "StemToWords", "StemToWords2", "WordParses", "WordCounts", "SigExtensions",
              "Suffixes", "Rebalancing_Signatures", "Subsignatures",
-             "UnlikelySignatures", "Log","Words", "Dynamics")
+             "UnlikelySignatures", "Log","Words", "Dynamics", "UnexplainedContinuations")
 for item in fileslist:
     # print item
     FileObject[item] = open(outfolder + item + ".txt", "w")
@@ -180,7 +180,6 @@ if True:
                            FileObject["Subsignatures"], FindSuffixesFlag, Lexicon.MinimumStemLength)
 
 if True and datatype == "CORPUS":
-    print "229  dynamics"
     Dynamics(Lexicon,FileObject["Dynamics"])
 
 if False:
@@ -210,7 +209,7 @@ if True:
     "\n4. Printing signatures."
     Lexicon.printSignatures(FileObject["Log"], FileObject["Signatures"], FileObject["UnlikelySignatures"],
                             FileObject["WordToSig"], FileObject["StemToWords"], FileObject["StemToWords2"],
-                            FileObject["SigExtensions"], FileObject["Suffixes"], FileObject["Words"], g_encoding, FindSuffixesFlag)
+                            FileObject["SigExtensions"], FileObject["Suffixes"], FileObject["UnexplainedContinuations"], FileObject["Words"], g_encoding, FindSuffixesFlag)
 
 if False:
     print
@@ -222,6 +221,10 @@ if False:
     print
     "6. Slicing signatures."
     SliceSignatures(Lexicon, g_encoding, FindSuffixesFlag, FileObject["Log"])
+
+#if True:
+#   print "7. Summarizing what has not been accounted for following the recognized stems."
+#   Lexicon.SummarizePostStemMaterial(FindSuffixFlag, FileObject["Remains"])
 
 if True:
     print
