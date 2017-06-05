@@ -22,8 +22,8 @@ from fsa import *
 from loose_fit import *
 from lxa_module import *
 from read_data import *
-
-
+from svg import * 
+from crab import *
 
 
 
@@ -85,6 +85,7 @@ fileslist = ("Signatures", "FSA", "SigExemplars", "WordToSig", "SigTransforms",
 for item in fileslist:
     # print item
     FileObject[item] = open(outfolder + item + ".txt", "w")
+FileObject["html"] = open(outfolder + "signatures.html", "w")
 
 # --------------------------------------------------------------------##
 #		Tell the user what we will be doing.
@@ -176,7 +177,7 @@ morphology = FSA_lxa(splitEndState)
 if True:
     print
     "2. Make Signatures."
-    Lexicon.MakeSignatures(FileObject["Log"], FileObject["Rebalancing_Signatures"], FileObject["UnlikelySignatures"],
+    MakeSignatures_Crab(Lexicon, FileObject["Log"], FileObject["Rebalancing_Signatures"], FileObject["UnlikelySignatures"],
                            FileObject["Subsignatures"], FindSuffixesFlag, Lexicon.MinimumStemLength)
 
 if True and datatype == "CORPUS":
@@ -207,7 +208,7 @@ if False:
 if True:
     print
     "\n4. Printing signatures."
-    Lexicon.printSignatures(FileObject["Log"], FileObject["Signatures"], FileObject["UnlikelySignatures"],
+    Lexicon.printSignatures(FileObject["Log"], FileObject["Signatures"], FileObject["UnlikelySignatures"], FileObject["html"],
                             FileObject["WordToSig"], FileObject["StemToWords"], FileObject["StemToWords2"],
                             FileObject["SigExtensions"], FileObject["Suffixes"], FileObject["UnexplainedContinuations"], FileObject["Words"], g_encoding, FindSuffixesFlag)
 
@@ -216,6 +217,9 @@ if False:
     "5. Printing signature transforms for each word."
     printWordsToSigTransforms(Lexicon.SignatureToStems, Lexicon.WordToSig, Lexicon.StemCorpusCounts,
                               FileObject["SigTransforms"], g_encoding, FindSuffixesFlag)
+
+
+
 
 if False:
     print

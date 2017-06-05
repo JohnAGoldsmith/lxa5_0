@@ -58,6 +58,7 @@ def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
                         Lexicon.WordCounts[token] = 1
                         tokencount += 1
                         typecount += 1
+                     
                     Lexicon.WordList.AddWord(token)
                     Lexicon.Corpus.append(token)
                     Lexicon.WordBiographies[token] = list()

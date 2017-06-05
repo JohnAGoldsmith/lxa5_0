@@ -2,6 +2,7 @@ import math
 
 from class_alternation import *
 from signaturefunctions import *
+from svg import * 
 
 
 
@@ -112,9 +113,27 @@ def print_signature_list_1(this_file, DisplayList, stemcountcutoff, totalrobustn
                                                      runningsumproportion, stem)
     print >> this_file, "-" * 60
 
+def print_signatures_to_svg (outfile_html, DisplayList,SignatureToStems):
+    thispage = Page()
+    
+    DisplayList = sorted(DisplayList, lambda x, y: cmp(x[2], y[2]), reverse=True)
+    thispage.start_an_html_file(outfile_html)
+    for signo in range(len(DisplayList)):
+            (sig,stemcount,robustness,stem) = DisplayList[signo]
+            stemlist = SignatureToStems[sig].keys()
+            affixlist = sig.split("=")
+            signature_box = SignatureBox(stemlist, affixlist)
+            #stem_box = Box(stemlist)
+            #affix_box = Box(affixlist,style="vertical")
+            #this_box_pair = BoxPair(stem_box, affix_box)
+                
+           
+            thispage.print_signature_box(outfile_html,signature_box,300,300)
+    thispage.end_an_html_file(outfile_html)
+
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def print_signature_list_2(this_file, lxalogfile, DisplayList, stemcountcutoff, totalrobustness, SignatureToStems,
+def print_signature_list_2(this_file, lxalogfile, Lexicon,  DisplayList, stemcountcutoff, totalrobustness, SignatureToStems,
                            StemCorpusCounts, suffix_flag):
     numberofstemsperline = 6
     stemlist = []
@@ -189,8 +208,23 @@ def print_signature_list_2(this_file, lxalogfile, DisplayList, stemcountcutoff, 
             else:
                 flag = ""
             print >> this_file, formatstring % (item[0], item[1], item[2], flag)
-
-
+        # ------------------------------------------------------------------------------------------------------
+        # Already analyzed stems: Just a temporary experiment to see how one signature feeds another.
+        #print "\n", sig    , "line 213 of printing_to_files"     
+        numberofstems = len(stemlist)
+        temp_signatures_with_stems = dict()
+        for stem in stemlist:
+            if stem in Lexicon.WordToSig:
+                for pair in Lexicon.WordToSig[stem]:
+                    sig2 = pair[1]
+                    if  sig2 != sig:               
+                        #print stem, sig2,   pair
+                        if sig2 not in temp_signatures_with_stems:
+                                temp_signatures_with_stems[sig2]=list()
+                        temp_signatures_with_stems[sig2].append((stem,pair[0]))
+        #for sig in temp_signatures_with_stems:
+        #        print "printing_to_files, line 226", sig, temp_signatures_with_stems[sig]
+             
 # ----------------------------------------------------------------------------------------------------------------------------#
 def print_unlikelysignatures(this_file, signatures, ColumnWidth):
     print "   Printing unlikely signatures file."
@@ -254,8 +288,13 @@ def print_stems(outfile1, outfile2, StemToWord, StemToSignature, WordCounts, suf
         # We print a list of stems with their words (and frequencies) in which only those suffixes which are among the K most frequent suffixes,
         # in order to use visualization methods that put soft limits on the number of dimensions they can handle well.
 
-        threshold_for_top_affixes = 25  # this will give us one more than that number, since we are zero-based counting.
-        top_affixes = suffixlist[0:threshold_for_top_affixes]
+    threshold_for_top_affixes = 25  # this will give us one more than that number, since we are zero-based counting.
+    top_affixes = suffixlist[0:threshold_for_top_affixes]
+    
+    
+    # [continue work here] 
+    
+    
     print >> outfile2, "\n--------------------------------------------------------------"
     print >> outfile2, "---  Stems and their words with high frequency affixes"
     print >> outfile2, "--------------------------------------------------------------"

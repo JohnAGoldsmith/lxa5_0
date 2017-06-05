@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 # -------------      Some short utility functions ---------------------------------------
 
 def AddAffixToSigString(affix, sigstring):
@@ -180,12 +182,16 @@ def FindGoodSignatureListFromInsideAnother(target_affixes_list, siglist):
     #SortSignaturesByLocalRobustness(siglist)
     # print "68 ", target_affixes_list
     good_affixes_set = set()
+    #print target_affixes_list, "sig functions 185"
     for sig_string in siglist:
         these_affixes = set(MakeSignatureListFromSignatureString(sig_string))
+        #print "188 FindGoodSignatureList...", these_affixes
         if these_affixes.issubset(set(target_affixes_list)):
             good_affixes_set.update(these_affixes)
+            #print "191, we have added these affixes: ", these_affixes
     sig_list = list(good_affixes_set)
     sig_list.sort()
+    #print sig_list,"signatures line 194\n "
     return sig_list
 
 
@@ -553,3 +559,7 @@ def FindSignatureChains(lexicon):
         #count1 = sigstring1 * len()
         #print pair[0], pair[0] * len(lexicon)           count, pair[1]
 
+#June 2017
+# ----------------------------------------------------------------------------------------------------------------------------#
+ 
+# ----------------------------------------------------------------------------------------------------------------------------#
