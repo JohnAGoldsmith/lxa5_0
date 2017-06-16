@@ -33,8 +33,7 @@ from crab import *
 # --------------------------------------------------------------------##
 
 verboseflag = True
-FindSuffixesFlag = True
-
+ 
 # --------------------------------------------------------------------##
 #		parse command line arguments
 # --------------------------------------------------------------------##
@@ -46,12 +45,29 @@ parser.add_argument('-w', action="store", dest="wordcountlimit", help="number of
 parser.add_argument('-f', action="store", dest="filename", help="name of file to read", default="browncorpus")
 parser.add_argument('-c', action="store", dest="corrections", help="number of corrections to make", default=0)
 parser.add_argument('-d', action="store", dest="data_folder", help="data directory", default="../../data/")
+parser.add_argument('-s', action="store", dest="affix_type", help="prefix or suffix", default="True")
+parser.add_argument('-F', action="store", dest="FSA", help="generate and print FSA", default="False")
+
 
 results                 = parser.parse_args()
 language                = results.language
 wordcountlimit          = int(results.wordcountlimit)
 shortfilename           = results.filename
 NumberOfCorrections     = results.corrections
+
+if results.FSA == "FSA" or results.FSA== "True":
+	results.FSA = True
+else:
+	results.FSA = False
+
+if results.affix_type == "True":
+	FindSuffixesFlag = True
+else:
+	FindSuffixesFlag = False
+
+FSA_flag                = results.FSA
+
+print "FSA? ", FSA_flag
 
 # --------------------------------------------------------------------##
 #	Determine folders for input, output; initialize output files
@@ -65,7 +81,7 @@ if shortfilename[-4:] == ".txt":
     datatype = "CORPUS"
     infilename = datafolder + shortfilename
 else:
-    datatype == "DX1"
+    datatype = "DX1"
     infilename  = infolder + shortfilename + ".dx1"
 graphicsfolder  = outfolder + "graphics/"
 if not os.path.exists(graphicsfolder):
@@ -73,20 +89,22 @@ if not os.path.exists(graphicsfolder):
 
 
 
-
 g_encoding = "asci"  # "utf8"
 BreakAtHyphensFlag = True
 
-FileObject = dict()
-fileslist = ("Signatures", "FSA", "SigExemplars", "WordToSig", "SigTransforms",
-             "StemToWords", "StemToWords2", "WordParses", "WordCounts", "SigExtensions",
-             "Suffixes", "Rebalancing_Signatures", "Subsignatures",
-             "UnlikelySignatures", "Log","Words", "Dynamics", "UnexplainedContinuations")
-for item in fileslist:
-    # print item
-    FileObject[item] = open(outfolder + item + ".txt", "w")
-FileObject["html"] = open(outfolder + "signatures.html", "w")
+if (False):
+        FileObject = dict()
+        Files_list_txt = ["Signatures", "FSA", "SigExemplars", "WordToSig", "SigTransforms", "Signature_Details",
+                     "StemToWords","StemsAndUnanalyzedWords", "WordParses", "WordCounts", "SigExtensions",
+                     "Suffixes", "Rebalancing_Signatures", "Subsignatures",
+                     "UnlikelySignatures", "Signatures_2", "Log",  "Dynamics",  "Signature_feeding"]
+        Files_list_html=["Signatures_svg_html", "Signatures_html", "Index", "WordToSig_html"]
 
+        for item in Files_list:
+            FileObject[item] = open(outfolder + item + ".txt", "w")
+        for item in Files_list_html:
+            FileObject[item] = open(outfolder + item + ".html", "w")
+ 
 # --------------------------------------------------------------------##
 #		Tell the user what we will be doing.
 # --------------------------------------------------------------------##
@@ -120,12 +138,17 @@ print "-" * 100
 # A signature is a tuple of strings (each an affix).
 # Signatures is a map: its keys are signatures.  Its values are *sets* of stems.
 # StemToWord is a map; its keys are stems.       Its values are *sets* of words.
-# StemToSig  is a map; its keys are stems.       Its values are individual signatures.
+# StemToSig  is a map; its keys are stems.       Its values are lists of signatures. The usual case when a stem has two signatures is when it is X+a for a signature in which X is a stem, 
+# and it is X + NULL in a differrent signature
 # WordToSig  is a Map. its keys are words.       Its values are *lists* of signatures.
 # StemCorpusCounts is a map. Its keys are words. 	 Its values are corpus counts of stems.
 # SignatureToStems is a dict: its keys are tuples of strings, and its values are dicts of stems. We don't need both this and Signatures!
 
 Lexicon = CLexicon()
+Lexicon.infolder = infolder
+Lexicon.outfolder = outfolder
+Lexicon.graphicsfolder = graphicsfolder
+Lexicon.FindSuffixesFlag = FindSuffixesFlag
 
 # --------------------------------------------------------------------##
 #		read wordlist (dx1)
@@ -137,24 +160,19 @@ else:
     infile = open(infilename)
 
 filelines = infile.readlines()
-
 read_data(datatype,filelines,Lexicon,BreakAtHyphensFlag,wordcountlimit)
-
 Lexicon.ReverseWordList = Lexicon.WordCounts.keys()
 Lexicon.ReverseWordList.sort(key=lambda word: word[::-1])
 Lexicon.WordList.sort()
 print "\n1. Finished reading word list.\n"
 
-
 # --------------------------------------------------------------------##
 #		Initialize some output files
 # --------------------------------------------------------------------##
 
-Lexicon.PrintWordCounts(FileObject["WordCounts"])
+Lexicon.PrintWordCounts()
 Lexicon.Words = Lexicon.WordCounts.keys()
 Lexicon.Words.sort()
-print >> FileObject["Signatures"], "# ", language, wordcountlimit
-initialize_files(Lexicon, FileObject["Log"], 0,0, language)
 initialize_files(Lexicon, "console", 0,0, language)
 
 # --------------------------------------------------------------------##
@@ -176,24 +194,74 @@ morphology = FSA_lxa(splitEndState)
 
 if True:
     print
-    "2. Make Signatures."
-    MakeSignatures_Crab(Lexicon, FileObject["Log"], FileObject["Rebalancing_Signatures"], FileObject["UnlikelySignatures"],
-                           FileObject["Subsignatures"], FindSuffixesFlag, Lexicon.MinimumStemLength)
+    "2. Make Signatures.", FindSuffixesFlag
+    MakeSignatures_Crab(Lexicon, FindSuffixesFlag, Lexicon.MinimumStemLength)
+
+if True:
+    print "     Printing signatures."
+    suffix = "1"
+    Lexicon.printSignatures(g_encoding, FindSuffixesFlag,suffix)
+
 
 if True and datatype == "CORPUS":
     Dynamics(Lexicon,FileObject["Dynamics"])
 
-if False:
-    print
-    "3. Find good signatures inside bad."
-    Lexicon.FindGoodSignaturesInsideBad(FileObject["Subsignatures"], True)
+if True:
+    print "  3. Find good signatures inside bad."
+    FindGoodSignaturesInsideBad_crab(Lexicon,  FindSuffixesFlag,verboseflag)
+
+if (False):
+    if verboseflag:
+         print  formatstring1.format("6. Looking for good signatures inside bad ones.", len(Lexicon.SignatureStringsToStems))
+
+    Step += 1
+    FindGoodSignaturesInsideBad_crab(Lexicon, outfile_subsignatures, FindSuffixesFlag,verboseflag, Step);
+ 
+if (False):
+    if verboseflag:
+        print "{0:20s}".format("5. Finished; we will reassign signature structure.")
+        print "{0:20s}".format("6. Recompute signature structure.\n     <----------------------------------------->")
+    #Step += 1
+    AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag, verboseflag)
+if (False):
+    # --------------------------------------------------------------------
+    # 4 Rebalancing now, which means:                  -------
+    # We look for a stem-final sequence that appears on all or almost all the stems, and shift it to affixes.
+    # Make changes in Lexicon.SignatureStringsToStems, and .StemToSig, and .WordToSig, and .StemToWord, and .StemToAffix  and signature_tuples....
+
+    if verboseflag:
+        print formatstring2.format("5. Find shift stem/affix boundary when appropriate.")
+    threshold = 0.80
+
+    if False:
+
+        count = Lexicon.RebalanceSignatureBreaks(threshold, outfile_Rebalancing_Signatures, FindSuffixesFlag,Step)
+        print formatstring2.format("5. Completed.")
+        print formatstring2.format("6. Recompute signature structure.")
+        Lexicon.AssignSignaturesToEachStem_crab(FindSuffixesFlag,Step)
+
+        # --------------------------------------------------------------------
+        # 5  ------- compute robustness
+        Lexicon.Compute_Lexicon_Size()
+        print  formatstring2.format("6. Computed robustness")
+
+        # 6  ------- Print
+        print >> lxalogfile, formatstring3.format("Number of analyzed words", Lexicon.NumberOfAnalyzedWords)
+        print >> lxalogfile, formatstring3.format("Number of unanalyzed words", Lexicon.NumberOfUnanalyzedWords)
+        print >> lxalogfile, formatstring3.format("Letters in stems", Lexicon.total_letters_in_stems)
+        print >> lxalogfile, formatstring3.format("Letters in affixes", Lexicon.total_affix_length_in_signatures)
+        print >> lxalogfile, formatstring3.format("Total robustness in signatures", Lexicon.TotalRobustnessInSignatures)
+
+ 
+
+
 
 if False:
     print
     "3. Finding sets of extending signatures."
     extending_signatures(Lexicon, FileObject["SigExtensions"])
 
-if True:
+if False:
     print "Finding pairs of signatures that share words."
     FindSignatureChains(Lexicon)
 
@@ -208,38 +276,35 @@ if False:
 if True:
     print
     "\n4. Printing signatures."
-    Lexicon.printSignatures(FileObject["Log"], FileObject["Signatures"], FileObject["UnlikelySignatures"], FileObject["html"],
-                            FileObject["WordToSig"], FileObject["StemToWords"], FileObject["StemToWords2"],
-                            FileObject["SigExtensions"], FileObject["Suffixes"], FileObject["UnexplainedContinuations"], FileObject["Words"], g_encoding, FindSuffixesFlag)
+    suffix = "2"
+    #Lexicon.printSignatures(FileObject, g_encoding, FindSuffixesFlag,suffix)
+    Lexicon.printSignatures(g_encoding, FindSuffixesFlag,suffix)
 
 if False:
     print
     "5. Printing signature transforms for each word."
+    #printWordsToSigTransforms(Lexicon.SignatureToStems, Lexicon.WordToSig, Lexicon.StemCorpusCounts,
+    #                          FileObject["SigTransforms"], g_encoding, FindSuffixesFlag)
     printWordsToSigTransforms(Lexicon.SignatureToStems, Lexicon.WordToSig, Lexicon.StemCorpusCounts,
-                              FileObject["SigTransforms"], g_encoding, FindSuffixesFlag)
-
-
-
+                              g_encoding, FindSuffixesFlag)
 
 if False:
     print
     "6. Slicing signatures."
     SliceSignatures(Lexicon, g_encoding, FindSuffixesFlag, FileObject["Log"])
 
-#if True:
-#   print "7. Summarizing what has not been accounted for following the recognized stems."
-#   Lexicon.SummarizePostStemMaterial(FindSuffixFlag, FileObject["Remains"])
 
-if True:
+if FSA_flag:
     print
     "7. Adding signatures to the FSA."
     AddSignaturesToFSA(Lexicon, Lexicon.SignatureStringsToStems, morphology, FindSuffixesFlag)
 
-if True:
-    print
+if FSA_flag:
+    print outfolder + "fsa.txt"
     "8. Printing the FSA."
-    print >> FileObject["FSA"], "#", language, shortfilename, wordcountlimit
-    morphology.printFSA(FileObject["FSA"])
+    fsa_file = open(outfolder +  "fsa.txt", "w")
+    print >> fsa_file, "#", language, shortfilename, wordcountlimit
+    morphology.printFSA(fsa_file)
 
 if False:
     print
@@ -253,7 +318,7 @@ if False:
     for loopno in range(NumberOfCorrections):
         morphology.find_highest_weight_affix_in_an_edge(FileObject["Log"], FindSuffixesFlag)
 
-if True:
+if FSA_flag:
     print
     "11. Printing graphs of the FSA."
     for state in morphology.States:
@@ -264,7 +329,7 @@ if True:
         graph = morphology.createPySubgraph(state)
         # if the graph has 3 edges or fewer, do not print it:
 
-        if len(graph.edges()) < 4:
+        if len(graph.edges()) < 2:
             continue
 
         graph.layout(prog='dot')
@@ -278,11 +343,8 @@ if True:
 #	5d. Print FSA again, with these changes.
 # ---------------------------------------------------------------------------------#
 
-if False:
-    print
-    "11. Printing the FSA."
-    morphology.printFSA(FileObject[FSA])
-
+ 
+ 
 if False:
     print
     "12. Parsing all words through FSA."
@@ -293,16 +355,7 @@ if False:
     "13. Printing all the words' parses."
     morphology.printAllParses(FileObject[WordParses])
 
-if False:
-    print
-    "14. Now look for common morphemes across different edges."
-    morphology.findCommonMorphemes(lxalogfile)
-
-if False:    
-    # we will remove this. It will be replaced by a function that looks at all cross-edge sharing of morphemes.
-    morphology.EdgeMergers(FileObject[FSA], HowManyTimesToCollapseEdges)
-     
-
+ 
 # ------------------------------------------------------------------------------------------#
 # ------------------------------------------------------------------------------------------#
 #		User inquiries about morphology
@@ -436,13 +489,8 @@ while True:
         print
     print
     "\n\n"
-
-# ---------------------------------------------------------------------------------------------------------------------------#
-# ---------------------------------------------------------------------------------#
-#	Close output files
-# ---------------------------------------------------------------------------------#
-for item in fileslist:
-    FileObject[item].close()
+ 
+ 
 
 # ---------------------------------------------------------------------------------#
 #	Logging information
@@ -452,5 +500,5 @@ localtime = time.asctime(time.localtime(time.time()))
 print
 "Local current time :", localtime
 
-FileObject["Log"].close()
+ 
 # --------------------------------------------------#

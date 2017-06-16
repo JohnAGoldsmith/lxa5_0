@@ -179,19 +179,14 @@ def EvaluateSignatures(Lexicon, outfile):
 
 # ----------------------------------------------------------------------------------------------------------------------------#
 def FindGoodSignatureListFromInsideAnother(target_affixes_list, siglist):
-    #SortSignaturesByLocalRobustness(siglist)
-    # print "68 ", target_affixes_list
     good_affixes_set = set()
-    #print target_affixes_list, "sig functions 185"
+    
     for sig_string in siglist:
         these_affixes = set(MakeSignatureListFromSignatureString(sig_string))
-        #print "188 FindGoodSignatureList...", these_affixes
         if these_affixes.issubset(set(target_affixes_list)):
             good_affixes_set.update(these_affixes)
-            #print "191, we have added these affixes: ", these_affixes
     sig_list = list(good_affixes_set)
     sig_list.sort()
-    #print sig_list,"signatures line 194\n "
     return sig_list
 
 
@@ -199,20 +194,12 @@ def FindGoodSignatureListFromInsideAnother(target_affixes_list, siglist):
 #  Call from the main function
 # -----------------------------------------------------------------#
 def extending_signatures(Lexicon, outfile, new_stem_length=3, ):
-    # old_stem_length = lexicon.MinimumStemLength
-    # signatures = lexicon.SignatureStringsToStems.keys()
     signature_list = list()
     for sig in Lexicon.SignatureStringsToStems:
-        # sigL = MakeSignatureListFromSignatureString(sig)
-        # print sig_list, "line 142"
         if NumberOfAffixesInSigString(sig) < 2:
             continue
         signature_list.append(sig)
-        # print "159", sig
     signature_list = SortSignaturesByGlobalRobustness(signature_list, Lexicon.SignatureStringsToStems, outfile)
-    # for sig in signature_list:
-    # print "149", sig, len(Lexicon.SignatureStringsToStems[sig])
-    # print >>outfile, "177", sig, len(Lexicon.SignatureStringsToStems[sig])
     FindSignatureDifferences(signature_list, outfile)
 
 
@@ -437,11 +424,11 @@ def AddSignaturesToFSA(Lexicon, SignatureStringsToStems, fsa, FindSuffixesFlag):
     for sig in SignatureStringsToStems:
         affixlist = sig.split('=')
         stemlist = Lexicon.SignatureStringsToStems[sig]
-        if len(stemlist) >= Lexicon.MinimumStemsInaSignature:
-            if FindSuffixesFlag:
-                fsa.addSignature(stemlist, affixlist, FindSuffixesFlag)
-            else:
-                fsa.addSignature(affixlist, stemlist, FindSuffixesFlag)
+        #if len(stemlist) >= Lexicon.MinimumStemsInaSignature:
+        if FindSuffixesFlag:
+            fsa.addSignature(stemlist, affixlist, FindSuffixesFlag)
+        else:
+            fsa.addSignature(affixlist, stemlist, FindSuffixesFlag)
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#

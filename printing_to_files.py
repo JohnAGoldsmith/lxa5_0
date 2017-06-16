@@ -1,25 +1,38 @@
 import math
-
 from class_alternation import *
 from signaturefunctions import *
 from svg import * 
+from html_lxa import *  
 
 
 
+def print_html_report(outfile, this_lexicon, singleton_signatures, doubleton_signatures, DisplayList):
+    leader=["Number of distinct words (types):" , "Total letter count in words " , "Number of signatures: ",
+        "Number of singleton signatures (one stem): ", "Number of doubleton signatures (two stems): ",
+        "Total number of letters in stems: ",  "Total number of affix letters: "]
+    values=[ str(this_lexicon.total_word_count),  str(this_lexicon.word_letter_count), str(len(this_lexicon.SignatureStringsToStems)),
+         str(singleton_signatures),   str(doubleton_signatures), str(this_lexicon.total_letters_in_stems), str(this_lexicon.total_affix_length_in_signatures) ]
+ 
+
+    start_an_html_file( outfile)
+    start_an_html_table(outfile)
+    for lineno in range(7):
+                start_table_row(outfile)
+                add_table_entry(leader[lineno], outfile)
+                add_table_entry(values[lineno], outfile)
+                end_table_row(outfile)
+    end_an_html_table(outfile)
+    
+    end_an_html_file(outfile)
+ 
 
 def print_report(filename, headerlist, contentlist):
-
     file = open(filename, 'w')
     for item in headerlist:
         print >>file, item
-
-
     print >>file, len(contentlist)
     for item in contentlist:
         print >> file, item
-
-
-
     file.close()
 
 
@@ -28,17 +41,19 @@ def initialize_filesdeprecated(this_lexicon, this_file, language):
     formatstring_initfiles1 = "{:40s}{:>15d}"
     formatstring_initfiles2 = "{:40s}{:>15s}"
     formatstring_initfiles3 = "{:40s}{:15.2f}"
+    leader=list["Language:", "Total words:", "Minimum Stem Length", "Maximum Affix Length",
+        "Minimum number of stems in signature:", "Total letter count in words:",
+        "Average letters per word:"]
     if this_file == "console":
         print "Initialization."
-        print formatstring_initfiles2.format("Language: ", language)
-        print formatstring_initfiles1.format("Total words:",         this_lexicon.total_word_count)
-        print formatstring_initfiles1.format("Minimum Stem Length",  this_lexicon.MinimumStemLength)
-        print formatstring_initfiles1.format("Maximum Affix Length", this_lexicon.MaximumAffixLength)
-        print formatstring_initfiles1.format("Minimum Number of stems in signature: ",
-                                                                     this_lexicon.MinimumStemsInaSignature)
-        print formatstring_initfiles1.format("Total letter count in words: ", this_lexicon.word_letter_count)
+        print formatstring_initfiles2.format(list[0], language)
+        print formatstring_initfiles1.format(list[1],         this_lexicon.total_word_count)
+        print formatstring_initfiles1.format(list[2],  this_lexicon.MinimumStemLength)
+        print formatstring_initfiles1.format(list[3], this_lexicon.MaximumAffixLength)
+        print formatstring_initfiles1.format(list[4], this_lexicon.MinimumStemsInaSignature)
+        print formatstring_initfiles1.format(list[5], this_lexicon.word_letter_count)
         if this_lexicon.total_word_count > 0:
-            print formatstring_initfiles3.format("Average letters per word: ", this_lexicon.word_letter_count/ float(this_lexicon.total_word_count) )
+            print formatstring_initfiles3.format(list[6], this_lexicon.word_letter_count/ float(this_lexicon.total_word_count) )
     else:
         print >>this_file, "\nInitialization."
         print >> this_file, formatstring_initfiles2.format("Language: ", language)
@@ -112,38 +127,93 @@ def print_signature_list_1(this_file, DisplayList, stemcountcutoff, totalrobustn
             print >> this_file, formatstring2.format(sig, stemcount, robustness, robustnessproportion,
                                                      runningsumproportion, stem)
     print >> this_file, "-" * 60
+    this_file.close()
 
-def print_signatures_to_svg (outfile_html, DisplayList,SignatureToStems):
-    thispage = Page()
+def print_signature_list_1_html(this_file, DisplayList, stemcountcutoff, totalrobustness):
+    print "   Printing signatures in an  html file."
+    runningsum = 0.0
+    formatstring1 = '{0:25}{1:>10s} {2:>15s} {3:>25s} {4:>20s}{5:>20s} '
+    formatstring2 = '{0:<25}{1:10d} {2:15d} {3:25.3%} {4:20.3%}{5:>20s}'
+    headers = ["Signature", "Stem count", "Robustness", "Proportion of robustness",
+                                             "Running sum", "Example"]
+    DisplayList = sorted(DisplayList, lambda x, y: cmp(x[2], y[2]), reverse=True)
+    
+    start_an_html_file( this_file)
+
+    start_an_html_table(this_file)
+    start_table_row(this_file)
+    for item in headers:
+        add_table_entry(item, this_file)
+    end_table_row(this_file)
+    
+    for sig, stemcount, robustness, stem in DisplayList:
+         
+        runningsum += robustness
+        if stemcount < stemcountcutoff:
+            break;
+        else:
+            start_table_row(this_file)
+            robustnessproportion = float(robustness) / totalrobustness
+            runningsumproportion = runningsum / totalrobustness
+            add_table_entry(sig, this_file)
+            add_table_entry(str(stemcount), this_file)
+            add_table_entry(str(robustness), this_file)
+            add_table_entry(str(robustnessproportion), this_file)
+            add_table_entry(str(runningsumproportion), this_file)
+            add_table_entry(stem, this_file)
+        end_table_row(this_file)
+    end_an_html_table(this_file)
+        
+    end_an_html_file( this_file)
+    this_file.close() 
+
+# ----------------------------------------------------------------------------------------------------------------------------#
+
+def print_signatures_to_svg (outfile_html, DisplayList,SignatureToStems,FindSuffixesFlag):
+    this_page = Page()
     
     DisplayList = sorted(DisplayList, lambda x, y: cmp(x[2], y[2]), reverse=True)
-    thispage.start_an_html_file(outfile_html)
+    this_page.start_an_html_file(outfile_html)
     for signo in range(len(DisplayList)):
             (sig,stemcount,robustness,stem) = DisplayList[signo]
             stemlist = SignatureToStems[sig].keys()
             affixlist = sig.split("=")
-            signature_box = SignatureBox(stemlist, affixlist)
-            #stem_box = Box(stemlist)
-            #affix_box = Box(affixlist,style="vertical")
-            #this_box_pair = BoxPair(stem_box, affix_box)
-                
-           
-            thispage.print_signature_box(outfile_html,signature_box,300,300)
-    thispage.end_an_html_file(outfile_html)
+            if FindSuffixesFlag:
+                signature_box = SignatureBox(stemlist, affixlist,FindSuffixesFlag)
+            else:
+                signature_box=SignatureBox(affixlist,stemlist, FindSuffixesFlag)
+            signature_box.print_signature_box(outfile_html, this_page, 300,300)
+    this_page.end_an_html_file(outfile_html)
+    outfile_html.close()
+
+# ----------------------------------------------------------------------------------------------------------------------------#
+def print_complex_signature_to_svg (outfile_html, sig, lexicon):
+# a complex signature is one where the "stem" column is a stack, of several groups, including a stem list,
+# and also a list of analyzed stems with their signatures. 
+    this_page = Page()
+    
+    this_page.start_an_html_file(outfile_html)
+    stemlist = lexicon.SignatureToStems[sig].keys()
+    affixlist = sig.split("=")
+    complex_signature_box = ComplexSignatureBox(stemlist, affixlist)
+    signature_box.print_signature_box(outfile_html, this_page, 300,300)
+    this_page.end_an_html_file(outfile_html)
+    outfile_html.close() 
+	 
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def print_signature_list_2(this_file, lxalogfile, Lexicon,  DisplayList, stemcountcutoff, totalrobustness, SignatureToStems,
-                           StemCorpusCounts, suffix_flag):
+def print_signature_list_2(this_file, signature_feeding_outfile, lxalogfile, Lexicon,  DisplayList, stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
+
+    start_an_html_file (signature_feeding_outfile)
+    
+
     numberofstemsperline = 6
     stemlist = []
     reversedstemlist = []
     count = 0
     print >> this_file, "*** Stems in each signature"
     for sig, stemcount, robustness, stem in DisplayList:
-        # if encoding == "utf8":
-        #        print >> this_file, "\n"+"="*45 , sig, "\n"
-        # else:
         print >> this_file, "\n" + "=" * 45, '{0:30s} \n'.format(sig)
         n = 0
 
@@ -210,21 +280,44 @@ def print_signature_list_2(this_file, lxalogfile, Lexicon,  DisplayList, stemcou
             print >> this_file, formatstring % (item[0], item[1], item[2], flag)
         # ------------------------------------------------------------------------------------------------------
         # Already analyzed stems: Just a temporary experiment to see how one signature feeds another.
-        #print "\n", sig    , "line 213 of printing_to_files"     
+        #print "\n", sig    , "line 213 of printing_to_files"    
         numberofstems = len(stemlist)
         temp_signatures_with_stems = dict()
+        formatstring = "{0:20s} {1:30s} {2:20s}"
+
+       
+
+        div_last   = "</div>\n"   
+        table_first ="<table>\n"
+
+        start_an_html_div(signature_feeding_outfile, class_type="")
+        start_an_html_table(signature_feeding_outfile)
+        print  >> signature_feeding_outfile, sig, "\n"
         for stem in stemlist:
             if stem in Lexicon.WordToSig:
                 for pair in Lexicon.WordToSig[stem]:
                     sig2 = pair[1]
                     if  sig2 != sig:               
-                        #print stem, sig2,   pair
+                        print  >> signature_feeding_outfile, formatstring.format(stem, sig2, pair[0])
                         if sig2 not in temp_signatures_with_stems:
                                 temp_signatures_with_stems[sig2]=list()
                         temp_signatures_with_stems[sig2].append((stem,pair[0]))
-        #for sig in temp_signatures_with_stems:
-        #        print "printing_to_files, line 226", sig, temp_signatures_with_stems[sig]
-             
+        print >>signature_feeding_outfile    
+        end_an_html_table(signature_feeding_outfile)
+        end_an_html_div(signature_feeding_outfile)
+    
+
+
+        signature_list= sorted(temp_signatures_with_stems , key = lambda x:len(temp_signatures_with_stems[x]), reverse=True  )             
+        for item  in signature_list:
+                print  >> signature_feeding_outfile, temp_signatures_with_stems[item] 
+
+        signature_feeding_outfile.write(div_last)
+           
+
+    this_file.close()
+    signature_feeding_outfile.close() 
+  
 # ----------------------------------------------------------------------------------------------------------------------------#
 def print_unlikelysignatures(this_file, signatures, ColumnWidth):
     print "   Printing unlikely signatures file."
@@ -247,7 +340,7 @@ def print_unlikelysignatures(this_file, signatures, ColumnWidth):
         print >> this_file
     print >> this_file, "-" * 60
 
-
+    this_file.close()
 # ----------------------------------------------------------------------------------------------------------------------------#
 def print_suffixes(outfile, Suffixes):
     print >> outfile, "--------------------------------------------------------------"
@@ -258,11 +351,15 @@ def print_suffixes(outfile, Suffixes):
     suffixlist.sort(key=lambda suffix: Suffixes[suffix], reverse=True)
     for suffix in suffixlist:
         print >> outfile, "{:8s}{:9,d}".format(suffix, Suffixes[suffix])
+    outfile.close()
     return suffixlist
-
+    
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def print_stems(outfile1, outfile2, StemToWord, StemToSignature, WordCounts, suffixlist):
+def print_stems(outfile1, outfile_stems_and_unanalyzed_words, Lexicon, suffixlist):
+    StemToWord = Lexicon.StemToWord
+    StemToSignature = Lexicon.StemToSignature
+    WordCounts = Lexicon.WordCounts
     stems = StemToWord.keys()
     stems.sort()
     print >> outfile1, "--------------------------------------------------------------"
@@ -282,47 +379,44 @@ def print_stems(outfile1, outfile2, StemToWord, StemToSignature, WordCounts, suf
         stemcount = float(stemcount)
         for word in wordlist:
             wordcount = WordCounts[word]
-            print >> outfile1, '{:15}{:4n} {:7.1%} '.format(word, wordcount, wordcount / stemcount),
+            print >> outfile1, '{:10}{:4n} '.format(word, wordcount),
+
         print >> outfile1
+ 
+    # Add to wordlist all the words that have no analysis 
 
-        # We print a list of stems with their words (and frequencies) in which only those suffixes which are among the K most frequent suffixes,
-        # in order to use visualization methods that put soft limits on the number of dimensions they can handle well.
-
-    threshold_for_top_affixes = 25  # this will give us one more than that number, since we are zero-based counting.
-    top_affixes = suffixlist[0:threshold_for_top_affixes]
-    
-    
-    # [continue work here] 
-    
-    
-    print >> outfile2, "\n--------------------------------------------------------------"
-    print >> outfile2, "---  Stems and their words with high frequency affixes"
-    print >> outfile2, "--------------------------------------------------------------"
-    print "   Printing stems and their words, but only with high frequency affixes."
-    print >> outfile2, "---\n--- Only signatures with these affixes: ", top_affixes
-    print >> outfile2, "---"
+    stems_and_unanalyzed_words = deepcopy(stems)
+    for word in WordCounts:
+	if word not in Lexicon.WordToSig:
+	    stems_and_unanalyzed_words.append(word + "*")
+            #print "printing to files 387", word
+    stems_and_unanalyzed_words.sort()
+    print >> outfile_stems_and_unanalyzed_words, "--------------------------------------------------------------"
+    print >> outfile_stems_and_unanalyzed_words, "---  Stems and unanalyzed words"
+    print >> outfile_stems_and_unanalyzed_words, "--------------------------------------------------------------"
+    print "   Printing stems and their words along with unanalyzed words."
     StemCounts = dict()
-    for stem in stems:
-        signature = StemToSignature[stem]
-        for affix in signature:
-            if affix not in top_affixes:
-                continue
-        print >> outfile2, '{:15}'.format(stem),
-        wordlist = StemToWord[stem].keys()
-        wordlist.sort()
-        stemcount = 0
-        for word in wordlist:
-            stemcount += WordCounts[word]
-        StemCounts[stem] = stemcount
-        print    >> outfile2, '{:5d}'.format(stemcount), '; ',
-        stemcount = float(stemcount)
-        for word in wordlist:
-            wordcount = WordCounts[word]
-            print >> outfile2, '{:15}{:4n} {:7.1%} '.format(word, wordcount, wordcount / stemcount),
-        print >> outfile2
-        # print top_affixes
-
-
+    for item in stems_and_unanalyzed_words:
+        # print >> outfile_stems_and_unanalyzed_words, '{:15}'.format(item),
+	if item in stems:
+                stem = item
+		print >> outfile_stems_and_unanalyzed_words, "{:15s}".format(stem),
+		wordlist = StemToWord[stem].keys()
+		wordlist.sort()
+		stemcount = 0
+		for word in wordlist:
+		    stemcount += WordCounts[word]
+		StemCounts[stem] = stemcount
+		print    >> outfile_stems_and_unanalyzed_words, '{:5d}'.format(stemcount), '; ',
+		stemcount = float(stemcount)
+		for word in wordlist:
+		    wordcount = WordCounts[word]
+		    print >> outfile_stems_and_unanalyzed_words, '{:15}{:4n} {:7.1%} '.format(word, wordcount, wordcount / stemcount),
+        	print >> outfile_stems_and_unanalyzed_words
+	else:
+		print >>outfile_stems_and_unanalyzed_words,  item
+    outfile1.close()
+    outfile_stems_and_unanalyzed_words.close()
 # ----------------------------------------------------------------------------------------------------------------------------#
 def AverageCountOfTopStems(howmany, sig, Signatures, StemCounts, logfile):
     stemlist = list(Signatures[sig])
@@ -357,6 +451,7 @@ def makeWordListFromSignature(signature, stemset):
             else:
                 word = stem + affix
         wordlist.append(word)
+    
     return wordlist
 
 
@@ -500,9 +595,9 @@ def print_all_words(outfile, WordCounts, WordToSig):
             print >> outfile, '  {0:<28}'.format(word), ":", WordCounts[word]
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def print_words(outfile, logfile, WordToSig, ColumnWidth):
+def print_words(outfile, outfile_html, logfile,words, WordToSig, ColumnWidth):
     # ----------------------------------------------------------------------------------------------------------------------------#
-    words = WordToSig.keys()
+ 
     words.sort()
     print >> outfile, "***"
     print >> outfile, "\n--------------------------------------------------------------"
@@ -511,14 +606,12 @@ def print_words(outfile, logfile, WordToSig, ColumnWidth):
     maxnumberofsigs = 0
     ambiguity_counts = dict()
     for word in WordToSig:
-        # print "388", word, WordToSig[word]
         ambiguity = len(WordToSig[word])
         if ambiguity not in ambiguity_counts:
             ambiguity_counts[ambiguity] = 0
         ambiguity_counts[ambiguity] += 1
         if len(WordToSig[word]) > maxnumberofsigs:
             maxnumberofsigs = len(WordToSig[word])
-            # print word, maxnumberofsigs
     print >> logfile, "How many words have multiple analyses?"
     print "   How many words have multiple analyses?"
     for i in range(maxnumberofsigs):
@@ -528,14 +621,40 @@ def print_words(outfile, logfile, WordToSig, ColumnWidth):
 
     wordlist = WordToSig.keys()
     wordlist.sort()
-
+    
+    
+    formatstring = "{0:15s} {1:30s} "
+	
     for word in wordlist:
-        print >> outfile, '{0:<30}'.format(word), ":",
+        print >> outfile, '{0:15}'.format(word), ":",
         for n in range(len(WordToSig[word])):
             # sig = MakeStringFromSignature(WordToSig[word][n], ColumnWidth)
             stem, sig = WordToSig[word][n]
-            print >> outfile, sig + " " * (ColumnWidth - len(sig)),
+            print >> outfile, formatstring.format(stem, sig),  
         print >> outfile
+        
+    start_an_html_file(outfile_html)
+    start_an_html_div(outfile_html, class_type="wordlist")
+    start_an_html_table(outfile_html)
+    start_an_html_table_row(outfile_html)
+    add_an_html_header_entry(outfile_html,"word")
+    add_an_html_header_entry(outfile_html,"stem")
+    add_an_html_header_entry(outfile_html,"signature")
+    end_an_html_table_row(outfile_html)
+    for word in wordlist:
+        start_an_html_table_row(outfile_html)
+        add_an_html_table_entry(outfile_html,word)
+        for n in range(len(WordToSig[word])):
+            # sig = MakeStringFromSignature(WordToSig[word][n], ColumnWidth)
+            stem, sig = WordToSig[word][n]
+            add_an_html_table_entry(outfile_html,stem)
+            add_an_html_table_entry(outfile_html,sig)
+        end_an_html_table_row(outfile_html)
+         
+        print >> outfile_html
+    end_an_html_table(outfile_html)
+    end_an_html_div(outfile_html)
+    end_an_html_file(outfile_html)
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
@@ -569,13 +688,7 @@ def print_signature_extensions(outfile, logfile, DisplayList, SignatureToStems):
             if AlignedList1 != None:
                 print >> outfile, "Signature extension:"
                 print >> outfile, "{:35s}{:35s}{:35s}".format(AlignedList1, AlignedList2, Differences),
-                # Make CAlternation:
-                # this_alternation = CAlternation(stemcount)
-                # for i  in range(len(AlignedList1)):
-                #    this_alloform = CAlloform(Differences[i], AlignedList2[i], stemcount)
-                #    this_alternation.AddAlloform (this_alloform)
-                # print  >>outfile, this_alternation.display()
-                # ListOfAlternations.append(this_alternation)
+ 
 
                 if (False):
                     print >> outfile_SigExtensions, "A", FindSuffixesFlag, "{:35s}{:35s}{:35s}".format(AlignedList1,

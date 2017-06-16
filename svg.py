@@ -1,3 +1,43 @@
+def start_an_html_file(outfile):
+        outfile.write("<!DOCTYPE html>\n")
+        outfile.write("<html>\n")
+        outfile.write("<head>\n")
+        outfile.write("<link rel=\"stylesheet\" href=\"style.css\">\n")
+        outfile.write("</head>\n")
+        outfile.write("<body>\n")
+       
+def     end_an_html_file(outfile):
+        outfile.write("</body>\n")
+        outfile.write("</html>\n")
+        outfile.close()
+        
+def start_an_html_table(outfile):
+        outfile.write("<table>\n")
+
+def end_an_html_table(outfile):
+        outfile.write("</table>\n")
+
+def start_an_html_table_row(outfile):
+        outfile.write("<tr>\n")
+
+def end_an_html_table_row(outfile):
+        outfile.write("</tr>\n")
+
+
+def start_an_html_div(outfile, class_type=""):
+   outfile.write("\n\n<div class=\""+ class_type + "\">\n")
+
+def end_an_html_div(outfile):
+   outfile.write("\n\n</div>\n")
+
+def add_an_html_table_entry(outfile,item):
+   outfile.write("<td>{0:1s}</td>\n".format(item))
+
+def add_an_html_header_entry(outfile,item):
+   outfile.write("<th>{0:1s}</th>\n".format(item))
+
+
+
 class Page:
     def __init__(self):
         self.my_height =1000
@@ -5,81 +45,58 @@ class Page:
 
 
     def start_an_html_file(self, outfile):
- 
-
- 
-        outfile.write("<!DOCTYPE html>\n")
-        outfile.write("<html>\n")
-        outfile.write("<head>\n")
-        outfile.write("<link rel=\"stylesheet\" href=\"style.css\">\n")
-        outfile.write("</head>\n")
-        outfile.write("<body>\n")
-        #string1 = "<svg width=\"{0:1d}\" height=\"{1:1d}\">\n"
-        #outfile.write(string1.format(self.my_width,self.my_height))
+        start_an_html_file(outfile)
         return outfile
 
     def end_an_html_file(self,outfile):
-        #outfile.write("</svg>\n")
-        outfile.write("</body>\n")
-        outfile.write("</html>\n")
-        outfile.close()
-        
-
+        end_an_html_file(outfile)
 
     def print_box(self, outfile,  this_box,x,y):
         # x and y are the lower left points of the box, in Page-logical units, where the origin of the Page is its lower left-hand corner
-        
         #this_box.number_of_columns = int(len(this_box.my_string_list)/this_box.max_column_height + 0.5)
- 
         startpoint_x = x
         startpoint_y = self.my_height - y - this_box.my_height
- 
         if this_box.genre == "suffix":
-                div_first="\n\n<div class=\"suffixclass\">\n"
+                div_class="suffixclass"
         else:
-                div_first="\n\n<div class=\"morphemeclass\">\n"
-        div_last = "</div>\n    "
-        line_first="<table>\n"
-        line_last = "</table>\n"
-        line_begin = "<tr>\n"
-        line_end = "</tr>\n"
-        entry = "<td>{0:1s}</td>\n"
-        
-        outfile.write(div_first)
-        outfile.write(line_first)
-
-        if this_box.genre=="suffix":
+                div_class="morphemeclass"
+        start_an_html_div(outfile,div_class)
+        start_an_html_table(outfile)
+        if this_box.genre=="suffix" or this_box.genre=="prefix":
             for morph in this_box.my_string_list:
-                outfile.write(line_begin)
-                outfile.write(entry.format(morph))
-                outfile.write(line_end) 
-            outfile.write(line_last)
-
+                start_an_html_table_row(outfile)
+                add_an_html_table_entry(outfile,morph)
+                end_an_html_table_row(outfile)
+            end_an_html_table(outfile)
         else:   
                 colno=0
                 for stemno in range(len(this_box.my_string_list)):
                   if colno == 0:
-                        outfile.write(line_begin)
-                  outfile.write(entry.format(this_box.my_string_list[stemno]) )
+                        start_an_html_table_row(outfile)
+                  add_an_html_table_entry(outfile,this_box.my_string_list[stemno])
                   colno += 1
                   if colno == this_box.number_of_columns:
-                        outfile.write(line_end)
+                        end_an_html_table_row(outfile)
                         colno = 0
                 while colno < this_box.number_of_columns :
-                     outfile.write(entry.format(""))
+                     add_an_html_table_entry(outfile,"")
                      colno += 1
-                outfile.write(line_last)
-         
-        outfile.write(div_last)
+                end_an_html_table_row(outfile)
+                end_an_html_table(outfile)
+        end_an_html_div(outfile)
 
     def print_signature_box(self,outfile,this_signature_box,x,y):
-        deltax = this_signature_box.my_box1.my_width + 25
-        div_first="\n\n<div class=\"signature\">\n"
-        div_last ="</div>"
-        outfile.write(div_first)
-        self.print_box(outfile, this_signature_box.my_box1,x,y)
-        self.print_box(outfile, this_signature_box.my_box2,x+deltax, y)
-        outfile.write(div_last)
+        deltax = this_signature_box.my_stack1.my_width + 25
+        start_an_html_div(outfile, class_type="signature")
+        self.print_box(outfile, this_signature_box.my_stack1,x,y)
+        self.print_box(outfile, this_signature_box.my_stack2,x+deltax, y)
+        end_an_html_div(outfile)
+
+class Stack:
+    def __init__(self):       
+        self.my_box_list = list()
+
+
 class Box:
 
     def __init__(self, string_list,genre="None"):
@@ -110,13 +127,48 @@ class Box:
 
  
 class SignatureBox:
-    def __init__(self,stem_list,affix_list):
-        self.my_box1=Box(stem_list,"stem")
-        self.my_box2=Box(affix_list,"suffix")
-        self.my_box1.genre="stem"
-        self.my_box2.genre="suffix"
+    def __init__(self,stem_list,affix_list,FindSuffixesFlag):
+        self.my_two_column_box = TwoColumnBox()
+        if FindSuffixesFlag:
+            self.my_stack1 = Box(stem_list,"stem")
+            self.my_stack2 = Box(affix_list,"suffix")
+        else:
+            self.my_stack1 = Box(stem_list,"prefix")
+            self.my_stack2 = Box(affix_list,"stem")       
 
- 
+    def print_signature_box(self,  outfile, Page, x, y):
+        deltax = self.my_stack1.my_width + 25
+        start_an_html_div(outfile, class_type="signature")
+        Page.print_box(outfile, self.my_stack1,x,y)
+        Page.print_box(outfile, self.my_stack2,x+deltax, y)
+        end_an_html_div(outfile)
+
+
+
+
+
+        
+class ComplexSignatureBox:
+    def __init__(self,stem_list,affix_list):
+        self.my_two_column_box = TwoColumnBox()
+        self.my_stack1 = list()
+        self.my_stack1 = append.Box(stem_list,"stem")
+        self.my_stack2 = Box(affix_list,"suffix")
+    def print_complex_signature_box(self):
+        deltax = self.my_stack1.my_width + 25
+        start_an_html_div(outfile, class_type="signature")
+        for box in self.my_stack1:
+            Page.print_box(outfile, box)
+        Page.print_box(outfile, self.my_stack2,x+deltax, y)
+        end_an_html_div(outfile)        
+         
+
+class TwoColumnBox:
+    def __init__(self):
+        self.my_stack1 = Stack()
+        self.my_stack2 = Stack()
+
+
 
  
 

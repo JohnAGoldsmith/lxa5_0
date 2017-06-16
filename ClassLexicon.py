@@ -125,14 +125,15 @@ class CLexicon:
         self.Words = list()
         self.WordCounts = dict()
         self.ReverseWordList = list()
+        self.Protostems= dict()
         self.WordToSig = {}
         self.StemToWord = {}
         self.StemToAffix = {}  # value is a Dict whose keys are affixes.
-        self.StemToSignature = {}  # value is a string with hyphens
-        self.SignatureStringsToStems = {}
+        self.StemToSignature = {}  # value is a list of pairs of the form (stem, sig-string) where the sig-string is a string with "=" as separator. This was changed June 2017 to allow more than one sig. 
+        self.SignatureStringsToStems = {} 
         self.Signatures={} ; #key is string, value is a Signature object
+        self.RawSignatures=dict(); # key is signature-string, and value is a string of stems. These signatures occur only once (or are bad for some other reason), and we want to find what's good inside them.
         self.UnexplainedContinuations = {}
-        self.UnlikelySignatureStringsToStems = {}
         self.RemovedSignatureList = list()
         self.UnlikelyStems = {}
         self.StemCorpusCounts = {}
@@ -141,11 +142,10 @@ class CLexicon:
         self.Prefixes = {}
         self.WordBiographies=dict()
         self.SignatureBiographies=dict()
-        self.MinimumStemsInaSignature = 2
-        self.MinimumAffixesInaSignature = 2
-        self.MinimumStemLength = 3
+        #self.MinimumStemsInSignature = 2
+        #self.MinimumAffixesInaSignature = 2
+        self.MinimumStemLength = 2
         self.MaximumAffixLength = 5
-        self.MaximumNumberOfAffixesInASignature = 100
 
         self.TotalRobustInSignatures = 0
 
@@ -235,11 +235,9 @@ class CLexicon:
                                     affix_t = "NULL"
                                 else:
                                     affix_t = affix
-                                #print "612", stem, affix_t
                                 del self.Parses[(stem, affix_t)]
                                 newaffix = shiftingchunk + affix_t
                                 self.Parses[(newstem, newaffix)] = 1
-                                #print "615 {0:20s} {1:20s} {2:20s} {3:20s}".format(stem, affix, newstem,  newaffix )
                         else:
                             newstem = stem[chunklength:]
                             for affix in sig_list:
@@ -253,17 +251,36 @@ class CLexicon:
         return count
 
     # --------------------------------------------------------------------------------------------------------------------------#
-    def printSignatures(self, lxalogfile, outfile_signatures, outfile_unlikelysignatures, outfile_html, outfile_wordstosigs,
-                        outfile_stemtowords, outfile_stemtowords2, outfile_SigExtensions, outfile_suffixes, outfile_unexplained, outfile_words, encoding,
-                        FindSuffixesFlag):
+    def printSignatures(self,  encoding, FindSuffixesFlag, suffix = ""): 
+ 
         # NOTE! this needs to be updated to include Lexicon.Signatures
         # ----------------------------------------------------------------------------------------------------------------------------#
+        suffix = "_" + suffix
+        filename_txt = ["Log", "Signatures", "Signatures_2", "Signatures_svg_html", "Signatures_feeding", 
+                  "SignatureDetails", "WordToSig", "StemToWords","SigExtensions", "Suffixes",   "StemsAndUnanalyzedWords"]
+        filenames_html = [  "Signatures_html", "Index", "WordToSig_html"] 
+        lxalogfile = open(self.outfolder + "Log", "w")
 
-        print "   Print signatures from within Lexicon class."
+        
+        outfile_signatures_1            = open(self.outfolder + "Signatures"+ suffix+".txt", "w")
+        outfile_signatures_2            = open(self.outfolder + "Signatures_"+ suffix+"2.txt", "w")  
+        outfile_signatures_svg_html     = open(self.outfolder + "Signatures_graphic"+ suffix+".html", "w") 
+        outfile_signature_feeding       = open(self.outfolder + "Signature_feeding"+ suffix+".html", "w")  
+        outfile_signatures_html         = open(self.outfolder + "Signatures"+ suffix+".html", "w")  
+        outfile_signatures_details      = open(self.outfolder + "Signature_Details"+ suffix+".txt", "w")  
+        outfile_index                   = open(self.outfolder + "Index"+ suffix+".html", "w")   
+
+        outfile_wordstosigs             = open(self.outfolder + "WordToSig"+ suffix+".txt", "w")
+        outfile_wordstosigs_html        = open(self.outfolder + "WordToSig"+ suffix+".html", "w")
+        outfile_stemtowords             = open(self.outfolder + "StemToWords"+ suffix+".txt", "w")
+        outfile_SigExtensions           = open(self.outfolder + "SigExtensions"+ suffix+".txt", "w")
+        outfile_suffixes                = open(self.outfolder + "Suffixes"+ suffix+".txt", "w")
+        outfile_stems_and_unanalyzed_words = open(self.outfolder + "StemsAndUnanalyzedWords"+ suffix+".txt", "w") 
+
         # 1  Create a list of signatures, sorted by number of stems in each. DisplayList is that list. Its 4-tuples   have the signature, the number of stems, and the signature's robustness, and a sample stem
 
         ColumnWidth = 35
-        stemcountcutoff = self.MinimumStemsInaSignature
+        stemcountcutoff = 1
         SortedListOfSignatures = sorted(self.SignatureStringsToStems.items(), lambda x, y: cmp(len(x[1]), len(y[1])),
                                         reverse=True)
 
@@ -271,7 +288,6 @@ class CLexicon:
         for sig, stems in SortedListOfSignatures:
             if len(stems) < stemcountcutoff:
                 continue;
-            # print 464, sig, stems
             if sig in self.SignatureStringsToStems:
                 stems = self.SignatureStringsToStems[sig].keys()
                 DisplayList.append((sig, len(stems), getrobustness(sig, stems), stems[0]))
@@ -290,7 +306,7 @@ class CLexicon:
         for sig, stemcount, robustness, stem in DisplayList:
             totalrobustness += robustness
 
-        initialize_files(self, outfile_signatures, singleton_signatures, doubleton_signatures, DisplayList)
+        initialize_files(self, outfile_signatures_1, singleton_signatures, doubleton_signatures, DisplayList)
         initialize_files(self, lxalogfile, singleton_signatures, doubleton_signatures, DisplayList)
         initialize_files(self, "console", singleton_signatures, doubleton_signatures, DisplayList)
 
@@ -298,36 +314,34 @@ class CLexicon:
             for sig, stemcount, robustness in DisplayList:
                 if len(self.SignatureStringsToStems[sig]) > 5:
                     self.Multinomial(sig, FindSuffixesFlag)
+        # Print html index
+        print_html_report(outfile_index, self, singleton_signatures,doubleton_signatures, DisplayList)
 
         # Print signatures (not their stems) sorted by robustness
-        print_signature_list_1(outfile_signatures, DisplayList, stemcountcutoff, totalrobustness)
+        print_signature_list_1(outfile_signatures_1, DisplayList, stemcountcutoff, totalrobustness)
         
         # Print signatures to html file with svg
-        print_signatures_to_svg (outfile_html, DisplayList,self.SignatureStringsToStems)
+        print_signatures_to_svg (outfile_signatures_svg_html, DisplayList,self.SignatureStringsToStems,FindSuffixesFlag)
 
         # Print suffixes
         suffix_list = print_suffixes(outfile_suffixes, self.Suffixes)
 
         # Print stems
-        print_stems(outfile_stemtowords, outfile_stemtowords2, self.StemToWord, self.StemToSignature, self.WordCounts,
-                    suffix_list)
+        print_stems(outfile_stemtowords, outfile_stems_and_unanalyzed_words, self,  suffix_list)
+
+        # print the stems of each signature to html:
+        print_signature_list_1_html(outfile_signatures_html, DisplayList, stemcountcutoff, totalrobustness)
 
         # print the stems of each signature:
-        print_signature_list_2(outfile_signatures, lxalogfile, self, DisplayList, stemcountcutoff, totalrobustness,
-                               self.SignatureStringsToStems, self.StemCorpusCounts,  FindSuffixesFlag)
+        print_signature_list_2(outfile_signatures_2, outfile_signature_feeding, lxalogfile, self, DisplayList, stemcountcutoff,  totalrobustness, self.SignatureStringsToStems, self.StemCorpusCounts,  FindSuffixesFlag)
 
         # print WORDS of each signature:
-        print_words(outfile_wordstosigs, lxalogfile, self.WordToSig, ColumnWidth)
+        print_words(outfile_wordstosigs, outfile_wordstosigs_html, lxalogfile, self.Words, self.WordToSig, ColumnWidth)
 
         # print unlikely signatures:
-        print_unlikelysignatures(outfile_unlikelysignatures, self.UnlikelySignatureStringsToStems, ColumnWidth)
+        #print_unlikelysignatures(outfile_unlikelysignatures, self.UnlikelySignatureStringsToStems, ColumnWidth)
 
-        # print words, with unanalyzed words indicated
-        print_all_words(outfile_words, self.WordCounts, self.WordToSig)
-
-        # print unexplained suffixes
-        #print_all_unexplained_continuations(outfile_unexplained, self.UnexplainedContinuations,self.StemToSignature.keys())
-
+    
         # print signature extensions:
 
     # print_signature_extensions(outfile_SigExtensions, lxalogfile, DisplayList, self.SignatureStringsToStems)
@@ -342,7 +356,8 @@ class CLexicon:
     ## -------                                                      ------- #
     ##              Utility functions                               ------- #
     ## -------                                                      ------- #
-    def PrintWordCounts(self, outfile):
+    def PrintWordCounts(self):
+        outfile = open(self.outfolder + "WordCount.txt", "w")
         formatstring = "{:20s} {:6d}"
         words = self.WordCounts.keys()
         words.sort()
@@ -352,27 +367,20 @@ class CLexicon:
     def Multinomial(self, this_signature, FindSuffixesFlag):
         counts = dict()
         total = 0.0
-        # print "{:45s}".format(this_signature),
         for affix in this_signature:
-            # print "affix", affix
             counts[affix] = 0
             for stem in self.SignatureStringsToStems[this_signature]:
-                # print "stem", stem
                 if affix == "NULL":
                     word = stem
                 elif FindSuffixesFlag:
                     word = stem + affix
                 else:
                     word = affix + stem
-            # print stem,":", affix, "::", word
-            # print "A", counts[affix], self.WordCounts[word]
             counts[affix] += self.WordCounts[word]
             total += self.WordCounts[word]
         frequency = dict()
         for affix in this_signature:
             frequency[affix] = counts[affix] / total
-            # print "{:12s}{:10.2f}   ".format(affix, frequency[affix]),
-            # print
   # ----------------------------------------------------------------------------------------------------------------------------#
 
 
@@ -413,9 +421,6 @@ class CLexicon:
 
             tempstemlength = 0
 
-
-            #self.TotalRobustnessInSignatures += getrobustness(mystems, sig)
-            #self.AffixLettersInSignatures += AffixListLetterLength
         return reportlist
 
 class Word:
@@ -594,23 +599,31 @@ def TestForCommonEdge(stemlist, outfile, threshold, FindSuffixesFlag):
 
 
 
-#
+# 
 def getrobustness(sig, stems):
     # ----------------------------------------------------------------------------------------------------------------------------#
-    countofsig = len(sig)
+    sig_string_list = sig.split("=")
+    countofsig = len(sig_string_list)
     countofstems = len(stems)
     lettersinstems = 0
     lettersinaffixes = 0
     for stem in stems:
         lettersinstems += len(stem)
-    for affix in sig:
-        lettersinaffixes += len(affix)
+    for affix in sig_string_list:
+	if affix == "NULL":
+	  thislength = 1
+	else: thislength = len(affix)
+        lettersinaffixes += thislength
+    robustness = lettersinstems * (countofsig - 1) + lettersinaffixes * (countofstems - 1) 
+    print sig, "count:", countofsig, "stem count: ", countofstems, "letters in stems:", lettersinstems, "letters in affixes", lettersinaffixes, "robustness: ", robustness
+    print "\n", stems
     # ----------------------------------------------------------------------------------------------------------------------------#
-    return lettersinstems * (countofsig - 1) + lettersinaffixes * (countofstems - 1)
+    return robustness
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
 
+# The following function is not used, and does the same as the one above. Delete it.
 # ---------------------------------------------------------#
 def FindSignature_LetterCountSavings(Signatures, sig):
     affixlettercount = 0

@@ -50,6 +50,7 @@ def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
                         token = token[:-1]
                     if len(token) == 0:
                         continue
+		    token.lower()	
                     if token in Lexicon.WordCounts:
                         Lexicon.WordCounts[token] += 1
                         tokencount += 1
