@@ -204,7 +204,8 @@ if True:
 
 
 if True and datatype == "CORPUS":
-    Dynamics(Lexicon,FileObject["Dynamics"])
+    dynamics_file = open(outfolder +  "dynamics.txt", "w")
+    Dynamics(Lexicon,dynamics_file)
 
 if True:
     print "  3. Find good signatures inside bad."

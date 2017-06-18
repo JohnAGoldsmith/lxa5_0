@@ -615,8 +615,8 @@ def getrobustness(sig, stems):
 	else: thislength = len(affix)
         lettersinaffixes += thislength
     robustness = lettersinstems * (countofsig - 1) + lettersinaffixes * (countofstems - 1) 
-    print sig, "count:", countofsig, "stem count: ", countofstems, "letters in stems:", lettersinstems, "letters in affixes", lettersinaffixes, "robustness: ", robustness
-    print "\n", stems
+    #print sig, "count:", countofsig, "stem count: ", countofstems, "letters in stems:", lettersinstems, "letters in affixes", lettersinaffixes, "robustness: ", robustness
+    #print "\n", stems
     # ----------------------------------------------------------------------------------------------------------------------------#
     return robustness
 
