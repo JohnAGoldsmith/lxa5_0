@@ -135,6 +135,38 @@ class Edge_lxa:
         return count
 
     # ----------------------------------------------------------------------------#
+    def test_if_most_labels_start_with_common_letter(FinalLetter):
+        counter = dict()
+        threshold  = 0.90
+        for label in self.labels:
+            if label[0] not in counter:
+                counter[label[0]]=1
+            else:
+                counter[label[0]] +=1
+        letters = counter.keys()
+        letters.sort(key=lambda x:counter[x], reverse = True)
+        max_letter = sorted_letters[0]
+        if counter[max_letter] / float(len(self.labels)) >= threshold:
+            return (max_letter, counter[letter], len(self.labels))
+        else:
+            return (False,False,False)
+    # ----------------------------------------------------------------------------#
+    def test_if_most_labels_end_with_common_letter(FinalLetter):
+        counter = dict()
+        threshold  = 0.90
+        for label in self.labels:
+            if label[-1] not in counter:
+                counter[label[-1]]=1
+            else:
+                counter[label[-1]] +=1
+        letters = counter.keys()
+        letters.sort(key=lambda x:counter[x], reverse = True)
+        max_letter = sorted_letters[0]
+        if counter[max_letter] / float(len(self.labels)) >= threshold:
+            return (max_letter, counter[letter], len(self.labels))
+        else:
+            return (False,False,False)
+    # ----------------------------------------------------------------------------#
     def testIfAllLabelsEndWithCommonLetter(FinalLetter):
         for label in self.labels:
             if label[-1] != FinalLetter:
@@ -398,6 +430,13 @@ class FSA_lxa:
             if self.Edges[index] == otherEdge:
                 self.Edges.insert(index + 1, thisEdge)
         return thisEdge
+    # -----------------------------------------------------------#
+    def addEdgeToSameEndState(self, otherEdge, stateFrom):
+        thisEdge = Edge_lxa(len(self.Edges),  stateFrom, otherEdge.ToState, otherEdge.stemFlag)
+        for index in range(len(self.Edges)):
+            if self.Edges[index] == otherEdge:
+                self.Edges.insert(index + 1, thisEdge)
+        return thisEdge
 
     # -----------------------------------------------------------#
     def cleanDeletedStatesAndEdges(self):
@@ -591,6 +630,11 @@ class FSA_lxa:
 
     # -------------------------------#
 
+
+
+
+
+ # -------------------------------------------------#
     def find_highest_weight_affix_in_an_edge(self, outfile, FindSuffixesFlag):
 
         candidates = list()
@@ -705,7 +749,70 @@ class FSA_lxa:
 
         return
 
-    # -----------------------------------------------------------#
+    # -----------------------------
+    def ExtractSinglePeripheralLetter(self, this_edge, left_edge_boolean_flag):
+        """
+        :param this_edge: we examine each of the labels on this edge
+        :param left_edge_boolean_flag: if True, the left edge of the labels; if False, the right edge
+        :return: a new edge and state are added if appropriate.
+        """
+
+        if left_edge_boolean_flag:
+            #previous_state=edge.fromState
+            (letter, how_many, label_counts) = test_if_most_labels_start_with_common_letter( this_edge.labels)
+            if letter:
+                if how_many == label_counts:    # all words begin with this letter
+                    new_state_1 = self.addState(self)
+                    new_edge_1 = addEdge(self, this_edge.fromState, new_state_1)
+                    this_edge.fromState = new_state_1
+                    new_edge_1.addLabel(self, letter)
+                    new_list = list()
+                    for label in this_edge.labels:
+                        new_list.append(label[1:])
+                    this_edge.labels=new_list
+                    this_edge.fromState = new_state_1
+                else: # not all labels start with this letter:
+                    new_state_1 = self.addState(self)
+                    new_edge_1 = addEdge(self, this_edge.fromState, new_state_1)
+                    new_edge_2 = addEdge(self, new_state_1, this_edge.toState)
+                    new_edge_1.addLabel(self, letter)
+                    for label in this_edge.labels:
+                        if label[0]==letter:
+                            new_edge_2.addLabel(label[1:])
+                            templist.append(label)
+                    for label in templist:
+                        del this_edge.labels[label]
+        else:
+            #previous_state=edge.fromState
+            (letter, how_many, label_counts) = test_if_most_labels_end_with_common_letter( this_edge.labels)
+            if letter:
+                if how_many == label_counts:    # all words end with this letter
+                    new_state_1 = self.addState(self)
+                    new_edge_1  = self.addEdge(self, this_edge.toState, new_state_1 )
+                    new_edge_1.addLabel(self, letter)
+                    new_list = list()
+                    for label in this_edge.labels:
+                        new_list.append(label[:-1])
+                    this_edge.labels=new_list
+                    this_edge.toState = new_state_1
+                else: # not all labels start with this letter:
+                    new_state_1 = self.addState(self)
+                    new_edge_1 = self.addEdge(self,this_edge.fromState, new_state_1 )
+                    new_edge_2 = self.addEdge(self, new_state_1, this_edge.toState)
+                    new_edge_2.addLabel(self, letter)
+                    for label in this_edge.labels:
+                        if label[-1]==letter:
+                            new_edge_1.addLabel(label[:-1])
+                            templist.append(label)
+                    for label in templist:
+                        del this_edge.labels[label]
+
+
+
+
+    # ------------------------------#
+    # this should be removed: more or less replaced by the preceding function,
+    # ExtractSinglePeripheralLetter
     def shiftSingleLetterPeripherally(self, edge, Letter, FindSuffixesFlag):
         # This function takes a letter (Letter) at the end of a set of labels on an edge, and shifts it to the labels of the following edge,
         # if no other edges enter that state.
