@@ -297,23 +297,36 @@ def print_signature_list_2(this_file, signature_feeding_outfile, lxalogfile, Lex
             if stem in Lexicon.WordToSig:
                 for pair in Lexicon.WordToSig[stem]:
                     sig2 = pair[1]
-                    if  sig2 != sig:               
-                        print  >> signature_feeding_outfile, formatstring.format(stem, sig2, pair[0])
+                    if  sig2 != sig: 
+                        start_table_row(signature_feeding_outfile)
+                        add_table_entry(stem, signature_feeding_outfile)  
+                        add_table_entry(sig2, signature_feeding_outfile)                         
+                        add_table_entry(pair[0], signature_feeding_outfile)              
                         if sig2 not in temp_signatures_with_stems:
                                 temp_signatures_with_stems[sig2]=list()
                         temp_signatures_with_stems[sig2].append((stem,pair[0]))
-        print >>signature_feeding_outfile    
+                        end_table_row(signature_feeding_outfile)
         end_an_html_table(signature_feeding_outfile)
         end_an_html_div(signature_feeding_outfile)
     
 
-
+        start_an_html_div(signature_feeding_outfile, class_type="")
+        start_an_html_table(signature_feeding_outfile)
         signature_list= sorted(temp_signatures_with_stems , key = lambda x:len(temp_signatures_with_stems[x]), reverse=True  )             
         for item  in signature_list:
-                print  >> signature_feeding_outfile, temp_signatures_with_stems[item] 
+                start_table_row(signature_feeding_outfile)
+                add_table_entry(item, signature_feeding_outfile) 
+                end_table_row(signature_feeding_outfile)
+		for chunk in temp_signatures_with_stems[item]:
+		        start_table_row(signature_feeding_outfile)
+       		        add_table_entry("", signature_feeding_outfile)
+		        add_table_entry(chunk, signature_feeding_outfile) 
+                        end_table_row(signature_feeding_outfile)
 
         signature_feeding_outfile.write(div_last)
-           
+        end_an_html_table(signature_feeding_outfile)
+        end_an_html_div(signature_feeding_outfile)
+          
 
     this_file.close()
     signature_feeding_outfile.close() 
