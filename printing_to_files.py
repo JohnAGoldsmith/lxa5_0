@@ -17,9 +17,9 @@ def print_html_report(outfile, this_lexicon, singleton_signatures, doubleton_sig
     start_an_html_file( outfile)
     start_an_html_table(outfile)
     for lineno in range(7):
-                start_table_row(outfile)
-                add_table_entry(leader[lineno], outfile)
-                add_table_entry(values[lineno], outfile)
+                start_an_html_table_row(outfile)
+                add_an_html_table_entry(leader[lineno], outfile)
+                add_an_html_table_entry(values[lineno], outfile)
                 end_table_row(outfile)
     end_an_html_table(outfile)
     

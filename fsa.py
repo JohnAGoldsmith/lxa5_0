@@ -1,4 +1,5 @@
 import pygraphviz as pgv
+import html_lxa
 
 from ClassLexicon import ParseChain
 from ClassLexicon import parseChunk
@@ -524,7 +525,30 @@ class FSA_lxa:
             if edge.toState == thisState:
                 edgelist.append(edge)
         return edgelist
+    # -----------------------------------------------------------#
+    #   Added June 2017 : printing FSA to html
+    # -----------------------------------------------------------#
 
+    def print_FSA_to_HTML(self, filename):
+        outfile = open (filename, "w")
+        start_an_html_file(outfile)
+        
+        startState = self.startState
+        first_edge = self.StartState.getAllEdgesFromThisState(startState)[0]
+        this_box = Box(self,first_edge.labels)
+        this_box.print_box(outfile)
+        
+
+
+
+
+
+
+        end_an_html_file(outfile)
+
+
+
+    # -----------------------------------------------------------#
     # -----------------------------------------------------------#
     # this function and the one after it (find common stems on two edges) is used to determine if two edges might be collapsed into one, allowing their mother states to be merged.
     def updateMorphemeToEdgeDict(self):

@@ -306,6 +306,8 @@ if FSA_flag:
     fsa_file = open(outfolder +  "fsa.txt", "w")
     print >> fsa_file, "#", language, shortfilename, wordcountlimit
     morphology.printFSA(fsa_file)
+    filename = outfolder + "fsa_a.html"
+    morphology.print_FSA_to_HTML(filename)
 
 if False:
     print
