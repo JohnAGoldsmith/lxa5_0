@@ -1,4 +1,5 @@
 import pygraphviz as pgv
+from html_lxa import *
 
 from ClassLexicon import ParseChain
 from ClassLexicon import parseChunk
@@ -134,6 +135,38 @@ class Edge_lxa:
                 count += len(label)
         return count
 
+    # ----------------------------------------------------------------------------#
+    def test_if_most_labels_start_with_common_letter(FinalLetter):
+        counter = dict()
+        threshold  = 0.90
+        for label in self.labels:
+            if label[0] not in counter:
+                counter[label[0]]=1
+            else:
+                counter[label[0]] +=1
+        letters = counter.keys()
+        letters.sort(key=lambda x:counter[x], reverse = True)
+        max_letter = sorted_letters[0]
+        if counter[max_letter] / float(len(self.labels)) >= threshold:
+            return (max_letter, counter[letter], len(self.labels))
+        else:
+            return (False,False,False)
+    # ----------------------------------------------------------------------------#
+    def test_if_most_labels_end_with_common_letter(FinalLetter):
+        counter = dict()
+        threshold  = 0.90
+        for label in self.labels:
+            if label[-1] not in counter:
+                counter[label[-1]]=1
+            else:
+                counter[label[-1]] +=1
+        letters = counter.keys()
+        letters.sort(key=lambda x:counter[x], reverse = True)
+        max_letter = sorted_letters[0]
+        if counter[max_letter] / float(len(self.labels)) >= threshold:
+            return (max_letter, counter[letter], len(self.labels))
+        else:
+            return (False,False,False)
     # ----------------------------------------------------------------------------#
     def testIfAllLabelsEndWithCommonLetter(FinalLetter):
         for label in self.labels:
@@ -398,6 +431,13 @@ class FSA_lxa:
             if self.Edges[index] == otherEdge:
                 self.Edges.insert(index + 1, thisEdge)
         return thisEdge
+    # -----------------------------------------------------------#
+    def addEdgeToSameEndState(self, otherEdge, stateFrom):
+        thisEdge = Edge_lxa(len(self.Edges),  stateFrom, otherEdge.ToState, otherEdge.stemFlag)
+        for index in range(len(self.Edges)):
+            if self.Edges[index] == otherEdge:
+                self.Edges.insert(index + 1, thisEdge)
+        return thisEdge
 
     # -----------------------------------------------------------#
     def cleanDeletedStatesAndEdges(self):
@@ -485,7 +525,30 @@ class FSA_lxa:
             if edge.toState == thisState:
                 edgelist.append(edge)
         return edgelist
+    # -----------------------------------------------------------#
+    #   Added June 2017 : printing FSA to html
+    # -----------------------------------------------------------#
 
+    def print_FSA_to_HTML(self, filename):
+        outfile = open (filename, "w")
+        start_an_html_file(outfile)
+        
+        #startState = self.startState
+        #first_edge = self.getAllEdgesFromThisState(startState)[0]
+        #this_box = Box(self,first_edge.labels)
+        #this_box.print_box(outfile)
+        
+
+
+
+
+
+
+        end_an_html_file(outfile)
+
+
+
+    # -----------------------------------------------------------#
     # -----------------------------------------------------------#
     # this function and the one after it (find common stems on two edges) is used to determine if two edges might be collapsed into one, allowing their mother states to be merged.
     def updateMorphemeToEdgeDict(self):
@@ -591,6 +654,11 @@ class FSA_lxa:
 
     # -------------------------------#
 
+
+
+
+
+ # -------------------------------------------------#
     def find_highest_weight_affix_in_an_edge(self, outfile, FindSuffixesFlag):
 
         candidates = list()
@@ -705,81 +773,65 @@ class FSA_lxa:
 
         return
 
-    # -----------------------------------------------------------#
-    def shiftSingleLetterPeripherally(self, edge, Letter, FindSuffixesFlag):
-        # This function takes a letter (Letter) at the end of a set of labels on an edge, and shifts it to the labels of the following edge,
-        # if no other edges enter that state.
+    # -----------------------------
+    def ExtractSinglePeripheralLetter(self, this_edge, left_edge_boolean_flag):
+        """
+        :param this_edge: we examine each of the labels on this edge
+        :param left_edge_boolean_flag: if True, the left edge of the labels; if False, the right edge
+        :return: a new edge and state are added if appropriate.
+        """
 
+        if left_edge_boolean_flag:
+            #previous_state=edge.fromState
+            (letter, how_many, label_counts) = test_if_most_labels_start_with_common_letter( this_edge.labels)
+            if letter:
+                if how_many == label_counts:    # all words begin with this letter
+                    new_state_1 = self.addState(self)
+                    new_edge_1 = addEdge(self, this_edge.fromState, new_state_1)
+                    this_edge.fromState = new_state_1
+                    new_edge_1.addLabel(self, letter)
+                    new_list = list()
+                    for label in this_edge.labels:
+                        new_list.append(label[1:])
+                    this_edge.labels=new_list
+                    this_edge.fromState = new_state_1
+                else: # not all labels start with this letter:
+                    new_state_1 = self.addState(self)
+                    new_edge_1 = addEdge(self, this_edge.fromState, new_state_1)
+                    new_edge_2 = addEdge(self, new_state_1, this_edge.toState)
+                    new_edge_1.addLabel(self, letter)
+                    for label in this_edge.labels:
+                        if label[0]==letter:
+                            new_edge_2.addLabel(label[1:])
+                            templist.append(label)
+                    for label in templist:
+                        del this_edge.labels[label]
+        else:
+            #previous_state=edge.fromState
+            (letter, how_many, label_counts) = test_if_most_labels_end_with_common_letter( this_edge.labels)
+            if letter:
+                if how_many == label_counts:    # all words end with this letter
+                    new_state_1 = self.addState(self)
+                    new_edge_1  = self.addEdge(self, this_edge.toState, new_state_1 )
+                    new_edge_1.addLabel(self, letter)
+                    new_list = list()
+                    for label in this_edge.labels:
+                        new_list.append(label[:-1])
+                    this_edge.labels=new_list
+                    this_edge.toState = new_state_1
+                else: # not all labels start with this letter:
+                    new_state_1 = self.addState(self)
+                    new_edge_1 = self.addEdge(self,this_edge.fromState, new_state_1 )
+                    new_edge_2 = self.addEdge(self, new_state_1, this_edge.toState)
+                    new_edge_2.addLabel(self, letter)
+                    for label in this_edge.labels:
+                        if label[-1]==letter:
+                            new_edge_1.addLabel(label[:-1])
+                            templist.append(label)
+                    for label in templist:
+                        del this_edge.labels[label]
 
-        goodMorphs = list()
-        if FindSuffixesFlag == True:  # Suffix case
-            nextState = edge.toState
-
-            if nextState.findNumberOfIncomingEdges() > 1:
-                print
-                "Problem! shiftSingleLetterPeripherally"
-
-            for morph in edge.labels:
-                if morph[-1:] == Letter:
-                    goodMorphs.append(morph)
-            if len(goodMorphs) == 0:
-                return;
-            if len(goodMorphs) == len(
-                    edge.labels):  # all 'stems' end with the Letter; so we don't need to create any new nodes
-                del edge.labels[:]
-                for string in goodMorphs:
-                    edge.labels.append(string[1:])
-                nextStateOutEdges = nextState.getOutgoingEdges()
-                for edge in nextStateOutEdges:
-                    edge.addInitialLetter(Letter)
-
-            else:  # more normal case:
-                newedge1 = self.addEdgeFromSameStartState(edge, newMidState)
-                newedge2 = self.addEdge(newMidState, edge.toState)
-                labelcopy = list(edge.labels)
-                del edge.labels[:]
-                for morph in labelcopy:
-                    if morph[-1] == Letter:
-                        newedge1.addLabel(morph[:-1])
-                    else:
-                        edge.addLabel(morph)
-                nextState.addLetterToStartOfAllOutedges(Letter)
-
-        if FindSuffixesFlag == False:  # Prefix case
-            if edge.fromState == self.startState:  # This means the edge we are looking at is at the periphery, no good...
-                return
-
-            fromState = edge.fromState
-            for edge in self.Edges:
-                if edge.toState == fromState:
-                    motherEdge = edge  # This is where we make the assumption that each prefix has only one state "before" it.
-                    break
-            for morph in edge.labels:
-                if morph[-1:] == stemcondition:
-                    stems.append(morph)
-            if len(stems) == 0:
-                return;
-            if len(stems) == len(
-                    edge.labels):  # all 'stems' end with the Letter; so we don't need to create any new nodes
-                labelcopy = list(edge.labels())
-                del edge.labels[:]
-                for string in labelcopy:
-                    edge.labels.append(string[1:])
-            else:  # normal case:
-                newedge1 = self.addEdgeFromSameStartState(edge, newMidState)
-                newedge2 = self.addEdge(newMidState, edge.toState)
-                labelcopy = list(edge.labels)
-                for morph in motherEdge:
-                    newedge1.addLabel(morph + Letter)
-                del edge.labels[:]
-                for morph in labelcopy:
-                    if morph[0] == Letter:
-                        morph = morph[1:]
-                        newedge2.addLabel(morph)
-                newedge2.addLabel(stemcondition)
-
-        return
-
+ 
     # -----------------------------------------------------------#
     def clipCommonSuffix(edge, commonsuffix):  # Not used.
         # ----------------------------------------------#

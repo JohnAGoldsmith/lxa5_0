@@ -17,10 +17,10 @@ def print_html_report(outfile, this_lexicon, singleton_signatures, doubleton_sig
     start_an_html_file( outfile)
     start_an_html_table(outfile)
     for lineno in range(7):
-                start_table_row(outfile)
-                add_table_entry(leader[lineno], outfile)
-                add_table_entry(values[lineno], outfile)
-                end_table_row(outfile)
+                start_an_html_table_row(outfile)
+                add_an_html_table_entry(outfile, leader[lineno])
+                add_an_html_table_entry(outfile, values[lineno])
+                end_an_html_table_row(outfile)
     end_an_html_table(outfile)
     
     end_an_html_file(outfile)
@@ -141,10 +141,10 @@ def print_signature_list_1_html(this_file, DisplayList, stemcountcutoff, totalro
     start_an_html_file( this_file)
 
     start_an_html_table(this_file)
-    start_table_row(this_file)
+    start_an_html_table_row(this_file)
     for item in headers:
-        add_table_entry(item, this_file)
-    end_table_row(this_file)
+        add_an_html_table_entry(this_file, item)
+    end_an_html_table_row(this_file)
     
     for sig, stemcount, robustness, stem in DisplayList:
          
@@ -152,16 +152,16 @@ def print_signature_list_1_html(this_file, DisplayList, stemcountcutoff, totalro
         if stemcount < stemcountcutoff:
             break;
         else:
-            start_table_row(this_file)
+            start_an_html_table_row(this_file)
             robustnessproportion = float(robustness) / totalrobustness
             runningsumproportion = runningsum / totalrobustness
-            add_table_entry(sig, this_file)
-            add_table_entry(str(stemcount), this_file)
-            add_table_entry(str(robustness), this_file)
-            add_table_entry(str(robustnessproportion), this_file)
-            add_table_entry(str(runningsumproportion), this_file)
-            add_table_entry(stem, this_file)
-        end_table_row(this_file)
+            add_an_html_table_entry(this_file, sig)
+            add_an_html_table_entry(this_file, str(stemcount) )
+            add_an_html_table_entry(this_file, str(robustness))
+            add_an_html_table_entry(this_file, str(robustnessproportion))
+            add_an_html_table_entry(this_file, str(runningsumproportion))
+            add_an_html_table_entry(this_file, stem)
+        end_an_html_table_row(this_file)
     end_an_html_table(this_file)
         
     end_an_html_file( this_file)
@@ -298,14 +298,14 @@ def print_signature_list_2(this_file, signature_feeding_outfile, lxalogfile, Lex
                 for pair in Lexicon.WordToSig[stem]:
                     sig2 = pair[1]
                     if  sig2 != sig: 
-                        start_table_row(signature_feeding_outfile)
-                        add_table_entry(stem, signature_feeding_outfile)  
-                        add_table_entry(sig2, signature_feeding_outfile)                         
-                        add_table_entry(pair[0], signature_feeding_outfile)              
+                        start_an_html_table_row(signature_feeding_outfile)
+                        add_an_html_table_entry(signature_feeding_outfile, stem)  
+                        add_an_html_table_entry(signature_feeding_outfile, sig2)                         
+                        add_an_html_table_entry(signature_feeding_outfile, pair[0] )              
                         if sig2 not in temp_signatures_with_stems:
                                 temp_signatures_with_stems[sig2]=list()
                         temp_signatures_with_stems[sig2].append((stem,pair[0]))
-                        end_table_row(signature_feeding_outfile)
+                        end_an_html_table_row(signature_feeding_outfile)
         end_an_html_table(signature_feeding_outfile)
         end_an_html_div(signature_feeding_outfile)
     
@@ -314,14 +314,14 @@ def print_signature_list_2(this_file, signature_feeding_outfile, lxalogfile, Lex
         start_an_html_table(signature_feeding_outfile)
         signature_list= sorted(temp_signatures_with_stems , key = lambda x:len(temp_signatures_with_stems[x]), reverse=True  )             
         for item  in signature_list:
-                start_table_row(signature_feeding_outfile)
-                add_table_entry(item, signature_feeding_outfile) 
-                end_table_row(signature_feeding_outfile)
+                start_an_html_table_row(signature_feeding_outfile)
+                add_an_html_table_entry(signature_feeding_outfile, item) 
+                end_an_html_table_row(signature_feeding_outfile)
 		for chunk in temp_signatures_with_stems[item]:
-		        start_table_row(signature_feeding_outfile)
-       		        add_table_entry("", signature_feeding_outfile)
-		        add_table_entry(chunk, signature_feeding_outfile) 
-                        end_table_row(signature_feeding_outfile)
+		        start_an_html_table_row(signature_feeding_outfile)
+       		        add_an_html_table_entry(signature_feeding_outfile, "")
+		        add_an_html_table_entry(signature_feeding_outfile, chunk) 
+                        end_an_html_table_row(signature_feeding_outfile)
 
         signature_feeding_outfile.write(div_last)
         end_an_html_table(signature_feeding_outfile)
