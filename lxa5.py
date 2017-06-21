@@ -13,6 +13,9 @@ import string
 import sys
 import sys
 import time
+
+
+
 from collections import defaultdict
 
 from ClassLexicon import *
@@ -24,48 +27,54 @@ from lxa_module import *
 from read_data import *
 from svg import * 
 from crab import *
+from config import *
 
 
 
-
-# --------------------------------------------------------------------##
-#		user modified variables
-# --------------------------------------------------------------------##
-
-verboseflag = True
+ 
  
 # --------------------------------------------------------------------##
 #		parse command line arguments
 # --------------------------------------------------------------------##
-datatype = None
+
+# The config.py file contains default or preferred values. Anything not specified on the command line will be governed by the config file. 
 
 parser = argparse.ArgumentParser(description='Compute morphological analysis.')
-parser.add_argument('-l', action="store", dest="language", help="name of language", default="english")
-parser.add_argument('-w', action="store", dest="wordcountlimit", help="number of words to read", default=10000)
-parser.add_argument('-f', action="store", dest="filename", help="name of file to read", default="browncorpus")
-parser.add_argument('-c', action="store", dest="corrections", help="number of corrections to make", default=0)
-parser.add_argument('-d', action="store", dest="data_folder", help="data directory", default="../../data/")
-parser.add_argument('-s', action="store", dest="affix_type", help="prefix or suffix", default="True")
-parser.add_argument('-F', action="store", dest="FSA", help="generate and print FSA", default="False")
+parser.add_argument('-l', action="store", dest="language", help="name of language")
+parser.add_argument('-w', action="store", dest="wordcountlimit", help="number of words to read")
+parser.add_argument('-f', action="store", dest="infilename", help="name of file to read")
+parser.add_argument('-d', action="store", dest="data_folder", help="data directory")
+parser.add_argument('-s', action="store", dest="affix_type", help="prefix or suffix")
+parser.add_argument('-F', action="store", dest="FSA", help="generate and print FSA")
 
 
 results                 = parser.parse_args()
 language                = results.language
-wordcountlimit          = int(results.wordcountlimit)
-shortfilename           = results.filename
-NumberOfCorrections     = results.corrections
+ 
 
-if results.FSA == "FSA" or results.FSA== "True":
-	results.FSA = True
-else:
-	results.FSA = False
 
+if results.language != None:
+        config_lxa["language"] = results.language
+if results.wordcountlimit != None:
+        config_lxa["word_count_limit"] = results.wordcountlimit
+if results.infilename != None:
+        config_lxa["infilename"] = results.infilename
+
+if results.data_folder != None:
+        config_lxa["data_folder"] = results.data_folder
 if results.affix_type == "True":
 	FindSuffixesFlag = True
-else:
+elif results.affix_type == "False":
 	FindSuffixesFlag = False
-
-FSA_flag                = results.FSA
+else:   FindSuffixesFlag = True
+if results.FSA == "FSA" or results.FSA== "True":
+	config_lxa["FSA"] = True
+        FSA_flag = True
+elif results.FSA == "False":
+	config_lxa.FSA = False
+        FSA_flag = False
+else:
+        FSA_flag = config_lxa["FSA"]
 
 print "FSA? ", FSA_flag
 
@@ -74,36 +83,24 @@ print "FSA? ", FSA_flag
 # --------------------------------------------------------------------##
 
 
-datafolder      = results.data_folder + language + "/"
-outfolder       = datafolder + "lxa/"
-infolder        = datafolder + 'dx1/'
-if shortfilename[-4:] == ".txt":
+datafolder      = config_lxa["data_folder"] + config_lxa["language"] + "/"
+outfolder       = config_lxa["data_folder"] + config_lxa["language"] + "/"+ "lxa/"
+infolder        = config_lxa["data_folder"] + config_lxa["language"] + "/"+ "dx1/"
+if  config_lxa["infilename"][-4:] == ".txt":
     datatype = "CORPUS"
-    infilename = datafolder + shortfilename
 else:
     datatype = "DX1"
-    infilename  = infolder + shortfilename + ".dx1"
 graphicsfolder  = outfolder + "graphics/"
+complete_infilename = config_lxa["data_folder"] + config_lxa["infilename"]
+
 if not os.path.exists(graphicsfolder):
     os.makedirs(graphicsfolder)
 
-
+ 
 
 g_encoding = "asci"  # "utf8"
 BreakAtHyphensFlag = True
-
-if (False):
-        FileObject = dict()
-        Files_list_txt = ["Signatures", "FSA", "SigExemplars", "WordToSig", "SigTransforms", "Signature_Details",
-                     "StemToWords","StemsAndUnanalyzedWords", "WordParses", "WordCounts", "SigExtensions",
-                     "Suffixes", "Rebalancing_Signatures", "Subsignatures",
-                     "UnlikelySignatures", "Signatures_2", "Log",  "Dynamics",  "Signature_feeding"]
-        Files_list_html=["Signatures_svg_html", "Signatures_html", "Index", "WordToSig_html"]
-
-        for item in Files_list:
-            FileObject[item] = open(outfolder + item + ".txt", "w")
-        for item in Files_list_html:
-            FileObject[item] = open(outfolder + item + ".html", "w")
+ 
  
 # --------------------------------------------------------------------##
 #		Tell the user what we will be doing.
@@ -118,11 +115,12 @@ if FindSuffixesFlag:
 else:
     print     "Finding prefixes."
 if datatype == "DX1":
-    print     formatstring_initial_1.format("Reading dx file: ", infilename)
+    print     formatstring_initial_1.format("Reading dx file: ", complete_infilename)
 else:
-    print     formatstring_initial_1.format("Reading corpus: ", infilename)
-print
-formatstring_initial_1.format("Logging to: ", outfolder)
+    print     formatstring_initial_1.format("Reading corpus: ", complete_infilename)
+print formatstring_initial_1.format("Logging to: ", outfolder)
+print formatstring_initial_1.format("Number of words: ", str(config_lxa["word_count_limit"]))
+print 
 print "-" * 100
 
  
@@ -157,10 +155,10 @@ Lexicon.FindSuffixesFlag = FindSuffixesFlag
 if g_encoding == "utf8":
     infile = codecs.open(infilename, g_encoding='utf-8')
 else:
-    infile = open(infilename)
+    infile = open(complete_infilename)
 
 filelines = infile.readlines()
-read_data(datatype,filelines,Lexicon,BreakAtHyphensFlag,wordcountlimit)
+read_data(datatype,filelines,Lexicon,BreakAtHyphensFlag,config_lxa["word_count_limit"])
 Lexicon.ReverseWordList = Lexicon.WordCounts.keys()
 Lexicon.ReverseWordList.sort(key=lambda word: word[::-1])
 Lexicon.WordList.sort()
@@ -203,7 +201,7 @@ if True:
     Lexicon.printSignatures(g_encoding, FindSuffixesFlag,suffix)
 
 
-if True and datatype == "CORPUS":
+if config_lxa["dynamics"] and datatype == "CORPUS":
     dynamics_file = open(outfolder +  "dynamics.txt", "w")
     Dynamics(Lexicon,dynamics_file)
 
@@ -211,19 +209,8 @@ if True:
     print "  3. Find good signatures inside bad."
     FindGoodSignaturesInsideBad_crab(Lexicon,  FindSuffixesFlag,verboseflag)
 
-if (False):
-    if verboseflag:
-         print  formatstring1.format("6. Looking for good signatures inside bad ones.", len(Lexicon.SignatureStringsToStems))
-
-    Step += 1
-    FindGoodSignaturesInsideBad_crab(Lexicon, outfile_subsignatures, FindSuffixesFlag,verboseflag, Step);
  
-if (False):
-    if verboseflag:
-        print "{0:20s}".format("5. Finished; we will reassign signature structure.")
-        print "{0:20s}".format("6. Recompute signature structure.\n     <----------------------------------------->")
-    #Step += 1
-    AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag, verboseflag)
+ 
 if (False):
     # --------------------------------------------------------------------
     # 4 Rebalancing now, which means:                  -------
@@ -266,9 +253,8 @@ if False:
     print "Finding pairs of signatures that share words."
     FindSignatureChains(Lexicon)
 
-if False:
-    print
-    "3.1 Creating data structure for radviz."
+if config_lxa["radviz"]:
+    print     "3.1 Creating data structure for radviz."
     (SignatureStemList, SigDataDict) = signature_by_stem_data(Lexicon)
     for sig in SignatureStemList:
         print
@@ -280,6 +266,8 @@ if True:
     suffix = "2"
     #Lexicon.printSignatures(FileObject, g_encoding, FindSuffixesFlag,suffix)
     Lexicon.printSignatures(g_encoding, FindSuffixesFlag,suffix)
+
+ 
 
 if False:
     print
@@ -294,21 +282,22 @@ if False:
     "6. Slicing signatures."
     SliceSignatures(Lexicon, g_encoding, FindSuffixesFlag, FileObject["Log"])
 
+ 
 
 if FSA_flag:
     print
     "7. Adding signatures to the FSA."
     AddSignaturesToFSA(Lexicon, Lexicon.SignatureStringsToStems, morphology, FindSuffixesFlag)
 
-if FSA_flag:
+ 
     print outfolder + "fsa.txt"
     "8. Printing the FSA."
     fsa_file = open(outfolder +  "fsa.txt", "w")
-    print >> fsa_file, "#", language, shortfilename, wordcountlimit
+    print >> fsa_file,   language, complete_infilename, config_lxa["word_count_limit"]
     morphology.printFSA(fsa_file)
     filename = outfolder + "fsa_a.html"
     morphology.print_FSA_to_HTML(filename)
-
+    print "  All signatures placed in FSA."
 if False:
     print
     "9. Printing signatures."
@@ -316,14 +305,12 @@ if False:
                     FileObject[Suffixes], g_encoding, FindSuffixesFlag, letterCostOfStems, letterCostOfSignatures)
 
 if False:
-    print
-    "10. Finding robust peripheral pieces on edges in FSA."
+    print "  10. Finding robust peripheral pieces on edges in FSA."
     for loopno in range(NumberOfCorrections):
         morphology.find_highest_weight_affix_in_an_edge(FileObject["Log"], FindSuffixesFlag)
 
-if FSA_flag:
-    print
-    "11. Printing graphs of the FSA."
+if FSA_flag and config_lxa["PrintFSAgraphs"]:
+    print     "  11. Printing graphs of the FSA."
     for state in morphology.States:
         # do not print the entire graph:
         # if state == morphology.startState:

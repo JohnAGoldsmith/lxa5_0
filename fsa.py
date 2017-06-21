@@ -1,5 +1,5 @@
 import pygraphviz as pgv
-import html_lxa
+from html_lxa import *
 
 from ClassLexicon import ParseChain
 from ClassLexicon import parseChunk
@@ -533,10 +533,10 @@ class FSA_lxa:
         outfile = open (filename, "w")
         start_an_html_file(outfile)
         
-        startState = self.startState
-        first_edge = self.StartState.getAllEdgesFromThisState(startState)[0]
-        this_box = Box(self,first_edge.labels)
-        this_box.print_box(outfile)
+        #startState = self.startState
+        #first_edge = self.getAllEdgesFromThisState(startState)[0]
+        #this_box = Box(self,first_edge.labels)
+        #this_box.print_box(outfile)
         
 
 
