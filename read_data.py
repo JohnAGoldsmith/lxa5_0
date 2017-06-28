@@ -1,7 +1,8 @@
+import string
 
 def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
 
-
+         
         if datatype == "DX1":
             for line in filelines:
                 pieces = line.split()
@@ -14,9 +15,13 @@ def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
                 else:
                     count = 1
                 word = word.lower()
+                #word.translate(None, string.punctuation)
                 if (BreakAtHyphensFlag and '-' in word):
                     words = word.split('-')
                     for word in words:
+                        if word[-1]==":" or word[-1] == ")":
+                            word= word[:-1]
+                            
                         if word not in Lexicon.WordCounts:
                             Lexicon.WordBiographies[word] = list()
                             Lexicon.WordCounts[word] = 0
@@ -24,6 +29,8 @@ def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
                         if len(Lexicon.WordCounts) >= wordcountlimit:
                             break
                 else:
+                    if word[-1]==":" or word[-1]==")":
+                            word= word[:-1]
                     if word not in Lexicon.WordCounts:
                         Lexicon.WordBiographies[word] = list()
                         Lexicon.WordCounts[word] = 0
@@ -45,12 +52,17 @@ def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
                         token = token[1:]
                     if len(token) == 0:
                         continue;
-                    if token[-1] == '.' or token[-1] == '!' or token[-1] == ',' or token[-1] == ';' or token[-1] == ': ' or \
-                                    token[-1] == '?' or token[-1] == ')' or token[-1] == ']':
-                        token = token[:-1]
+                    for iterations in range(2):
+                            if token[-1] == '.' or token[-1] == '!' or token[-1] == ',' or token[-1] == ';' or token[-1] == ':' or \
+                                    token[-1] == '?' or token[-1] == ')' or token[-1] == ']' or token[-1] == '\"' or token[-1] == '-':
+                                token = token[:-1]
+                            if len(token) == 0:                                
+                                break
                     if len(token) == 0:
                         continue
-		    token.lower()	
+		    token.lower()
+		    exclude = set(string.punctuation)
+		    word = "".join(ch for ch in token if ch not in exclude)	
                     if token in Lexicon.WordCounts:
                         Lexicon.WordCounts[token] += 1
                         tokencount += 1

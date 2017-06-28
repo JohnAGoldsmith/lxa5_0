@@ -1,7 +1,7 @@
 import math
 from class_alternation import *
 from signaturefunctions import *
-from svg import * 
+#from svg import * 
 from html_lxa import *  
 
 
@@ -74,7 +74,7 @@ def initialize_files(this_lexicon, this_file, singleton_signatures, doubleton_si
     formatstring_console = "   {:45s}{:10,d}"
     if this_file == "console":
         print
-        print  formatstring_console.format("Number of words (corpus count): ", this_lexicon.total_word_count)
+        print  formatstring_console.format("Number of words (types): ", this_lexicon.total_word_count)
         print  formatstring_console.format("Total letter count in words ", this_lexicon.word_letter_count)
         print  formatstring_console.format("Number of signatures: ", len(this_lexicon.SignatureStringsToStems))
         print  formatstring_console.format("Number of singleton signatures (one stem): ", singleton_signatures)
@@ -124,7 +124,8 @@ def print_signature_list_1(this_file, DisplayList, stemcountcutoff, totalrobustn
         else:
             robustnessproportion = float(robustness) / totalrobustness
             runningsumproportion = runningsum / totalrobustness
-            print >> this_file, formatstring2.format(sig, stemcount, robustness, robustnessproportion,
+            sig_string = "=".join(sig)
+            print >> this_file, formatstring2.format(sig_string, stemcount, robustness, robustnessproportion,
                                                      runningsumproportion, stem)
     print >> this_file, "-" * 60
     this_file.close()

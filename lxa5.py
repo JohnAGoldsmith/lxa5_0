@@ -25,7 +25,7 @@ from fsa import *
 from loose_fit import *
 from lxa_module import *
 from read_data import *
-from svg import * 
+#from svg import * 
 from crab import *
 from config import *
 
@@ -56,7 +56,7 @@ language                = results.language
 if results.language != None:
         config_lxa["language"] = results.language
 if results.wordcountlimit != None:
-        config_lxa["word_count_limit"] = results.wordcountlimit
+        config_lxa["word_count_limit"] = int(results.wordcountlimit)
 if results.infilename != None:
         config_lxa["infilename"] = results.infilename
 
@@ -85,13 +85,16 @@ print "FSA? ", FSA_flag
 
 datafolder      = config_lxa["data_folder"] + config_lxa["language"] + "/"
 outfolder       = config_lxa["data_folder"] + config_lxa["language"] + "/"+ "lxa/"
-infolder        = config_lxa["data_folder"] + config_lxa["language"] + "/"+ "dx1/"
+dx1_folder        = config_lxa["data_folder"] + config_lxa["language"] + "/"+ "dx1/"
 if  config_lxa["infilename"][-4:] == ".txt":
     datatype = "CORPUS"
+    complete_infilename = datafolder + config_lxa["infilename"]
 else:
     datatype = "DX1"
+    complete_infilename = dx1_folder + config_lxa["infilename"]
+
 graphicsfolder  = outfolder + "graphics/"
-complete_infilename = config_lxa["data_folder"] + config_lxa["infilename"]
+
 
 if not os.path.exists(graphicsfolder):
     os.makedirs(graphicsfolder)
@@ -143,7 +146,7 @@ print "-" * 100
 # SignatureToStems is a dict: its keys are tuples of strings, and its values are dicts of stems. We don't need both this and Signatures!
 
 Lexicon = CLexicon()
-Lexicon.infolder = infolder
+Lexicon.infolder = complete_infilename
 Lexicon.outfolder = outfolder
 Lexicon.graphicsfolder = graphicsfolder
 Lexicon.FindSuffixesFlag = FindSuffixesFlag
@@ -289,14 +292,14 @@ if FSA_flag:
     "7. Adding signatures to the FSA."
     AddSignaturesToFSA(Lexicon, Lexicon.SignatureStringsToStems, morphology, FindSuffixesFlag)
 
- 
+if False:
     print outfolder + "fsa.txt"
     "8. Printing the FSA."
     fsa_file = open(outfolder +  "fsa.txt", "w")
     print >> fsa_file,   language, complete_infilename, config_lxa["word_count_limit"]
     morphology.printFSA(fsa_file)
     filename = outfolder + "fsa_a.html"
-    morphology.print_FSA_to_HTML(filename)
+    #morphology.print_FSA_to_HTML(filename)
     print "  All signatures placed in FSA."
 if False:
     print

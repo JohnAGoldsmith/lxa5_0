@@ -19,17 +19,18 @@ class State_lxa:
         self.deletedFlag = False
         self.maximalDepth = -1
 
-    def findFinalLetterOfIncomingEdges():
-        edgelist = self.fsa.getAllEdgesToThisState(self)
-        FinalLetterDict = dict()  # its keys are the edges going into this state. Its values are dicts from Final Letters to integer counts.
-        for edge in edgelist:
-            FinalLetterDict[edge] = dict()
-            for morph in edge.labels:
-                finalletter = morph[-1]
-                if finalletter not in FinalLetterDict[edge]:
-                    FinalLetterDict[edge][finalletter] = 1
-                else:
-                    FinalLetterDict[edge][finalletter] += 1
+
+#    def findFinalLetterOfIncomingEdges():
+#        edgelist = self.fsa.getAllEdgesToThisState(self)
+#        FinalLetterDict = dict()  # its keys are the edges going into this state. Its values are dicts from Final Letters to integer counts.
+#        for edge in edgelist:
+#            FinalLetterDict[edge] = dict()
+#            for morph in edge.labels:
+#                finalletter = morph[-1]
+#                if finalletter not in FinalLetterDict[edge]:
+#                    FinalLetterDict[edge][finalletter] = 1
+#                else:
+#                    FinalLetterDict[edge][finalletter] += 1
 
     def findNumberOfIncomingEdges(self):
         return len(self.getIncomingEdges())
@@ -113,7 +114,7 @@ class Edge_lxa:
     def addLabels(self, labelList):
         for label in labelList:
             self.addLabel(label)
-            # ----------------------------------------------------------------------------#
+    # ----------------------------------------------------------------------------#
 
     def printLabels(self):
         for word in self.labels:
@@ -190,7 +191,7 @@ class Edge_lxa:
             if label[-1] != FinalLetter:
                 return -1
             self.addLabel(label[:-1])
-            # ----------------------------------------------------------------------------#
+   # ----------------------------------------------------------------------------#
 
     def addInitialLetter(InitialLetter):
         labelcopy = list(self.labels[:])
@@ -348,7 +349,6 @@ class FSA_lxa:
     # -----------------------------------------------------------#
     def addState(self):
         thisState = State_lxa(len(self.States), self)
-        # print thisState.label
         self.States.append(thisState)
         self.StateDict[thisState.index] = thisState
         return thisState
@@ -360,7 +360,6 @@ class FSA_lxa:
             if self.States[index] == afterState:
                 self.States.insert(index + 1, thisState)
         self.StateDict[thisState.index] = thisState
-        # print "this state label", thisState.label, "," , afterState.label
         return thisState
 
     # -----------------------------------------------------------#
@@ -528,15 +527,13 @@ class FSA_lxa:
     # -----------------------------------------------------------#
     #   Added June 2017 : printing FSA to html
     # -----------------------------------------------------------#
-
-    def print_FSA_to_HTML(self, filename):
+    # The following function takes a list of that forms a path (for one or more words) and generates an HTML block picture.
+    def print_path(self, filename, edges_list, word = "" ):
         outfile = open (filename, "w")
         start_an_html_file(outfile)
-        
-        #startState = self.startState
-        #first_edge = self.getAllEdgesFromThisState(startState)[0]
-        #this_box = Box(self,first_edge.labels)
-        #this_box.print_box(outfile)
+        for edge in edges_list:
+            this_box = Box(self,edge.labels)
+            this_box.print_box(outfile)
         
 
 
