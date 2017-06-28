@@ -577,15 +577,20 @@ def AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Minim
 
                 # 2f. Establish the link between this stem and its words:
                 for affix in signature_list:
-                        if affix not in Lexicon.Affixes:
-                                Lexicon.Affixes[affix] = 0
-                        Lexicon.Affixes[affix] += 1
-                        if affix == "NULL":
-                                affix = ""
-			if FindSuffixesFlag:
-                            word = stem + affix
-			else:
-			    word = affix + stem
+                        if FindSuffixesFlag:
+                                if affix not in Lexicon.Suffixes:
+                                        Lexicon.Suffixes[affix] = 0
+                                Lexicon.Suffixes[affix] += 1
+                                if affix == "NULL":
+                                        affix = ""
+                                word = stem + affix        
+                        else:
+                                if affix not in Lexicon.Prefixes:
+                                        Lexicon.Prefixes[affix] = 0
+                                Lexicon.Prefixes[affix] += 1
+                                if affix == "NULL":
+                                        affix = ""
+			        word = affix + stem
                         if word not in Lexicon.WordToSig:
                                 Lexicon.WordToSig[word] = list()
                         Lexicon.WordToSig[word].append((stem,signature_string))

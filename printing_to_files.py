@@ -364,7 +364,9 @@ def print_suffixes(outfile, Suffixes):
     suffixlist = list(Suffixes.keys())
     suffixlist.sort(key=lambda suffix: Suffixes[suffix], reverse=True)
     for suffix in suffixlist:
-        print >> outfile, "{:8s}{:9,d}".format(suffix, Suffixes[suffix])
+        if suffix == "":
+                suffix = "NULL"
+        print >> outfile, "{:12s}{:9,d}".format(suffix, Suffixes[suffix])
     outfile.close()
     return suffixlist
     
