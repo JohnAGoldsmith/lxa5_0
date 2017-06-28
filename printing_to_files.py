@@ -115,6 +115,9 @@ def print_signature_list_1(this_file, DisplayList, stemcountcutoff, totalrobustn
     print >> this_file, formatstring1.format("Signature", "Stem count", "Robustness", "Proportion of robustness",
                                              "Running sum", "Example")
     print >> this_file, "-" * 150
+
+
+
     DisplayList = sorted(DisplayList, lambda x, y: cmp(x[2], y[2]), reverse=True)
 
     for sig, stemcount, robustness, stem in DisplayList:
@@ -124,8 +127,7 @@ def print_signature_list_1(this_file, DisplayList, stemcountcutoff, totalrobustn
         else:
             robustnessproportion = float(robustness) / totalrobustness
             runningsumproportion = runningsum / totalrobustness
-            sig_string = "=".join(sig)
-            print >> this_file, formatstring2.format(sig_string, stemcount, robustness, robustnessproportion,
+            print >> this_file, formatstring2.format(sig, stemcount, robustness, robustnessproportion,
                                                      runningsumproportion, stem)
     print >> this_file, "-" * 60
     this_file.close()
@@ -367,6 +369,13 @@ def print_suffixes(outfile, Suffixes):
         if suffix == "":
                 suffix = "NULL"
         print >> outfile, "{:12s}{:9,d}".format(suffix, Suffixes[suffix])
+
+    suffixlist.sort()
+    for suffix in suffixlist:
+        if suffix == "":
+                suffix = "NULL"
+        print >> outfile, "{:12s}{:9,d}".format(suffix, Suffixes[suffix])
+
     outfile.close()
     return suffixlist
     

@@ -2,7 +2,7 @@ import string
 
 def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
 
-         
+        punctuation = "$(),;.:-?\\1234567890[]\"\'" 
         if datatype == "DX1":
             for line in filelines:
                 pieces = line.split()
@@ -47,20 +47,23 @@ def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
                 if tokencount - wordcountlimit > 0:
                     break
                 for token in line.split():
-                    if token[0] == '$' or token[0] == '(' or token[0] == ',' or token[0] == '-' or token[0] == '\\' or token[
-                        0] == '(' or token[0] == '1' or token[0] == '2':
-                        token = token[1:]
                     if len(token) == 0:
                         continue;
                     for iterations in range(2):
-                            if token[-1] == '.' or token[-1] == '!' or token[-1] == ',' or token[-1] == ';' or token[-1] == ':' or \
-                                    token[-1] == '?' or token[-1] == ')' or token[-1] == ']' or token[-1] == '\"' or token[-1] == '-':
+                            if token[0] in punctuation:
+                                token = token[1:]
+                            if len(token) == 0:
+                                break
+                    if len(token)==0:
+                        continue
+                    for iterations in range(3):                            
+                            if token[-1] in punctuation:
                                 token = token[:-1]
-                            if len(token) == 0:                                
+                            if len(token) == 0:
                                 break
                     if len(token) == 0:
                         continue
-		    token.lower()
+ 		    token.lower()
 		    exclude = set(string.punctuation)
 		    word = "".join(ch for ch in token if ch not in exclude)	
                     if token in Lexicon.WordCounts:
