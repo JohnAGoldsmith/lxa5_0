@@ -14,14 +14,15 @@ def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
                     count = int(pieces[1])
                 else:
                     count = 1
-                word = word.lower()
+                
                 #word.translate(None, string.punctuation)
                 if (BreakAtHyphensFlag and '-' in word):
                     words = word.split('-')
                     for word in words:
-                        if word[-1]==":" or word[-1] == ")":
-                            word= word[:-1]
-                            
+                        while len(word) > 0 and word[-1] in punctuation:
+                            word= word[:-1]  
+                        while len(word) > 0 and word[0] in punctuation:
+                            word= word[1:]                            
                         if word not in Lexicon.WordCounts:
                             Lexicon.WordBiographies[word] = list()
                             Lexicon.WordCounts[word] = 0
@@ -29,8 +30,10 @@ def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
                         if len(Lexicon.WordCounts) >= wordcountlimit:
                             break
                 else:
-                    if word[-1]==":" or word[-1]==")":
-                            word= word[:-1]
+                    while len(word) > 0 and word[-1] in punctuation:
+                            word= word[:-1]    
+                    while len(word) > 0 and word[0] in punctuation:
+                            word= word[1:]   
                     if word not in Lexicon.WordCounts:
                         Lexicon.WordBiographies[word] = list()
                         Lexicon.WordCounts[word] = 0
@@ -49,11 +52,8 @@ def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
                 for token in line.split():
                     if len(token) == 0:
                         continue;
-                    for iterations in range(2):
-                            if token[0] in punctuation:
-                                token = token[1:]
-                            if len(token) == 0:
-                                break
+                    while len(word) > 0 and word[-1] in punctuation:
+                            word= word[:-1]    
                     if len(token)==0:
                         continue
                     for iterations in range(3):                            
@@ -63,7 +63,7 @@ def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
                                 break
                     if len(token) == 0:
                         continue
- 		    token.lower()
+ 		    
 		    exclude = set(string.punctuation)
 		    word = "".join(ch for ch in token if ch not in exclude)	
                     if token in Lexicon.WordCounts:

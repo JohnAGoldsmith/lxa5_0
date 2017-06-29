@@ -142,8 +142,6 @@ class CLexicon:
         self.Prefixes = {}
         self.WordBiographies=dict()
         self.SignatureBiographies=dict()
-        #self.MinimumStemsInSignature = 2
-        #self.MinimumAffixesInaSignature = 2
         self.MinimumStemLength = 2
         self.MaximumAffixLength = 5
 
@@ -262,20 +260,20 @@ class CLexicon:
         lxalogfile = open(self.outfolder + "Log", "w")
 
         
-        outfile_signatures_1            = open(self.outfolder + "Signatures"+ suffix+".txt", "w")
-        outfile_signatures_2            = open(self.outfolder + "Signatures_"+ suffix+"2.txt", "w")  
-        outfile_signatures_svg_html     = open(self.outfolder + "Signatures_graphic"+ suffix+".html", "w") 
-        outfile_signature_feeding       = open(self.outfolder + "Signature_feeding"+ suffix+".html", "w")  
-        outfile_signatures_html         = open(self.outfolder + "Signatures"+ suffix+".html", "w")  
-        outfile_signatures_details      = open(self.outfolder + "Signature_Details"+ suffix+".txt", "w")  
-        outfile_index                   = open(self.outfolder + "Index"+ suffix+".html", "w")   
+        outfile_signatures_1            = open(self.outfolder + "Signatures_iter"+ suffix+".txt", "w")
+        #outfile_signatures_2            = open(self.outfolder + "Signatures_"+ suffix+"2.txt", "w")  
+        outfile_signatures_svg_html     = open(self.outfolder + "Signatures_graphic_iter"+ suffix+".html", "w") 
+        outfile_signature_feeding       = open(self.outfolder + "Signature_feeding_iter"+ suffix+".html", "w")  
+        outfile_signatures_html         = open(self.outfolder + "Signatures_iter"+ suffix+".html", "w")  
+        outfile_signatures_details      = open(self.outfolder + "Signature_Details_iter"+ suffix+".txt", "w")  
+        outfile_index                   = open(self.outfolder + "Index_iter"+ suffix+".html", "w")   
 
-        outfile_wordstosigs             = open(self.outfolder + "WordToSig"+ suffix+".txt", "w")
-        outfile_wordstosigs_html        = open(self.outfolder + "WordToSig"+ suffix+".html", "w")
-        outfile_stemtowords             = open(self.outfolder + "StemToWords"+ suffix+".txt", "w")
-        outfile_SigExtensions           = open(self.outfolder + "SigExtensions"+ suffix+".txt", "w")
-        outfile_suffixes                = open(self.outfolder + "Suffixes"+ suffix+".txt", "w")
-        outfile_stems_and_unanalyzed_words = open(self.outfolder + "StemsAndUnanalyzedWords"+ suffix+".txt", "w") 
+        outfile_wordstosigs             = open(self.outfolder + "WordToSig_iter"+ suffix+".txt", "w")
+        outfile_wordstosigs_html        = open(self.outfolder + "WordToSig_iter"+ suffix+".html", "w")
+        outfile_stemtowords             = open(self.outfolder + "StemToWords_iter"+ suffix+".txt", "w")
+        outfile_SigExtensions           = open(self.outfolder + "SigExtensions_iter"+ suffix+".txt", "w")
+        outfile_suffixes                = open(self.outfolder + "Suffixes_iter"+ suffix+".txt", "w")
+        outfile_stems_and_unanalyzed_words = open(self.outfolder + "StemsAndUnanalyzedWords_iter"+ suffix+".txt", "w") 
 
         # 1  Create a list of signatures, sorted by number of stems in each. DisplayList is that list. Its 4-tuples   have the signature, the number of stems, and the signature's robustness, and a sample stem
 
@@ -318,7 +316,7 @@ class CLexicon:
         print_html_report(outfile_index, self, singleton_signatures,doubleton_signatures, DisplayList)
 
         # Print signatures (not their stems) sorted by robustness
-        print_signature_list_1(outfile_signatures_1, DisplayList, stemcountcutoff, totalrobustness)
+        print_signature_list_1(outfile_signatures_1, DisplayList, stemcountcutoff, totalrobustness,self.SignatureStringsToStems,self.StemCorpusCounts,lxalogfile,FindSuffixesFlag)
         
         # Print signatures to html file with svg
         print_signatures_to_svg (outfile_signatures_svg_html, DisplayList,self.SignatureStringsToStems,FindSuffixesFlag)
@@ -333,7 +331,7 @@ class CLexicon:
         print_signature_list_1_html(outfile_signatures_html, DisplayList, stemcountcutoff, totalrobustness)
 
         # print the stems of each signature:
-        print_signature_list_2(outfile_signatures_2, outfile_signature_feeding, lxalogfile, self, DisplayList, stemcountcutoff,  totalrobustness, self.SignatureStringsToStems, self.StemCorpusCounts,  FindSuffixesFlag)
+        #print_signature_list_2(outfile_signatures_2, outfile_signature_feeding, lxalogfile, self, DisplayList, stemcountcutoff,  totalrobustness, self.SignatureStringsToStems, self.StemCorpusCounts,  FindSuffixesFlag)
 
         # print WORDS of each signature:
         print_words(outfile_wordstosigs, outfile_wordstosigs_html, lxalogfile, self.Words, self.WordToSig, ColumnWidth)

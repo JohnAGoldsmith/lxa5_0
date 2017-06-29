@@ -526,7 +526,7 @@ def AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Minim
         for stem in stemlist:
                 signature_list = Lexicon.StemToAffix[stem]
                 signature_string=MakeSignatureStringFromAffixDict(signature_list)
-                #print signature_string
+ 
                 number_of_stems_this_sig = temporary_signature_dict[signature_string]
                 #   2a. We ignore signatures with two few stems (typically only one):
                 if number_of_stems_this_sig < MinimumStemCountInSignature:

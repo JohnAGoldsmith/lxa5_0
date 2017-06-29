@@ -106,7 +106,7 @@ def initialize_files(this_lexicon, this_file, singleton_signatures, doubleton_si
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def print_signature_list_1(this_file, DisplayList, stemcountcutoff, totalrobustness):
+def print_signature_list_1(this_file, DisplayList, stemcountcutoff, totalrobustness,SignatureToStems,StemCorpusCounts,lxalogfile,FindSuffixesFlag):
     print "   Printing signature file."
     runningsum = 0.0
     formatstring1 = '{0:25}{1:>10s} {2:>15s} {3:>25s} {4:>20s}{5:>20s} '
@@ -130,6 +130,85 @@ def print_signature_list_1(this_file, DisplayList, stemcountcutoff, totalrobustn
             print >> this_file, formatstring2.format(sig, stemcount, robustness, robustnessproportion,
                                                      runningsumproportion, stem)
     print >> this_file, "-" * 60
+
+
+
+    numberofstemsperline = 6
+    stemlist = []
+    reversedstemlist = []
+    count = 0
+    print >> this_file, "*** Stems in each signature"
+    for sig, stemcount, robustness, stem in DisplayList:
+        print >> this_file, "\n" + "=" * 45, '{0:30s} \n'.format(sig)
+        n = 0
+
+        stemlist = SignatureToStems[sig].keys()
+        stemlist.sort()
+        numberofstems = len(stemlist)
+        for stem in stemlist:
+            n += 1
+            print >> this_file, '{0:12s}'.format(stem),
+            if n == numberofstemsperline:
+                n = 0
+                print >> this_file
+        print >> this_file, "\n" + "-" * 25
+
+        stemlist.sort(key=lambda stem: StemCorpusCounts[stem])
+        longeststemlength = 0
+        for stem in stemlist:
+            if len(stem) > longeststemlength:
+                longeststemlength = len(stem)
+        columnwidth = longeststemlength
+        numberofcolumns = 4
+        colno = 0
+        for stem in stemlist:
+            stemcount = str(StemCorpusCounts[stem])
+            print >> this_file, stem, " " * (columnwidth - len(stem)), stemcount, " " * (5 - len(stemcount)),
+            colno += 1
+            if colno == numberofcolumns:
+                colno = 0
+                print >> this_file
+
+        print >> this_file, "\n" + "-" * 25
+
+        # ------------------- New -----------------------------------------------------------------------------------
+        howmany = 5
+        print >> this_file, "Average count of top", howmany, " stems:", AverageCountOfTopStems(howmany, sig,
+                                                                                               SignatureToStems,
+                                                                                               StemCorpusCounts,
+                                                                                               lxalogfile)
+
+        # ------------------------------------------------------------------------------------------------------
+        bitsPerLetter = 5
+        wordlist = makeWordListFromSignature(sig, SignatureToStems[sig])
+        (a, b, c) = findWordListInformationContent(wordlist, bitsPerLetter)
+        (d, e, f) = findSignatureInformationContent(SignatureToStems, sig, bitsPerLetter)
+        formatstring = '%35s %10d  '
+        formatstringheader = '%35s %10s    %10s  %10s'
+        print >> this_file, formatstringheader % ("", "Phono", "Ordering", "Total")
+        print >> this_file, formatstring % ("Letters in words if unanalyzed:", a)
+        print >> this_file, formatstring % ("Letters as analyzed:", d)
+        # ------------------------------------------------------------------------------------------------------
+        howmanytopstems = 5
+
+        print >> this_file, "\n-------------------------"
+        print >> this_file, "Entropy-based stability: ", StableSignature(stemlist, FindSuffixesFlag)
+        print >> this_file, "\n", "High frequency possible affixes \nNumber of stems: ", len(stemlist)
+        formatstring = '%10s    weight: %5d count: %5d %2s'
+        peripheralchunklist = find_N_highest_weight_affix(stemlist, FindSuffixesFlag)
+
+        for item in peripheralchunklist:
+            if item[2] >= numberofstems * 0.9:
+                flag = "**"
+            else:
+                flag = ""
+            print >> this_file, formatstring % (item[0], item[1], item[2], flag)
+         
+
+    this_file.close()
+    
+
+
     this_file.close()
 
 def print_signature_list_1_html(this_file, DisplayList, stemcountcutoff, totalrobustness):
@@ -208,7 +287,7 @@ def print_complex_signature_to_svg (outfile_html, sig, lexicon):
 # ----------------------------------------------------------------------------------------------------------------------------#
 def print_signature_list_2(this_file, signature_feeding_outfile, lxalogfile, Lexicon,  DisplayList, stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
 
-    start_an_html_file (signature_feeding_outfile)
+   
     
 
     numberofstemsperline = 6
@@ -281,14 +360,30 @@ def print_signature_list_2(this_file, signature_feeding_outfile, lxalogfile, Lex
             else:
                 flag = ""
             print >> this_file, formatstring % (item[0], item[1], item[2], flag)
+         
+
+    this_file.close()
+    
+  
+# ----------------------------------------------------------------------------------------------------------------------------#
+def print_signature_list_2(this_file, signature_feeding_outfile, lxalogfile, Lexicon,  DisplayList, stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
+
+    start_an_html_file (signature_feeding_outfile)
+    
+
+    numberofstemsperline = 6
+    stemlist = []
+    reversedstemlist = []
+    count = 0
+    print >> this_file, "*** Stems in each signature"
+    for sig, stemcount, robustness, stem in DisplayList:
+         
         # ------------------------------------------------------------------------------------------------------
         # Already analyzed stems: Just a temporary experiment to see how one signature feeds another.
         #print "\n", sig    , "line 213 of printing_to_files"    
         numberofstems = len(stemlist)
         temp_signatures_with_stems = dict()
-        formatstring = "{0:20s} {1:30s} {2:20s}"
-
-       
+    
 
         div_last   = "</div>\n"   
         table_first ="<table>\n"
