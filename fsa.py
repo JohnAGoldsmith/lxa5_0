@@ -527,21 +527,28 @@ class FSA_lxa:
     # -----------------------------------------------------------#
     #   Added June 2017 : printing FSA to html
     # -----------------------------------------------------------#
-    # The following function takes a list of that forms a path (for one or more words) and generates an HTML block picture.
+    def print_path_of_word (self, word,folder):
+        filename = folder + word + "path.html"
+        outfile = open(filename, 'w' )
+        paths = this.parse_word
+
+    # The following function takes a list of edges that forms a path (for one or more words) and generates an HTML block picture.
     def print_path(self, filename, edges_list, word = "" ):
         outfile = open (filename, "w")
         start_an_html_file(outfile)
         for edge in edges_list:
             this_box = Box(self,edge.labels)
             this_box.print_box(outfile)
-        
-
-
-
-
-
-
         end_an_html_file(outfile)
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1440,7 +1447,7 @@ class FSA_lxa:
     # ------------------------------------------------------------------------------------------#
     # -----------------------------------------------------------------------------#
     # -----------------------------------------------------------#
-    def parseWords(self, wordlist, outfile):
+    def parse_words(self, wordlist, outfile):
         # -----------------------------------------------------------------------------#
         self.WordParses = dict()
         index = 1
@@ -1450,7 +1457,7 @@ class FSA_lxa:
                 print
                 index
             index += 1
-            self.WordParses[word] = self.parseWord(word)
+            self.WordParses[word] = self.parse_word(word)
             print >> outfile, word
             if self.WordParses[word]:
                 for parsechain in self.WordParses[word]:
@@ -1461,28 +1468,31 @@ class FSA_lxa:
 
     def lparse(self, CompletedParses, IncompleteParses):
         # -----------------------------------------------------------------------------#
+        print "------ lparse ------------"
         currentParseChain = IncompleteParses.pop()
         print currentParseChain.Display()
-        # print "------------------"
-        # print "length of current parsechain",  len(currentParseChain.my_chain)
+
+        print "Number of other incomplete parsechains",  len(IncompleteParses)
+        print "number of completed paths (parsechains)",  len(CompletedParses)
         currentParseChunk = currentParseChain.my_chain[-1]
-        # print "morph: ", currentParseChunk.morph, "remaining:",  currentParseChunk.remainingString
+        print "morph at now: ", currentParseChunk.morph, "remaining:",  currentParseChunk.remainingString
         currentParseToState = currentParseChunk.toState
         outgoingedges = currentParseToState.getOutgoingEdges()
         currentRemainingString = currentParseChunk.remainingString
 
-        # print "current remaining string: ", currentRemainingString
-        # print "Current parse To-state", currentParseChunk.toState.index
+        print "current remaining string: ", currentRemainingString
+        print "Current parse To-state", currentParseChunk.toState.index
+        progress_flag = False
         for edge in outgoingedges:
             for label in edge.labels:
-                if label == "NULL" and len(
-                        currentParseChunk.remainingString) == 0 and edge.toState.acceptingStateFlag == True:
+                if label == "NULL" and len(currentParseChunk.remainingString) == 0 and edge.toState.acceptingStateFlag == True:
                     CopyOfCurrentParseChain = ParseChain()
                     CopyOfCurrentParseChain.Copy(currentParseChain)
                     newParseChunk = parseChunk(label, "", edge)
                     CopyOfCurrentParseChain.Append(newParseChunk)
                     CompletedParses.append(CopyOfCurrentParseChain)
-                    # print "Completion, apparently, with a final NULL."
+                    print " Completion, apparently, with a final NULL."
+                    progress_flag = True
                     break  # break in label's for
 
                 labellength = len(label)
@@ -1493,21 +1503,26 @@ class FSA_lxa:
                         newParseChunk = parseChunk(label, "", edge)
                         CopyOfCurrentParseChain.Append(newParseChunk)
                         CompletedParses.append(CopyOfCurrentParseChain)
-                    # print CopyOfCurrentParseChain.Display()
+                        print " Perfect edge found, completion! ", "<<" + CopyOfCurrentParseChain.Display() + ">>"
+                        progress_flag = True
                     else:
-                        # print "Good edge found, its to state is", edge.toState.index
+                        print "  Good edge found, its to-state is", edge.toState.index,
                         newRemainingString = currentRemainingString[labellength:]
                         newParseChunk = parseChunk(label, newRemainingString, edge)
                         CopyOfCurrentParseChain.Append(newParseChunk)
                         IncompleteParses.append(CopyOfCurrentParseChain)
-                        # print "Partial match found ", label
-                        # for parsechain in IncompleteParses:
-                        #	print "1377", "lenth of IncompletePrses", len(IncompleteParses), parsechain.Display()
+                        print "Partial match found ", label
+                        progress_flag = True
+                        print "  Number of incomplete parses:",  len(IncompleteParses)
+                        for parsechain in IncompleteParses:
+                            print " ", parsechain.Display()
+        if progress_flag == False:
+             print "Impossible to complete! "
 
         return (CompletedParses, IncompleteParses)
 
     # -----------------------------------------------------------------------------#
-    def parseWord(self, word):
+    def parse_word(self, word):
         # -----------------------------------------------------------------------------#
         CompletedParses = list()
         IncompleteParses = list()
@@ -1515,21 +1530,22 @@ class FSA_lxa:
         startingParseChunk = parseChunk("", word)
         startingParseChunk.toState = self.startState
 
-        # print "\nBegin parse of this word:", word
+        print "\nBegin parse of this word:", word
 
         initialParseChain.Append(startingParseChunk)
         IncompleteParses.append(initialParseChain)
 
         while len(IncompleteParses) > 0:
+            print "========  parse_word ==========="
             CompletedParses, IncompleteParses = self.lparse(CompletedParses, IncompleteParses)
-        # print "1403: incompleted parses now:", len(IncompleteParses), "completed parses", len(CompletedParses)
-        if len(CompletedParses) == 0:
-            # print "No parse found.-------------------------------------------------------------------------------------------"
-            return None
-        # for parsechain in CompletedParses:
-        # print "in parseword:", parsechain.Display()
 
-        # print "completing parse of this word ----------------------------------------------------------------------------"
+        if len(CompletedParses) == 0:
+            print "No parse found.----------------------------------------------------------------------------"
+            return None
+        for parsechain in CompletedParses:
+            print "in parseword:", parsechain.Display()
+
+        print "completing parse of this word ---------------------------------------------------------"
         return CompletedParses
         
     # -----------------------------------------------------------------------------#

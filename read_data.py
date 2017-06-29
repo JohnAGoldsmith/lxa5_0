@@ -10,6 +10,9 @@ def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
                 if '#' in word:
                     print "We cannot accept a word with # in it.", word
                     continue
+                if '=' in word:
+                    print "We cannot accept a word with = in it.", word
+                    continue    
                 if len(pieces) > 1:
                     count = int(pieces[1])
                 else:

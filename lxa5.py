@@ -375,6 +375,9 @@ while True:
         print "5. Delete signatures with too few stems. (2)."
         print "6. Assign a unique signature to each stem. (3)."
 
+    #parses = morphology.parse_word(word)
+
+
 
     if word in Lexicon.SignatureBiographies:
         for line in Lexicon.SignatureBiographies[word]:
@@ -446,12 +449,11 @@ while True:
     startingParseChunk = parseChunk("", word)
     startingParseChunk.toState = morphology.startState
 
-    initialParseChain.my_chain. append(startingParseChunk)
+    initialParseChain.my_chain.append(startingParseChunk)
     IncompleteParses.append(initialParseChain)
     while len(IncompleteParses) > 0:
         CompletedParses, IncompleteParses = morphology.lparse(CompletedParses, IncompleteParses)
-    if len(CompletedParses) == 0: print
-    "no analysffound."
+    if len(CompletedParses) == 0: print "no analysis found."
 
     for parseChain in CompletedParses:
         for thisParseChunk in parseChain.my_chain:

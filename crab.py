@@ -758,7 +758,7 @@ def FindGoodSignaturesInsideBad_crab(Lexicon,   FindSuffixesFlag, verboseflag, S
                             word = stem+affix
 			else:
 			    word = affix + stem
-                        Lexicon.WordBiographies[word].append("6. good_sig_string" )
+                        Lexicon.WordBiographies[word].append("6. good_sig_string: " +  good_sig_string )
                         if verboseflag:
                             contentlist.append(formatstring2.format(stem, affix, good_sig_string))
 

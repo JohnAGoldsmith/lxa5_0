@@ -484,7 +484,11 @@ class parseChunk:
         self.remainingString = otherChunk.remainingString
 
     def Print(self):
-        returnstring = "morph: " + self.morph
+        returnstring = "parseChunk: morph: "
+        if len(self.morph) > 0:
+            returnstring += self.morph
+        else:
+            returnstring += "NULL"
         if self.remainingString == "":
             returnstring += ", no remaining string",
         else:
@@ -493,7 +497,7 @@ class parseChunk:
             return "-(" + str(self.fromState.index) + ")" + self.morph + "(" + str(
                 self.toState.index) + ") -" + "remains:" + returnstring
         else:
-            return returnstring + "!" + self.morph + "no edge on this parsechunk"
+            return returnstring + ". " + self.morph + "no edge on this parsechunk"
 
 
             # ----------------------------------------------------------------------------------------------------------------------------#
@@ -525,13 +529,13 @@ class ParseChain:
         print >> outfile
 
     def Display(self):
-        returnstring = ""
+        returnstring = "["
         for i in range(len(self.my_chain)):
             chunk = self.my_chain[i]
             returnstring += chunk.morph + "-"
             if chunk.edge:
                 returnstring += str(chunk.edge.toState.index) + "-"
-        return returnstring
+        return returnstring + "]"
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
