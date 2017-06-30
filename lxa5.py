@@ -25,19 +25,19 @@ from fsa import *
 from loose_fit import *
 from lxa_module import *
 from read_data import *
-#from svg import * 
+#from svg import *
 from crab import *
 from config import *
 
 
 
- 
- 
+
+
 # --------------------------------------------------------------------##
 #		parse command line arguments
 # --------------------------------------------------------------------##
 
-# The config.py file contains default or preferred values. Anything not specified on the command line will be governed by the config file. 
+# The config.py file contains default or preferred values. Anything not specified on the command line will be governed by the config file.
 
 parser = argparse.ArgumentParser(description='Compute morphological analysis.')
 parser.add_argument('-l', action="store", dest="language", help="name of language")
@@ -50,7 +50,7 @@ parser.add_argument('-F', action="store", dest="FSA", help="generate and print F
 
 results                 = parser.parse_args()
 language                = results.language
- 
+
 
 
 if results.language != None:
@@ -99,12 +99,12 @@ graphicsfolder  = outfolder + "graphics/"
 if not os.path.exists(graphicsfolder):
     os.makedirs(graphicsfolder)
 
- 
+
 
 g_encoding = "asci"  # "utf8"
 BreakAtHyphensFlag = True
- 
- 
+
+
 # --------------------------------------------------------------------##
 #		Tell the user what we will be doing.
 # --------------------------------------------------------------------##
@@ -123,10 +123,10 @@ else:
     print     formatstring_initial_1.format("Reading corpus: ", complete_infilename)
 print formatstring_initial_1.format("Logging to: ", outfolder)
 print formatstring_initial_1.format("Number of words: ", str(config_lxa["word_count_limit"]))
-print 
+print
 print "-" * 100
 
- 
+
 
 # -------------------------------------------------------------------------------------------------------#
 # -------------------------------------------------------------------------------------------------------#
@@ -139,7 +139,7 @@ print "-" * 100
 # A signature is a tuple of strings (each an affix).
 # Signatures is a map: its keys are signatures.  Its values are *sets* of stems.
 # StemToWord is a map; its keys are stems.       Its values are *sets* of words.
-# StemToSig  is a map; its keys are stems.       Its values are lists of signatures. The usual case when a stem has two signatures is when it is X+a for a signature in which X is a stem, 
+# StemToSig  is a map; its keys are stems.       Its values are lists of signatures. The usual case when a stem has two signatures is when it is X+a for a signature in which X is a stem,
 # and it is X + NULL in a differrent signature
 # WordToSig  is a Map. its keys are words.       Its values are *lists* of signatures.
 # StemCorpusCounts is a map. Its keys are words. 	 Its values are corpus counts of stems.
@@ -212,8 +212,8 @@ if True:
     print "  3. Find good signatures inside bad."
     FindGoodSignaturesInsideBad_crab(Lexicon,  FindSuffixesFlag,verboseflag)
 
- 
- 
+
+
 if (False):
     # --------------------------------------------------------------------
     # 4 Rebalancing now, which means:                  -------
@@ -243,7 +243,7 @@ if (False):
         print >> lxalogfile, formatstring3.format("Letters in affixes", Lexicon.total_affix_length_in_signatures)
         print >> lxalogfile, formatstring3.format("Total robustness in signatures", Lexicon.TotalRobustnessInSignatures)
 
- 
+
 
 
 
@@ -270,7 +270,7 @@ if True:
     #Lexicon.printSignatures(FileObject, g_encoding, FindSuffixesFlag,suffix)
     Lexicon.printSignatures(g_encoding, FindSuffixesFlag,suffix)
 
- 
+
 
 if False:
     print
@@ -285,14 +285,14 @@ if False:
     "6. Slicing signatures."
     SliceSignatures(Lexicon, g_encoding, FindSuffixesFlag, FileObject["Log"])
 
- 
+
 
 if FSA_flag:
     print
     "7. Adding signatures to the FSA."
     AddSignaturesToFSA(Lexicon, Lexicon.SignatureStringsToStems, morphology, FindSuffixesFlag)
 
-if False:
+if True:
     print outfolder + "fsa.txt"
     "8. Printing the FSA."
     fsa_file = open(outfolder +  "fsa.txt", "w")
@@ -336,19 +336,17 @@ if FSA_flag and config_lxa["PrintFSAgraphs"]:
 #	5d. Print FSA again, with these changes.
 # ---------------------------------------------------------------------------------#
 
- 
- 
-if False:
-    print
-    "12. Parsing all words through FSA."
-    morphology.parseWords(Lexicon.WordToSig.keys(), FileObject[WordParses])
 
-if False:
-    print
-    "13. Printing all the words' parses."
-    morphology.printAllParses(FileObject[WordParses])
+fsa_word_parses = open(outfolder + "fsa_word_parses.txt", "w")
+if True:
+    print    "12. Parsing all words through FSA."
+    morphology.parse_words(Lexicon.WordToSig.keys(), fsa_word_parses)
 
- 
+if True:
+    print     "13. Printing all the words' parses."
+    morphology.printAllParses(fsa_word_parses)
+
+
 # ------------------------------------------------------------------------------------------#
 # ------------------------------------------------------------------------------------------#
 #		User inquiries about morphology
@@ -368,7 +366,7 @@ while True:
         for line in Lexicon.WordBiographies[word]:
             print line
         print "------------------------"
-        print "1. Finding protostems.  "    
+        print "1. Finding protostems.  "
         print "2. Find first parsing into proto-stems plus affixes."
         print "3. Roll out the list of parse pairs."
         print "4. Assign affixes to each protostem, stem-to-word (1)."
@@ -386,12 +384,12 @@ while True:
 
     if word == "exit":
         break
-        
+
 # ------------------------------------------------------------------------------------------#
 # ------------------------------------------------------------------------------------------#
 
-        
-        
+
+
     if word == "State":
         while True:
             stateno = raw_input("State number:")
@@ -484,8 +482,8 @@ while True:
         print
     print
     "\n\n"
- 
- 
+
+
 
 # ---------------------------------------------------------------------------------#
 #	Logging information
@@ -495,5 +493,5 @@ localtime = time.asctime(time.localtime(time.time()))
 print
 "Local current time :", localtime
 
- 
+
 # --------------------------------------------------#
