@@ -55,8 +55,8 @@ def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
                 for token in line.split():
                     if len(token) == 0:
                         continue;
-                    while len(word) > 0 and word[-1] in punctuation:
-                            word= word[:-1]    
+                    while len(token) > 0 and token[-1] in punctuation:
+                            token= token[:-1]
                     if len(token)==0:
                         continue
                     for iterations in range(3):                            

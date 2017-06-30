@@ -285,9 +285,9 @@ def print_complex_signature_to_svg (outfile_html, sig, lexicon):
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def print_signature_list_2(this_file, signature_feeding_outfile, lxalogfile, Lexicon,  DisplayList, stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
+def print_signature_list_3(this_file, signature_feeding_outfile, lxalogfile, Lexicon,  DisplayList, stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
 
-
+# this function not used, should be DELETED.
 
 
     numberofstemsperline = 6
@@ -366,67 +366,83 @@ def print_signature_list_2(this_file, signature_feeding_outfile, lxalogfile, Lex
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def print_signature_list_2(this_file, signature_feeding_outfile, lxalogfile, Lexicon,  DisplayList, stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
+def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  DisplayList, stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
 
     start_an_html_file (signature_feeding_outfile)
+    print "starting print sig list 2"
 
-
-    numberofstemsperline = 6
     stemlist = []
-    reversedstemlist = []
-    count = 0
-    print >> this_file, "*** Stems in each signature"
+
+
     for sig, stemcount, robustness, stem in DisplayList:
 
+        stemlist = SignatureToStems[sig]
         # ------------------------------------------------------------------------------------------------------
         # Already analyzed stems: Just a temporary experiment to see how one signature feeds another.
         #print "\n", sig    , "line 213 of printing_to_files"
         numberofstems = len(stemlist)
         temp_signatures_with_stems = dict()
 
+        # test whether there will be any entries here:
+        PrintThisSignatureFlag=False
+        for stem in stemlist:
+            if stem in Lexicon.WordToSig:
+                for pair in Lexicon.WordToSig[stem]:
+                    if pair[1] != sig:
+                        PrintThisSignatureFlag = True
+                        break
+            if PrintThisSignatureFlag == True:
+                break
+        if PrintThisSignatureFlag == False:
+            continue
 
-        div_last   = "</div>\n"
-        table_first ="<table>\n"
+        start_an_html_div(signature_feeding_outfile, class_type="largegroup")
+        this_box = Box(sig, "signature")
+        this_box.print_box(signature_feeding_outfile, "signature-left")
 
-        start_an_html_div(signature_feeding_outfile, class_type="")
-        start_an_html_table(signature_feeding_outfile)
-        print  >> signature_feeding_outfile, sig, "\n"
         for stem in stemlist:
             if stem in Lexicon.WordToSig:
                 for pair in Lexicon.WordToSig[stem]:
                     sig2 = pair[1]
                     if  sig2 != sig:
-                        start_an_html_table_row(signature_feeding_outfile)
-                        add_an_html_table_entry(signature_feeding_outfile, stem)
-                        add_an_html_table_entry(signature_feeding_outfile, sig2)
-                        add_an_html_table_entry(signature_feeding_outfile, pair[0] )
+                        #start_an_html_table_row(signature_feeding_outfile)
+                        #add_an_html_table_entry(signature_feeding_outfile, stem)
+                        #add_an_html_table_entry(signature_feeding_outfile, sig2)
+                        #add_an_html_table_entry(signature_feeding_outfile, pair[0] )
                         if sig2 not in temp_signatures_with_stems:
                                 temp_signatures_with_stems[sig2]=list()
                         temp_signatures_with_stems[sig2].append((stem,pair[0]))
-                        end_an_html_table_row(signature_feeding_outfile)
-        end_an_html_table(signature_feeding_outfile)
-        end_an_html_div(signature_feeding_outfile)
+                        #end_an_html_table_row(signature_feeding_outfile)
+        #end_an_html_table(signature_feeding_outfile)
 
 
-        start_an_html_div(signature_feeding_outfile, class_type="")
+
+
+
+
+        number_of_columns = 7
+        colno=0
         start_an_html_table(signature_feeding_outfile)
         signature_list= sorted(temp_signatures_with_stems , key = lambda x:len(temp_signatures_with_stems[x]), reverse=True  )
         for item  in signature_list:
-                start_an_html_table_row(signature_feeding_outfile)
-                add_an_html_table_entry(signature_feeding_outfile, item)
-                end_an_html_table_row(signature_feeding_outfile)
-		for chunk in temp_signatures_with_stems[item]:
-		        start_an_html_table_row(signature_feeding_outfile)
-       		        add_an_html_table_entry(signature_feeding_outfile, "")
-		        add_an_html_table_entry(signature_feeding_outfile, chunk)
-                        end_an_html_table_row(signature_feeding_outfile)
-
-        signature_feeding_outfile.write(div_last)
+            start_an_html_table_row(signature_feeding_outfile)
+            add_an_html_table_entry(signature_feeding_outfile, item)
+            end_an_html_table_row(signature_feeding_outfile)
+            colno=0
+            for chunk in temp_signatures_with_stems[item]:
+                if colno == 0:
+                    colno = 1
+                    start_an_html_table_row(signature_feeding_outfile)
+                    add_an_html_table_entry(signature_feeding_outfile, "")
+                add_an_html_table_entry(signature_feeding_outfile, chunk)
+                colno += 1
+                if colno == number_of_columns:
+                    end_an_html_table_row(signature_feeding_outfile)
+                    colno = 0
         end_an_html_table(signature_feeding_outfile)
         end_an_html_div(signature_feeding_outfile)
 
 
-    this_file.close()
     signature_feeding_outfile.close()
 
 # ----------------------------------------------------------------------------------------------------------------------------#

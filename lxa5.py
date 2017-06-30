@@ -292,7 +292,7 @@ if FSA_flag:
     "7. Adding signatures to the FSA."
     AddSignaturesToFSA(Lexicon, Lexicon.SignatureStringsToStems, morphology, FindSuffixesFlag)
 
-if True:
+if FSA_flag:
     print outfolder + "fsa.txt"
     "8. Printing the FSA."
     fsa_file = open(outfolder +  "fsa.txt", "w")
@@ -338,11 +338,11 @@ if FSA_flag and config_lxa["PrintFSAgraphs"]:
 
 
 fsa_word_parses = open(outfolder + "fsa_word_parses.txt", "w")
-if True:
+if FSA_flag:
     print    "12. Parsing all words through FSA."
     morphology.parse_words(Lexicon.WordToSig.keys(), fsa_word_parses)
 
-if True:
+if FSA_flag:
     print     "13. Printing all the words' parses."
     morphology.printAllParses(fsa_word_parses)
 

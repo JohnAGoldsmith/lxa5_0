@@ -330,8 +330,8 @@ class CLexicon:
         # print the stems of each signature to html:
         print_signature_list_1_html(outfile_signatures_html, DisplayList, stemcountcutoff, totalrobustness)
 
-        # print the stems of each signature:
-        #print_signature_list_2(outfile_signatures_2, outfile_signature_feeding, lxalogfile, self, DisplayList, stemcountcutoff,  totalrobustness, self.SignatureStringsToStems, self.StemCorpusCounts,  FindSuffixesFlag)
+        # print signature feeding structures:
+        print_signature_list_2(outfile_signature_feeding, lxalogfile, self, DisplayList, stemcountcutoff,  totalrobustness, self.SignatureStringsToStems, self.StemCorpusCounts,  FindSuffixesFlag)
 
         # print WORDS of each signature:
         print_words(outfile_wordstosigs, outfile_wordstosigs_html, lxalogfile, self.Words, self.WordToSig, ColumnWidth)

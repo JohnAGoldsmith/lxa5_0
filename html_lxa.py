@@ -15,7 +15,7 @@ def start_an_html_table(outfile):
         outfile.write("<table>\n")
 
 def end_an_html_table(outfile):
-        outfile.write("</table>\n")
+        outfile.write("</table>")
 
 def start_an_html_table_row(outfile):
         outfile.write("<tr>\n")
@@ -28,7 +28,7 @@ def start_an_html_div(outfile, class_type=""):
    outfile.write("\n\n<div class=\""+ class_type + "\">\n")
 
 def end_an_html_div(outfile):
-   outfile.write("\n\n</div>\n")
+   outfile.write("\n</div>\n")
 
 def add_an_html_table_entry(outfile,item):
    outfile.write("<td>{0:1s}</td>\n".format(item))
@@ -90,7 +90,7 @@ class Page:
         start_an_html_div(outfile, class_type="signature")
         self.print_box(outfile, this_signature_box.my_stack1,x,y)
         self.print_box(outfile, this_signature_box.my_stack2,x+deltax, y)
-        end_an_html_div(outfile)
+
 
 class Stack:
     def __init__(self):       
@@ -100,7 +100,10 @@ class Stack:
 class Box:
 
     def __init__(self, string_list,genre="None"):
-        self.my_string_list = list(string_list)
+        if genre == "signature":
+            self.my_string_list = string_list.split("=")
+        else:
+           self.my_string_list = list(string_list)
         if len(string_list) > 200:
             self.number_of_columns = 30  
         elif len(string_list) > 50:
@@ -124,35 +127,35 @@ class Box:
                 newstem=stem[::-1]
                 self.my_string_list.append(newstem) 
     def print_box(self,  outfile, genre= "neutral" ):
-        start_an_html_div(outfile, class_type="genre") 
-        if this_box.genre == "suffix":
+        start_an_html_div(outfile, class_type=genre)
+        if self.genre == "suffix":
                 div_class="suffixclass"
         else:
                 div_class="neutral"
          
         start_an_html_table(outfile)
-        if this_box.genre=="suffix" or this_box.genre=="prefix":
-            for morph in this_box.my_string_list:
+        if self.genre=="suffix" or self.genre=="prefix" or self.genre=="signature":
+            for morph in self.my_string_list:
                 start_an_html_table_row(outfile)
                 add_an_html_table_entry(outfile,morph)
                 end_an_html_table_row(outfile)
             end_an_html_table(outfile)
         else:   
-                colno=0
-                for stemno in range(len(this_box.my_string_list)):
-                  if colno == 0:
+            colno=0
+            for stemno in range(len(self.my_string_list)):
+                if colno == 0:
                         start_an_html_table_row(outfile)
-                  add_an_html_table_entry(outfile,this_box.my_string_list[stemno])
-                  colno += 1
-                  if colno == this_box.number_of_columns:
-                        end_an_html_table_row(outfile)
-                        colno = 0
-                while colno < this_box.number_of_columns :
-                     add_an_html_table_entry(outfile,"")
-                     colno += 1
-                end_an_html_table_row(outfile)
-                end_an_html_table(outfile)
-        end_an_html_div(outfile)
+                add_an_html_table_entry(outfile,self.my_string_list[stemno])
+                colno += 1
+                if colno == self.number_of_columns:
+                    end_an_html_table_row(outfile)
+                    colno = 0
+                while colno < self.number_of_columns :
+                    add_an_html_table_entry(outfile,"")
+                    colno += 1
+                    end_an_html_table_row(outfile)
+            end_an_html_table(outfile)
+        #end_an_html_div(outfile)
 
 
 
