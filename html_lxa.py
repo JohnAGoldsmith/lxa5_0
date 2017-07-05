@@ -84,7 +84,7 @@ class Page:
 
     def print_circle (self, outfile, rowno,colno, radius = 10):
 	(xcoord,ycoord) = self.coor_from_row_col (rowno, colno)
-        circle_string =  "<circle cx=\"{0:3d}\" cy=\"{1:3d}\" r=\"{2:3d}\"  stroke=\"black\" stroke-width=\"3\" fill=\"red\" />\n"	
+        circle_string =  "<circle cx=\"{0:3d}\" cy=\"{1:3d}\" r=\"{2:2d}\"  stroke=\"black\" stroke-width=\"3\" fill=\"red\" />\n"	
 	outfile.write( circle_string.format(xcoord,ycoord,radius) )
 	
     def print_signature (self,outfile,text, rowno, colno, radius=10):
