@@ -3,7 +3,7 @@ from class_alternation import *
 from signaturefunctions import *
 #from svg import *
 from html_lxa import *
-
+from IPython.display import display 
 
 
 def print_html_report(outfile, this_lexicon, singleton_signatures, doubleton_signatures, DisplayList):
@@ -256,15 +256,23 @@ def print_signatures_to_svg (outfile_html, DisplayList,SignatureToStems,FindSuff
 
     DisplayList = sorted(DisplayList, lambda x, y: cmp(x[2], y[2]), reverse=True)
     this_page.start_an_html_file(outfile_html)
+    column_counts = dict();
     for signo in range(len(DisplayList)):
             (sig,stemcount,robustness,stem) = DisplayList[signo]
             stemlist = SignatureToStems[sig].keys()
-            affixlist = sig.split("=")
-            if FindSuffixesFlag:
-                signature_box = SignatureBox(stemlist, affixlist,FindSuffixesFlag)
-            else:
-                signature_box=SignatureBox(affixlist,stemlist, FindSuffixesFlag)
-            signature_box.print_signature_box(outfile_html, this_page, 300,300)
+	    row_no= sig.count("=")+1
+            if row_no not in column_counts:
+		column_counts[row_no] = 1
+	    else:
+ 		column_counts[row_no] += 1
+	    col_no = column_counts[row_no]
+	    this_page.print_signature (outfile_html, sig, row_no, col_no)
+
+            #if FindSuffixesFlag:
+            #    signature_box = SignatureBox(stemlist, affixlist,FindSuffixesFlag)
+            #else:
+            #    signature_box=SignatureBox(affixlist,stemlist, FindSuffixesFlag)
+            #signature_box.print_signature_box(outfile_html, this_page, 300,300)
     this_page.end_an_html_file(outfile_html)
     outfile_html.close()
 
@@ -369,8 +377,7 @@ def print_signature_list_3(this_file, signature_feeding_outfile, lxalogfile, Lex
 def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  DisplayList, stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
 
     start_an_html_file (signature_feeding_outfile)
-    print "starting print sig list 2"
-
+    
     stemlist = []
 
 

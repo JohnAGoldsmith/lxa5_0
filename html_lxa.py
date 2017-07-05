@@ -5,6 +5,7 @@ def start_an_html_file(outfile):
         outfile.write("<link rel=\"stylesheet\" href=\"style.css\">\n")
         outfile.write("</head>\n")
         outfile.write("<body>\n")
+
        
 def     end_an_html_file(outfile):
         outfile.write("</body>\n")
@@ -38,18 +39,64 @@ def add_an_html_header_entry(outfile,item):
 
 
 
+
 class Page:
     def __init__(self):
-        self.my_height =1000
-        self.my_width=1000
-
+        self.my_height =1500
+        self.my_width=10000
+	self.my_column_width = 200
+	self.my_row_height = 100
 
     def start_an_html_file(self, outfile):
         start_an_html_file(outfile)
+        string1 = "<svg width=\"{0:2d}\" height=\"{1:2d}\">\n"
+        outfile.write(string1.format(self.my_width,self.my_height))
         return outfile
 
     def end_an_html_file(self,outfile):
+        outfile.write("</svg>\n")
         end_an_html_file(outfile)
+
+
+    def print_text(self,outfile,rowno,colno,text):
+        (x,y) = self.coor_from_row_col(rowno,colno)
+        y += self.my_row_height * 0.3
+	outstring1 = "<text x=\"{}\" y=\"{}\" font-family=\"Verdana\" text-anchor=\"middle\" font-size=\"20\">"
+	outstring2 = "</text>\n"
+	if len(text) < 15:
+		outfile.write(outstring1.format(x,y) + text + outstring2)
+	else:
+	    text_height = self.my_row_height * 0.3
+	    sig_list = text.split("=")
+	    number_of_affixes = len(sig_list)
+	    half = number_of_affixes / 2
+	    first_line_list = sig_list[0:half]
+	    second_line_list = sig_list[half:number_of_affixes]
+	    outstring1 = "<text x=\"{}\" y=\"{}\" font-family=\"Verdana\" text-anchor=\"middle\" font-size=\"20\">\n"
+	    outstring2 = "</text>\n"
+	    outfile.write(outstring1.format(x,y) + "=".join(first_line_list) + outstring2)
+	    outfile.write(outstring1.format(x,y + text_height) + "=".join(second_line_list) + outstring2)
+
+    def coor_from_row_col (self, rowno, colno):
+	x = self.my_column_width * (colno)
+	y = self.my_height - self.my_row_height * (rowno)
+        return (x,y)
+
+    def print_circle (self, outfile, rowno,colno, radius = 10):
+	(xcoord,ycoord) = self.coor_from_row_col (rowno, colno)
+        circle_string =  "<circle cx=\"{0:3d}\" cy=\"{1:3d}\" r=\"{2:3d}\"  stroke=\"black\" stroke-width=\"3\" fill=\"red\" />\n"	
+	outfile.write( circle_string.format(xcoord,ycoord,radius) )
+	
+    def print_signature (self,outfile,text, rowno, colno, radius=10):
+        self.print_circle(outfile, rowno,colno,radius=10)
+ 	self.print_text(outfile,rowno, colno, text)
+
+	    
+
+
+
+
+
 
     def print_box(self, outfile,  this_box,x,y):
         # x and y are the lower left points of the box, in Page-logical units, where the origin of the Page is its lower left-hand corner
