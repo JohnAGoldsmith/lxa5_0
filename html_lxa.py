@@ -1,3 +1,5 @@
+import math
+
 def start_an_html_file(outfile):
         outfile.write("<!DOCTYPE html>\n")
         outfile.write("<html>\n")
@@ -42,10 +44,10 @@ def add_an_html_header_entry(outfile,item):
 
 class Page:
     def __init__(self):
-        self.my_height =1500
+        self.my_height =5000
         self.my_width=10000
-	self.my_column_width = 200
-	self.my_row_height = 100
+	self.my_column_width = 250
+	self.my_row_height = 200
 
     def start_an_html_file(self, outfile):
         start_an_html_file(outfile)
@@ -60,13 +62,14 @@ class Page:
 
     def print_text(self,outfile,rowno,colno,text):
         (x,y) = self.coor_from_row_col(rowno,colno)
-        y += self.my_row_height * 0.3
+        row_factor = 0.10
+        y += self.my_row_height * row_factor + 10
 	outstring1 = "<text x=\"{}\" y=\"{}\" font-family=\"Verdana\" text-anchor=\"middle\" font-size=\"20\">"
 	outstring2 = "</text>\n"
 	if len(text) < 15:
 		outfile.write(outstring1.format(x,y) + text + outstring2)
-	else:
-	    text_height = self.my_row_height * 0.3
+	elif len(text)<30:
+	    text_height = self.my_row_height * row_factor
 	    sig_list = text.split("=")
 	    number_of_affixes = len(sig_list)
 	    half = number_of_affixes / 2
@@ -77,18 +80,41 @@ class Page:
 	    outfile.write(outstring1.format(x,y) + "=".join(first_line_list) + outstring2)
 	    outfile.write(outstring1.format(x,y + text_height) + "=".join(second_line_list) + outstring2)
 
+        else:	    
+	    text_height = self.my_row_height * row_factor
+	    sig_list = text.split("=")
+	    number_of_affixes = len(sig_list)
+	    third = number_of_affixes/3
+	    first_line_list = sig_list[0:third]
+	    second_line_list = sig_list[third:2 * third]
+	    third_line_list = sig_list[2*third:number_of_affixes]
+	    outstring1 = "<text x=\"{}\" y=\"{}\" font-family=\"Verdana\" text-anchor=\"middle\" font-size=\"20\">\n"
+	    outstring2 = "</text>\n"
+	    outfile.write(outstring1.format(x,y) + "=".join(first_line_list) + outstring2)
+	    outfile.write(outstring1.format(x,y + text_height) + "=".join(second_line_list) +outstring2)
+	    outfile.write(outstring1.format(x,y + 2* text_height) + "=".join(third_line_list) + outstring2)
+	    
+	    
+	    
     def coor_from_row_col (self, rowno, colno):
 	x = self.my_column_width * (colno)
 	y = self.my_height - self.my_row_height * (rowno)
         return (x,y)
 
-    def print_circle (self, outfile, rowno,colno, radius = 10):
+    def print_circle (self, outfile, rowno,colno, count = 10):
 	(xcoord,ycoord) = self.coor_from_row_col (rowno, colno)
-        circle_string =  "<circle cx=\"{0:3d}\" cy=\"{1:3d}\" r=\"{2:2d}\"  stroke=\"black\" stroke-width=\"3\" fill=\"red\" />\n"	
-	outfile.write( circle_string.format(xcoord,ycoord,radius) )
+	if count == 1:
+          circle_string =  "<circle cx=\"{0:3d}\" cy=\"{1:3d}\" r=\"{2:1d}\"  stroke=\"black\" stroke-width=\"3\" fill=\"red\" />\n"
+          radius=1
+          outfile.write( circle_string.format(xcoord,ycoord,radius) )	
+        else:
+          circle_string =  "<circle cx=\"{0:3d}\" cy=\"{1:3d}\" r=\"{2:1f}\"  stroke=\"black\" stroke-width=\"3\" fill=\"red\" />\n"
+          radius=5 * math.log(count)
+          outfile.write( circle_string.format(xcoord,ycoord,radius) )	        	
+ 
 	
-    def print_signature (self,outfile,text, rowno, colno, radius=10):
-        self.print_circle(outfile, rowno,colno,radius=10)
+    def print_signature (self,outfile,text, count, rowno, colno  ):
+        self.print_circle(outfile, rowno,colno,count)
  	self.print_text(outfile,rowno, colno, text)
 
 	    
