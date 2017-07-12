@@ -48,6 +48,15 @@ class Page:
         self.my_width=10000
 	self.my_column_width = 250
 	self.my_row_height = 200
+        self.Node_dict = dict()
+        self.Arrow_dict = dict()
+
+    def add_arrow(self, outfile, from_node, to_node):
+        from_row, from_column = self.Node_dict[from_node]
+        to_row, to_column     = self.Node_dict[to_node]
+        arrow_code = "<line x1=\"" + {0:d} + "\ y1 = \"" + {1:d} + "\" x2=\"" + {2:d} + "\"y2 = \"" +{3:d} + "\" style=\"strike:rgb(255,0,0); stroke-width:2\" />"
+        outfile.write(arrow_code)
+
 
     def start_an_html_file(self, outfile):
         start_an_html_file(outfile)
