@@ -17,7 +17,7 @@ import time
 
 
 from collections import defaultdict
-
+from initialization import *
 from ClassLexicon import *
 from dataviz import *
 from dynamics import *
@@ -29,103 +29,19 @@ from read_data import *
 from crab import *
 from config import *
 
+FSA_flag = False
 
 
 
 
-# --------------------------------------------------------------------##
-#		parse command line arguments
-# --------------------------------------------------------------------##
-
-# The config.py file contains default or preferred values. Anything not specified on the command line will be governed by the config file.
-
-parser = argparse.ArgumentParser(description='Compute morphological analysis.')
-parser.add_argument('-l', action="store", dest="language", help="name of language")
-parser.add_argument('-w', action="store", dest="wordcountlimit", help="number of words to read")
-parser.add_argument('-f', action="store", dest="infilename", help="name of file to read")
-parser.add_argument('-d', action="store", dest="data_folder", help="data directory")
-parser.add_argument('-s', action="store", dest="affix_type", help="prefix or suffix")
-parser.add_argument('-F', action="store", dest="FSA", help="generate and print FSA")
+# -------------------------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------------------------#
+# 					Initialization			   	#
+# -------------------------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------------------------#
 
 
-results                 = parser.parse_args()
-language                = results.language
-
-
-
-if results.language != None:
-        config_lxa["language"] = results.language
-if results.wordcountlimit != None:
-        config_lxa["word_count_limit"] = int(results.wordcountlimit)
-if results.infilename != None:
-        config_lxa["infilename"] = results.infilename
-
-if results.data_folder != None:
-        config_lxa["data_folder"] = results.data_folder
-if results.affix_type == "True":
-	FindSuffixesFlag = True
-elif results.affix_type == "False":
-	FindSuffixesFlag = False
-else:   FindSuffixesFlag = True
-if results.FSA == "FSA" or results.FSA== "True":
-	config_lxa["FSA"] = True
-        FSA_flag = True
-elif results.FSA == "False":
-	config_lxa.FSA = False
-        FSA_flag = False
-else:
-        FSA_flag = config_lxa["FSA"]
-
-print "FSA? ", FSA_flag
-
-# --------------------------------------------------------------------##
-#	Determine folders for input, output; initialize output files
-# --------------------------------------------------------------------##
-
-
-datafolder      = config_lxa["data_folder"] + config_lxa["language"] + "/"
-outfolder       = config_lxa["data_folder"] + config_lxa["language"] + "/"+ "lxa/"
-dx1_folder        = config_lxa["data_folder"] + config_lxa["language"] + "/"+ "dx1/"
-if  config_lxa["infilename"][-4:] == ".txt":
-    datatype = "CORPUS"
-    complete_infilename = datafolder + config_lxa["infilename"]
-else:
-    datatype = "DX1"
-    complete_infilename = dx1_folder + config_lxa["infilename"]
-
-graphicsfolder  = outfolder + "graphics/"
-
-
-if not os.path.exists(graphicsfolder):
-    os.makedirs(graphicsfolder)
-
-
-
-g_encoding = "asci"  # "utf8"
-BreakAtHyphensFlag = True
-
-
-# --------------------------------------------------------------------##
-#		Tell the user what we will be doing.
-# --------------------------------------------------------------------##
-
-
-formatstring_initial_1 = "{:40s}{:>15s}"
-print "\n\n" + "-" * 100
-print("Language:", language)
-if FindSuffixesFlag:
-    print     "Finding suffixes."
-else:
-    print     "Finding prefixes."
-if datatype == "DX1":
-    print     formatstring_initial_1.format("Reading dx file: ", complete_infilename)
-else:
-    print     formatstring_initial_1.format("Reading corpus: ", complete_infilename)
-print formatstring_initial_1.format("Logging to: ", outfolder)
-print formatstring_initial_1.format("Number of words: ", str(config_lxa["word_count_limit"]))
-print
-print "-" * 100
-
+Initialization(argparse, config_lxa,FSA_flag)
 
 
 # -------------------------------------------------------------------------------------------------------#
@@ -146,24 +62,28 @@ print "-" * 100
 # SignatureToStems is a dict: its keys are tuples of strings, and its values are dicts of stems. We don't need both this and Signatures!
 
 Lexicon = CLexicon()
-Lexicon.infolder = complete_infilename
-Lexicon.outfolder = outfolder
-Lexicon.graphicsfolder = graphicsfolder
-Lexicon.FindSuffixesFlag = FindSuffixesFlag
+Lexicon.infolder = config_lxa["complete_infilename"]
+Lexicon.outfolder = config_lxa["outfolder"]
+Lexicon.graphicsfolder = config_lxa["graphicsfolder"]
+FindSuffixesFlag = config_lxa["FindSuffixesFlag"]
+
 
 # --------------------------------------------------------------------##
 #		read wordlist (dx1)
 # --------------------------------------------------------------------##
 
+g_encoding = "asci"  # "utf8"
+BreakAtHyphensFlag = True
+
 if g_encoding == "utf8":
     infile = codecs.open(infilename, g_encoding='utf-8')
 else:
-    infile = open(complete_infilename)
+    infile = open(config_lxa["complete_infilename"])
 
 filelines = infile.readlines()
-read_data(datatype,filelines,Lexicon,BreakAtHyphensFlag,config_lxa["word_count_limit"])
-Lexicon.ReverseWordList = Lexicon.WordCounts.keys()
-Lexicon.ReverseWordList.sort(key=lambda word: word[::-1])
+read_data(config_lxa["datatype"],filelines,Lexicon,BreakAtHyphensFlag,config_lxa["word_count_limit"])
+#Lexicon.ReverseWordList = Lexicon.WordCounts.keys()
+#Lexicon.ReverseWordList.sort(key=lambda word: word[::-1])
 Lexicon.WordList.sort()
 print "\n1. Finished reading word list.\n"
 
@@ -174,7 +94,7 @@ print "\n1. Finished reading word list.\n"
 Lexicon.PrintWordCounts()
 Lexicon.Words = Lexicon.WordCounts.keys()
 Lexicon.Words.sort()
-initialize_files(Lexicon, "console", 0,0, language)
+initialize_files(Lexicon, "console", 0,0, config_lxa["language"])
 
 # --------------------------------------------------------------------##
 #		For finite state automaton
@@ -337,7 +257,7 @@ if FSA_flag and config_lxa["PrintFSAgraphs"]:
 # ---------------------------------------------------------------------------------#
 
 
-fsa_word_parses = open(outfolder + "fsa_word_parses.txt", "w")
+fsa_word_parses = open(config_lxa["outfolder"] + "fsa_word_parses.txt", "w")
 if FSA_flag:
     print    "12. Parsing all words through FSA."
     morphology.parse_words(Lexicon.WordToSig.keys(), fsa_word_parses)
