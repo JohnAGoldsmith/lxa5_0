@@ -428,7 +428,10 @@ def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  Disp
 		for sig1 in feeding_signatures:
 		    if sig1 not in temp_signatures_with_stems:
 			temp_signatures_with_stems[sig1] = list()
-		    temp_signatures_with_stems[sig1].append(stem) 
+		    other_stem = Lexicon.get_stem_from_word_and_signature(word, sig1)
+		    diff = len(stem) - len(other_stem)
+                    display = other_stem + "/" + stem[-1*diff:]
+		    temp_signatures_with_stems[sig1].append(display) 
 		    		
 
 
@@ -440,7 +443,7 @@ def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  Disp
         for sig1  in signature_list:
 	    start_an_html_table(signature_feeding_outfile)
             start_an_html_table_row(signature_feeding_outfile)
-            add_an_html_table_entry(signature_feeding_outfile, "*"+sig1)
+            add_an_html_table_entry(signature_feeding_outfile, sig1)
             end_an_html_table_row(signature_feeding_outfile)
             colno=0
             for chunk in temp_signatures_with_stems[sig1]:
@@ -448,7 +451,7 @@ def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  Disp
                     colno = 1
                     start_an_html_table_row(signature_feeding_outfile)
                     add_an_html_table_entry(signature_feeding_outfile, "")
-                add_an_html_table_entry(signature_feeding_outfile, "**"+chunk)
+                add_an_html_table_entry(signature_feeding_outfile, chunk)
                 colno += 1
                 if colno == number_of_columns:
                     end_an_html_table_row(signature_feeding_outfile)
