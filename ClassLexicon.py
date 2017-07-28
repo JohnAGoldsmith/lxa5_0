@@ -154,6 +154,24 @@ class CLexicon:
         self.total_affix_length_in_signatures = 0
         self.number_of_analyzed_words =  0
 
+    def get_all_signatures (self,word):
+	sig_set = list()
+	for (stem,signature) in self.WordToSig[word]:
+	    sig_set.append(signature)
+	return sig_set
+
+    def get_stem_from_word_and_signature(self, word, signature):
+        for (stem, sig) in self.WordToSig[word]:
+	    if sig == signature:
+                return stem
+        return None
+
+
+
+
+
+
+
     ## -------                                                      ------- #
     ##              Central signature computation                   ------- #
     ## -------                                                      ------- #

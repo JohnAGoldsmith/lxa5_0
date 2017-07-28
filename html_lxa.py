@@ -31,9 +31,10 @@ def start_an_html_div(outfile, class_type=""):
    outfile.write("\n\n<div class=\""+ class_type + "\">\n")
 
 def end_an_html_div(outfile):
-   outfile.write("\n</div>\n")
+   outfile.write("\n</div>\n\n")
 
 def add_an_html_table_entry(outfile,item):
+   max_size = 20
    outfile.write("<td>{0:1s}</td>\n".format(item))
 
 def add_an_html_header_entry(outfile,item):

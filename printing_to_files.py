@@ -375,27 +375,28 @@ def print_signature_list_3(this_file, signature_feeding_outfile, lxalogfile, Lex
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
+# We find signatures which are more finely divided by a later signature (the later signature is shorter, with a longer stem).
+# Signature feeding 
 def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  DisplayList, stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
 
     start_an_html_file (signature_feeding_outfile)
-    
     stemlist = []
 
-
     for sig, stemcount, robustness, stem in DisplayList:
-
         stemlist = SignatureToStems[sig]
-        # ------------------------------------------------------------------------------------------------------
-        # Already analyzed stems: Just a temporary experiment to see how one signature feeds another.
-        #print "\n", sig    , "line 213 of printing_to_files"
         numberofstems = len(stemlist)
         temp_signatures_with_stems = dict()
 
         # test whether there will be any entries here:
         PrintThisSignatureFlag=False
         for stem in stemlist:
-            if stem in Lexicon.WordToSig:
-                for pair in Lexicon.WordToSig[stem]:
+	    for affix in sig.split("="):
+		if suffix_flag==True:	
+		    if affix == "NULL":
+			word = stem
+		    else:
+			word = stem + affix
+                for pair in Lexicon.WordToSig[word]:
                     if pair[1] != sig:
                         PrintThisSignatureFlag = True
                         break
@@ -408,48 +409,56 @@ def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  Disp
         this_box = Box(sig, "signature")
         this_box.print_box(signature_feeding_outfile, "signature-left")
 
+	# for all the words associated with each stem, find if there is another signature they all belong to.
+	# If there is, we say that other signature FEEDS this one (sig)
+	temp_signatures_with_stems = dict()
         for stem in stemlist:
-            if stem in Lexicon.WordToSig:
-                for pair in Lexicon.WordToSig[stem]:
-                    sig2 = pair[1]
-                    if  sig2 != sig:
-                        #start_an_html_table_row(signature_feeding_outfile)
-                        #add_an_html_table_entry(signature_feeding_outfile, stem)
-                        #add_an_html_table_entry(signature_feeding_outfile, sig2)
-                        #add_an_html_table_entry(signature_feeding_outfile, pair[0] )
-                        if sig2 not in temp_signatures_with_stems:
-                                temp_signatures_with_stems[sig2]=list()
-                        temp_signatures_with_stems[sig2].append((stem,pair[0]))
-                        #end_an_html_table_row(signature_feeding_outfile)
-        #end_an_html_table(signature_feeding_outfile)
-
-
-
-
+	    list_of_sets_of_signatures = list()
+            feeding_signatures = set()
+            for affix in sig.split("="):
+		if suffix_flag == True:
+		    if affix == "NULL":
+			word = stem
+		    else:
+			word = stem + affix	
+		list_of_sets_of_signatures.append(set(Lexicon.get_all_signatures(word)))
+	    feeding_signatures = set.intersection(*list_of_sets_of_signatures)
+	    feeding_signatures.remove(sig)
+	    if len(feeding_signatures) > 0:
+		for sig1 in feeding_signatures:
+		    if sig1 not in temp_signatures_with_stems:
+			temp_signatures_with_stems[sig1] = list()
+		    temp_signatures_with_stems[sig1].append(stem) 
+		    		
 
 
         number_of_columns = 7
         colno=0
+        start_an_html_div(signature_feeding_outfile, class_type="largegroup2")
         start_an_html_table(signature_feeding_outfile)
         signature_list= sorted(temp_signatures_with_stems , key = lambda x:len(temp_signatures_with_stems[x]), reverse=True  )
-        for item  in signature_list:
+        for sig1  in signature_list:
+	    start_an_html_table(signature_feeding_outfile)
             start_an_html_table_row(signature_feeding_outfile)
-            add_an_html_table_entry(signature_feeding_outfile, item)
+            add_an_html_table_entry(signature_feeding_outfile, "*"+sig1)
             end_an_html_table_row(signature_feeding_outfile)
             colno=0
-            for chunk in temp_signatures_with_stems[item]:
+            for chunk in temp_signatures_with_stems[sig1]:
                 if colno == 0:
                     colno = 1
                     start_an_html_table_row(signature_feeding_outfile)
                     add_an_html_table_entry(signature_feeding_outfile, "")
-                add_an_html_table_entry(signature_feeding_outfile, chunk)
+                add_an_html_table_entry(signature_feeding_outfile, "**"+chunk)
                 colno += 1
                 if colno == number_of_columns:
                     end_an_html_table_row(signature_feeding_outfile)
                     colno = 0
+	    end_an_html_table(signature_feeding_outfile)
+
         end_an_html_table(signature_feeding_outfile)
         end_an_html_div(signature_feeding_outfile)
 
+        end_an_html_div(signature_feeding_outfile)
 
     signature_feeding_outfile.close()
 
