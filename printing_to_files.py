@@ -396,6 +396,7 @@ def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  Disp
 			word = stem
 		    else:
 			word = stem + affix
+		word = remove_parentheses(word)
                 for pair in Lexicon.WordToSig[word]:
                     if pair[1] != sig:
                         PrintThisSignatureFlag = True
@@ -421,6 +422,7 @@ def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  Disp
 			word = stem
 		    else:
 			word = stem + affix	
+		word = remove_parentheses(word)
 		list_of_sets_of_signatures.append(set(Lexicon.get_all_signatures(word)))
 	    feeding_signatures = set.intersection(*list_of_sets_of_signatures)
 	    feeding_signatures.remove(sig)

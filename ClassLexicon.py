@@ -120,7 +120,8 @@ class CLexicon:
         reportnumber = 1
 
         self.Corpus = list()
-        self.Parses = dict()
+        self.Parses = list()
+	#self.ParseDict = dict()
         self.WordList = CWordList()
         self.Words = list()
         self.WordCounts = dict()

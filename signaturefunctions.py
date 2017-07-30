@@ -2,6 +2,16 @@ from copy import deepcopy
 
 # -------------      Some short utility functions ---------------------------------------
 
+def remove_parentheses (word):
+    temp = list()
+    for i in range(len(word)):
+ 	if word[i]=="(" or word[i]==")":
+	    continue
+	else:
+	    temp.append(word[i])
+    return "".join(temp)
+ 
+
 def AddAffixToSigString(affix, sigstring):
     sigset = set(sigstring.split("="))
     if affix == "":
