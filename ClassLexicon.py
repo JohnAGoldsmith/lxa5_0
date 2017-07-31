@@ -121,7 +121,7 @@ class CLexicon:
 
         self.Corpus = list()
         self.Parses = list()
-	#self.ParseDict = dict()
+	self.ParseDict = dict()
         self.WordList = CWordList()
         self.Words = list()
         self.WordCounts = dict()
