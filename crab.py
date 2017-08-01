@@ -49,9 +49,11 @@ def MakeSignatures_Crab(Lexicon, FindSuffixesFlag,   verboseflag = False):
         Step = 1
         maximumstemlength = 100
 	minimum_stem_length = 2
+        if verboseflag:
+            print formatstring1.format("1a. Finding protostems. Maximum stem length: ", minimum_stem_length)
         FindProtostems_crab(Lexicon,  FindSuffixesFlag, verboseflag, Step, maximumstemlength, minimum_stem_length)
         if verboseflag:
-            print formatstring1.format("1. Finished finding proto-stems.", len(Protostems))
+            print formatstring1.format("1b. Finished finding proto-stems.", len(Protostems))
 
 
 
@@ -76,25 +78,25 @@ def MakeSignatures_Crab(Lexicon, FindSuffixesFlag,   verboseflag = False):
 
 
 
-        if verboseflag:
-            print  formatstring1.format("5. Finished first pass of finding stems, affixes, and signatures.",
-                                    len(Lexicon.SignatureStringsToStems))
-        Lexicon.Compute_Lexicon_Size()
-
+ 
 	# 5 Pull single letter from edge of stems
-	
+	print "  4. Shifting a single letter from stem to affix."
 	while True:
 		number_of_changes = pull_single_letter_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag)
-		print "  6. Shift a letter from stem to affix. Number of changes: ", number_of_changes, ".",
+		print "  5. Shift a letter from stem to affix. Number of changes: ", number_of_changes, ".",
 		if number_of_changes == 0:
 			print " Recompute signatures with these changes."
 			break
                 print " Go through the signatures again."
-		AssignAffixesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag)
+		AssignAffixesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, "inside letter-shift")
 		MinimumStemCountInSignature = 2
 		AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, MinimumStemCountInSignature, Step=-1)
 		
 
+        if verboseflag:
+            print  formatstring1.format("6. Finished first pass of finding stems, affixes, and signatures.",
+                                    len(Lexicon.SignatureStringsToStems))
+        Lexicon.Compute_Lexicon_Size()
 
 
                 #---------------------------------------------------------------------------------------------------------------------#
@@ -112,7 +114,6 @@ def FindProtostems_crab(Lexicon, FindSuffixesFlag,verboseflag,Step, maximum_stem
             contentlist = list()
             formatstring = "{0:20s} Comparison span: {1:4s} {2:20s} {3:20s}."
 
-            print "  1. Finding protostems.", "Maximum stem length: ", maximum_stem_length
             formatstring2 = "{0:15s} {1:15s}"
             formatstring1 = "{0:20s} {1:5n} {2:20s}{3:32s}"
         previousword = ""
@@ -386,7 +387,7 @@ def CreateStemAffixPairs(Lexicon,  FindSuffixesFlag,Step, verboseflag = False):
 
  # ----------------------------------------------------------------------------------------------------------------------------#
 
-def AssignAffixesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Step=-1):
+def AssignAffixesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Key=""):
         """ This assumes parse pairs in Lexicon.Parses, and  creates:
             Affixes
             StemToWord
@@ -423,7 +424,7 @@ def AssignAffixesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Step=-1)
 
 
         if verboseflag:
-            print "  4. Assign affix sets to each stem.\n     Find affixes for each protostem"
+            print "  3. Assign affix sets to each stem.\n     Find affixes for each protostem."
         ParseList = list()
 	Lexicon.ParseDict = dict()
 
@@ -443,11 +444,13 @@ def AssignAffixesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Step=-1)
                     word = stem + affix
 		word = remove_parentheses(word)
                 Lexicon.StemToWord[stem][word] = 1
+		#if len(affix) == 0:
+		#	print  "447", stem, affix
                 Lexicon.StemToAffix[stem][affix] = 1
                 if affix not in Lexicon.Suffixes:
                     Lexicon.Suffixes[affix] = 0
                 Lexicon.Suffixes[affix] += 1
-                Lexicon.WordBiographies[word].append(str(Step) + " This split:" + stem + "=" + affix)
+                Lexicon.WordBiographies[word].append(Key + " This split:" + stem + "=" + affix)
             if verboseflag:
                     stemlist = Lexicon.StemToWord.keys()
                     stemlist.sort()
@@ -492,8 +495,6 @@ def AssignAffixesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Step=-1)
  # ----------------------------------------------------------------------------------------------------------------------------#
 
 def AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, MinimumStemCountInSignature, Step=-1):
-
-
 
         """ This assumes parse pairs in Lexicon.Parses, and  creates:
             Affixes
@@ -561,12 +562,12 @@ def AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Minim
                 signature_string=MakeSignatureStringFromAffixDict(signature_list)
  
                 number_of_stems_this_sig = temporary_signature_dict[signature_string]
-                #   2a. We ignore signatures with two few stems (typically only one):
+                #   2a. We ignore signatures with too few stems (typically only one):
                 if number_of_stems_this_sig < MinimumStemCountInSignature:
                         if signature_string not in Lexicon.RawSignatures:
                                 Lexicon.RawSignatures[signature_string]= list()
                         Lexicon.RawSignatures[signature_string].append(stem)
-                        reportline = formatstring4.format(stem, signature_string,"Too few stems", str(temporary_signature_dict[signature_string]),  str(number_of_stems_this_sig)  )
+                        reportline = formatstring4.format(stem, signature_string,"Too few stems", str(temporary_signature_dict[signature_string]),  str(number_of_stems_this_sig), "should be  at least", MinimumStemCountInSignature  )
                         contentlist.append(reportline)
                         if (True):
                                 for affix in Lexicon.StemToAffix[stem]:
@@ -578,7 +579,7 @@ def AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Minim
 					    else:
 						    thisword = affix + stem
 					thisword=remove_parentheses(thisword)
-                                        Lexicon.WordBiographies[thisword].append("5. Too few stems in sig: " + signature_string)
+                                        Lexicon.WordBiographies[thisword].append("5. Too few stems in sig: " + signature_string +  " (minimum is " + str( MinimumStemCountInSignature) + ".)")
                                 if signature_string not in Lexicon.SignatureBiographies:
                                         Lexicon.SignatureBiographies[signature_string] = list()
                                 Lexicon.SignatureBiographies[signature_string].append("5. This signature marked as raw: too few stems.")
@@ -765,12 +766,17 @@ def FindGoodSignaturesInsideBad_crab(Lexicon,   FindSuffixesFlag, verboseflag, S
 	# will be found here. Therefore we must delete the old set of parse-pairs, and replace them
         # with the set of parse-pairs that exactly describe the current signature structure.
 	ReplaceParsePairsFromCurrentSignatureStructure_crab(Lexicon,FindSuffixesFlag )
+	Minimum_Count_In_Signature_To_Serve_As_Exemplar = 5
+	Good_Signature_Exemplars = list()  # signatures that we will look for inside bad signatures
+	for signature in Lexicon.Signatures:
+		if len(Lexicon.SignatureStringsToStems[signature]) > Minimum_Count_In_Signature_To_Serve_As_Exemplar:
+			Good_Signature_Exemplars.append(signature)
 
         formatstring1 = "Bad: {0:20s} Corrected: {1:50s}"
         formatstring2 = "     {0:10s}={1:6s}     to {2:15s}"
         for sig_string in Lexicon.RawSignatures:
             sig_list = MakeSignatureListFromSignatureString(sig_string)
-            good_sig_list = FindGoodSignatureListFromInsideAnother(sig_list, Lexicon.Signatures)
+            good_sig_list = FindGoodSignatureListFromInsideAnother(sig_list, Good_Signature_Exemplars)
             good_sig_string = "=".join(good_sig_list)
 
 
@@ -783,41 +789,45 @@ def FindGoodSignaturesInsideBad_crab(Lexicon,   FindSuffixesFlag, verboseflag, S
                 continue;
             if (good_sig_list):
                 Lexicon.SignatureBiographies[sig_string].append("Stem count: " + str(number_of_stems) + ". Removed and replaced by: "+ good_sig_string)
-                if verboseflag:
+                if verboseflag:	
                     contentlist.append(formatstring1.format(sig_string,good_sig_string ))
                 for stem in Lexicon.RawSignatures[sig_string]:
-                    for affix in good_sig_list:
-                        if FindSuffixesFlag:
-                            good_parse = (stem, affix)
-			    word = stem + affix
-			    word = remove_parentheses
-			    new_broken_word = stem + " " + affix
-                        else:
-                            good_parse = (affix, stem)
-			    word = affix + stem
-			    word = remove_parentheses(word)
-		            new_broken_word = affix + " "+ stem	
 			
-                        if new_broken_word not in Lexicon.Parses:
-			    Lexicon.ParseDict[new_broken_word] = 1
-                            Lexicon.Parses.append(good_parse)
-                        if affix == 'NULL':
-                            word = stem
-                        elif FindSuffixesFlag:
-                            word = stem+affix
-			else:
-			    word = affix + stem
-			word = remove_parentheses(word) 
-                        Lexicon.WordBiographies[word].append("6. good_sig_string: " +  good_sig_string )
-                        if verboseflag:
-                            contentlist.append(formatstring2.format(stem, affix, good_sig_string))
+		    for affix in sig_list:
+                    	if affix in good_sig_list:
+		                if FindSuffixesFlag:
+		                    good_parse = (stem, affix)
+				    word = stem + affix
+				    word = remove_parentheses
+				    new_broken_word = stem + " " + affix
+		                else:
+		                    good_parse = (affix, stem)
+				    word = affix + stem
+				    word = remove_parentheses(word)
+				    new_broken_word = affix + " "+ stem	
+		                if new_broken_word not in Lexicon.Parses:
+				    Lexicon.ParseDict[new_broken_word] = 1
+  		                    Lexicon.Parses.append(good_parse)
 
+		                if affix == 'NULL':
+		                    word = stem
+		                elif FindSuffixesFlag:
+		                    word = stem+affix
+				else:
+				    word = affix + stem
+				word = remove_parentheses(word) 
+		                Lexicon.WordBiographies[word].append("6. good_sig_string: " +  good_sig_string )
+		                if verboseflag:
+		                    contentlist.append(formatstring2.format(stem, affix, good_sig_string))
+			#else:
+			    #if FindSuffixesFlag:
+				#print "find good in bad, but this is bad", affix, "not in ", good_sig_list
 
         if verboseflag:
             print_report(filename, headerlist, contentlist)
 
         MinimumStemCountinSignature = 1
-        AssignAffixesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Step=-1)
+        AssignAffixesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Key="Good_in_bad")
         AssignSignaturesToEachStem_crab(Lexicon,FindSuffixesFlag,verboseflag,MinimumStemCountinSignature,Step)
 
 
@@ -837,11 +847,11 @@ def	ReplaceParsePairsFromCurrentSignatureStructure_crab(Lexicon,FindSuffixesFlag
                 affixes = sig.split("=")
                 if FindSuffixesFlag:
                         for affix in affixes:
-                                if affix == "NULL":
-                                        affix = ""
                                 for stem in stems:
                                         Lexicon.Parses.append((stem,affix))
 				broken_word = stem + " " + affix
+                                if affix == "NULL":
+                                        affix = ""
 				word = stem + affix
 				word = remove_parentheses (word)
 				if broken_word not in Lexicon.ParseDict:
@@ -849,11 +859,13 @@ def	ReplaceParsePairsFromCurrentSignatureStructure_crab(Lexicon,FindSuffixesFlag
 				
                 else:
                         for affix in affixes:
-                                if affix == "NULL":
-                                        affix = ""
+
                                 for stem in stems:
                                         Lexicon.Parses.append((affix,stem))
 				broken_word = affix + " "+ stem
+                                if affix == "NULL":
+                                        affix = ""
+				word = affix + stem
 				if word not in Lexicon.ParseDict:
 				    Lexicon.ParseDict[word]=1
 				 
@@ -908,7 +920,6 @@ def	pull_single_letter_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag=True):
 				    print "Problem here on line 899 in Crab file.", signature_string, stem, suffix, word
 				else:
 				    del Lexicon.Parses[list_no]
-				
 				new_stem = stem[:-1]
 				new_suffix = final_letter + suffix
 				broken_word_2 = new_stem + " " + new_suffix

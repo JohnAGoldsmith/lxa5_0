@@ -82,8 +82,6 @@ else:
 
 filelines = infile.readlines()
 read_data(config_lxa["datatype"],filelines,Lexicon,BreakAtHyphensFlag,config_lxa["word_count_limit"])
-#Lexicon.ReverseWordList = Lexicon.WordCounts.keys()
-#Lexicon.ReverseWordList.sort(key=lambda word: word[::-1])
 Lexicon.WordList.sort()
 print "\n1. Finished reading word list.\n"
 
@@ -103,15 +101,10 @@ initialize_files(Lexicon, "console", 0,0, config_lxa["language"])
 splitEndState = True
 morphology = FSA_lxa(splitEndState)
 
-
-
 # ---------------------------------------------------------------------------------------------------------------##
 # ----------------- We can control which functions we are working on at the moment. ------------------------------#
 #
 #       This is the developer's way of deciding which functions s/he wishes to explore....
-
-
-
 
 if True:
     print
@@ -132,6 +125,19 @@ if True:
     print "  3. Find good signatures inside bad."
     FindGoodSignaturesInsideBad_crab(Lexicon,  FindSuffixesFlag,verboseflag)
 
+   #Pull single letter from edge of stems
+    print "   Shifting a single letter from stem to affix."
+    while True:
+		number_of_changes = pull_single_letter_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag)
+		print "  6a. Shift a letter from stem to affix. Number of changes: ", number_of_changes, ".",
+		if number_of_changes == 0:
+			print " Recompute signatures with these changes."
+			break
+                print " Go through the signatures again."
+		AssignAffixesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag)
+		MinimumStemCountInSignature = 1
+		AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, MinimumStemCountInSignature, Step=-1)
+		
 
 
 if (False):
@@ -360,48 +366,48 @@ while True:
 
 #   ---------------  New section: Parsing in the FSA ------------------------ #
 
+    else:
+	    del CompletedParses[:]
+	    del IncompleteParses[:]
+	    del initialParseChain.my_chain[:]
+	    startingParseChunk = parseChunk("", word)
+	    startingParseChunk.toState = morphology.startState
 
-    del CompletedParses[:]
-    del IncompleteParses[:]
-    del initialParseChain.my_chain[:]
-    startingParseChunk = parseChunk("", word)
-    startingParseChunk.toState = morphology.startState
+	    initialParseChain.my_chain.append(startingParseChunk)
+	    IncompleteParses.append(initialParseChain)
+	    while len(IncompleteParses) > 0:
+		CompletedParses, IncompleteParses = morphology.lparse(CompletedParses, IncompleteParses)
+	    if len(CompletedParses) == 0: print "no analysis found.", "367"
 
-    initialParseChain.my_chain.append(startingParseChunk)
-    IncompleteParses.append(initialParseChain)
-    while len(IncompleteParses) > 0:
-        CompletedParses, IncompleteParses = morphology.lparse(CompletedParses, IncompleteParses)
-    if len(CompletedParses) == 0: print "no analysis found."
+	    for parseChain in CompletedParses:
+		for thisParseChunk in parseChain.my_chain:
+		    if (thisParseChunk.edge):
+		        print
+		        "\t", thisParseChunk.morph,
+		print
+	    print
 
-    for parseChain in CompletedParses:
-        for thisParseChunk in parseChain.my_chain:
-            if (thisParseChunk.edge):
-                print
-                "\t", thisParseChunk.morph,
-        print
-    print
+	    for parseChain in CompletedParses:
+		print
+		"\tStates: ",
+		for thisParseChunk in parseChain.my_chain:
+		    if (thisParseChunk.edge):
+		        print
+		        "\t", thisParseChunk.fromState.index,
+		print
+		"\t", thisParseChunk.toState.index
+	    print	
 
-    for parseChain in CompletedParses:
-        print
-        "\tStates: ",
-        for thisParseChunk in parseChain.my_chain:
-            if (thisParseChunk.edge):
-                print
-                "\t", thisParseChunk.fromState.index,
-        print
-        "\t", thisParseChunk.toState.index
-    print
-
-    for parseChain in CompletedParses:
-        print
-        "\tEdges: ",
-        for thisParseChunk in parseChain.my_chain:
-            if (thisParseChunk.edge):
-                print
-                "\t", thisParseChunk.edge.index,
-        print
-    print
-    "\n\n"
+	    for parseChain in CompletedParses:
+		print
+		"\tEdges: ",
+		for thisParseChunk in parseChain.my_chain:
+		    if (thisParseChunk.edge):
+		        print
+		        "\t", thisParseChunk.edge.index,
+		print
+	    print
+	    "\n\n"
 
 
 
