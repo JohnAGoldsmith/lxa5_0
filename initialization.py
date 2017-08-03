@@ -16,12 +16,7 @@ def Initialization(argparse,config_lxa,FSA_flag):
     parser.add_argument('-d', action="store", dest="data_folder", help="data directory")
     parser.add_argument('-s', action="store", dest="affix_type", help="prefix or suffix")
     parser.add_argument('-F', action="store", dest="FSA", help="generate and print FSA")
-
-
     results                 = parser.parse_args()
-    language                = results.language
-
-
 
     if results.language != None:
             config_lxa["language"] = results.language
@@ -29,14 +24,12 @@ def Initialization(argparse,config_lxa,FSA_flag):
             config_lxa["word_count_limit"] = int(results.wordcountlimit)
     if results.infilename != None:
             config_lxa["infilename"] = results.infilename
-
     if results.data_folder != None:
             config_lxa["data_folder"] = results.data_folder
-    if results.affix_type == "True":
-        FindSuffixesFlag = True
-    elif results.affix_type == "False":
-        FindSuffixesFlag = False
-    else:   FindSuffixesFlag = True
+    if results.affix_type == "True"  or results.affix_type == "suffix" or results.affix_type=="suffixes":
+	config_lxa["affixtype"]="suffix"
+    elif results.affix_type == "False" or results.affix_type == "prefix" or results.affix_type == "prefixes":
+	config_lxa["affixtype"] = "prefix"
     if results.FSA == "FSA" or results.FSA== "True":
         config_lxa["FSA"] = True
         FSA_flag = True
@@ -45,7 +38,6 @@ def Initialization(argparse,config_lxa,FSA_flag):
         FSA_flag = False
     else:
             FSA_flag = config_lxa["FSA"]
-
     print "FSA? ", FSA_flag
 
     # --------------------------------------------------------------------##
@@ -64,7 +56,7 @@ def Initialization(argparse,config_lxa,FSA_flag):
         config_lxa["complete_infilename"] = dx1_folder + config_lxa["infilename"]
 
     config_lxa["graphicsfolder"]  = config_lxa["outfolder"] + "graphics/"
-
+    
 
     if not os.path.exists(config_lxa["graphicsfolder"]):
         os.makedirs(config_lxa["graphicsfolder"])
@@ -79,12 +71,8 @@ def Initialization(argparse,config_lxa,FSA_flag):
 
     formatstring_initial_1 = "{:40s}{:>15s}"
     print "\n\n" + "-" * 100
-    print("Language:", language)
-    if FindSuffixesFlag:
-        print     "Finding suffixes."
-    else:
-        print     "Finding prefixes."
-    config_lxa["FindSuffixesFlag"] = FindSuffixesFlag
+    print("Language:", results.language)
+
     if config_lxa["datatype"] == "DX1":
         print     formatstring_initial_1.format("Reading dx file: ", config_lxa["complete_infilename"])
     else:
