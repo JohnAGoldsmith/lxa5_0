@@ -8,7 +8,6 @@ import datetime
 import operator
 import os
 import os.path
-import pygraphviz as pgv
 import string
 import sys
 import sys
@@ -21,8 +20,6 @@ from initialization import *
 from ClassLexicon import *
 from dataviz import *
 from dynamics import *
-from fsa import *
-from loose_fit import *
 from lxa_module import *
 from read_data import *
 from crab import *
