@@ -307,9 +307,6 @@ def Extends(sigL_a, sigL_b, outfile, type="suffix"):
                 affix2 = sigL_2[affixno]
                 AffixList1.append(affix1)
                 AffixList2.append(affix2)
-                # del sigL_1[affixno]
-                # del sigL_2[affixno]
-                print >> outfile, "     270 match:", affix1
             else:
                 break
         sig1affix = sigL_1[affixno]
@@ -536,7 +533,7 @@ def PullOffSuffix(sig_target, shift, StemToWord, Signatures, outfile):
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def FindSignatureChains(lexicon):
+def find_signature_chains(lexicon):
     # ----------------------------------------------------------------------------------------------------------------------------#
 # "Chain" here simply refers to inclusion of words under 2 or more signatures. e.g. Null=s contains some words that are also in ed-ing-ings .
     signature_containments = dict()
@@ -545,20 +542,39 @@ def FindSignatureChains(lexicon):
         if wordtosig[word]  and len(wordtosig[word]) >1:
             sigs = wordtosig[word]
             for i in range(len(sigs)-1):
+		(stem1,sig1) = sigs[i]
                 for j in range(i+1,len(sigs)):
-                    sigpair=(sigs[i][1],sigs[j][1])
-                    if sigpair not in signature_containments:
-                        signature_containments[sigpair] = 1
-                    else:
-                        signature_containments[sigpair] += 1
+		    (stem2,sig2) = sigs[j]
+		    if len(stem1) > len(stem2):
+			stem2length = len(stem2)
+			difference = stem1[stem2length:]
+			sigpair= (sigs[j][1],sigs[i][1])
+		    else:
+			stem1length = len(stem1)
+			difference = stem2[stem1length:]
+                        sigpair=(sigs[i][1],sigs[j][1])
+                    if difference not in signature_containments:
+                        signature_containments[difference] = dict()
+                    if sigpair not in signature_containments[difference]:
+			signature_containments[difference][sigpair] = dict()
+		    if (stem1,stem2) not in signature_containments[difference][sigpair]:
+			signature_containments[difference][sigpair][(stem1,stem2)] = 1
+		    else: 
+			signature_containments[difference][sigpair][(stem1,stem2)]+= 1
+		    #print "567", difference, sigpair
+
+	
+    difference_list = signature_containments.keys()
+    difference_list.sort(key=lambda x: len(signature_containments[x]), reverse=True)
+
     formatstring = "{{0:10s} {1:5d {2:15s} {3:5d}}"
-    for pair, count in sorted(signature_containments.iteritems(), key = lambda (k,v) : (v,k)):
-        sigstring1 = pair[0]
-        sigstring2 = pair[1]
-        #count1 = sigstring1 * len()
-        #print pair[0], pair[0] * len(lexicon)           count, pair[1]
+    if (True):
+	    for difference in difference_list:
+		print difference, "573 signature functions"
+		for sigpair in signature_containments[difference]:
+		    print difference, sigpair, signature_containments[difference][sigpair]
+    return (signature_containments,difference_list)			
 
 #June 2017
 # ----------------------------------------------------------------------------------------------------------------------------#
- 
-# ----------------------------------------------------------------------------------------------------------------------------#
+# ---------------------------------------------------------------------------------------------------------------------------

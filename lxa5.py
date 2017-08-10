@@ -114,7 +114,6 @@ if True:
     print "  3. Find good signatures inside bad."
     FindGoodSignaturesInsideBad_crab(Lexicon,  FindSuffixesFlag,verboseflag)
 
-   #Pull single letter from edge of stems
     print "    Shifting a single letter from stem to affix."
     while True:
 		number_of_changes = pull_single_letter_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag)
@@ -136,10 +135,7 @@ if False:
     "3. Finding sets of extending signatures."
     extending_signatures(Lexicon, FileObject["SigExtensions"])
 
-if False:
-    print "Finding pairs of signatures that share words."
-    FindSignatureChains(Lexicon)
-
+ 
 if config_lxa["radviz"]:
     print     "3.1 Creating data structure for radviz."
     (SignatureStemList, SigDataDict) = signature_by_stem_data(Lexicon)

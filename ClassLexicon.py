@@ -278,10 +278,12 @@ class CLexicon:
         filenames_html = [  "Signatures_html", "Index", "WordToSig_html"] 
         lxalogfile = open(self.outfolder + "Log", "w")
 
-        
-        outfile_signatures_1            = open(self.outfolder + "Signatures_iter"+ suffix+".txt", "w")
+        outfile_signatures_1_name 	= "Signatures_iter"+ suffix+".txt"
+ 	#outfile_signatures_chains_svg_name = "Signatures_graphic_chains_iter"+ suffix+".html"
+        #outfile_signatures_1            = open(self.outfolder + "Signatures_iter"+ suffix+".txt", "w")
         #outfile_signatures_2            = open(self.outfolder + "Signatures_"+ suffix+"2.txt", "w")  
         outfile_signatures_svg_html     = open(self.outfolder + "Signatures_graphic_iter"+ suffix+".html", "w") 
+        outfile_signature_chains_svg = open(self.outfolder + "Signature_chains_graphic_iter"+ suffix+".html", "w")
         outfile_signature_feeding       = open(self.outfolder + "Signature_feeding_iter"+ suffix+".html", "w")  
         outfile_signatures_html         = open(self.outfolder + "Signatures_iter"+ suffix+".html", "w")  
         outfile_signatures_details      = open(self.outfolder + "Signature_Details_iter"+ suffix+".txt", "w")  
@@ -323,9 +325,9 @@ class CLexicon:
         for sig, stemcount, robustness, stem in DisplayList:
             totalrobustness += robustness
 
-        initialize_files(self, outfile_signatures_1, singleton_signatures, doubleton_signatures, DisplayList)
-        initialize_files(self, lxalogfile, singleton_signatures, doubleton_signatures, DisplayList)
-        initialize_files(self, "console", singleton_signatures, doubleton_signatures, DisplayList)
+        #initialize_files(self, outfile_signatures_1, singleton_signatures, doubleton_signatures, DisplayList)
+        #initialize_files(self, lxalogfile, singleton_signatures, doubleton_signatures, DisplayList)
+        #initialize_files(self, "console", singleton_signatures, doubleton_signatures, DisplayList)
 
         if False:
             for sig, stemcount, robustness in DisplayList:
@@ -335,10 +337,16 @@ class CLexicon:
         print_html_report(outfile_index, self, singleton_signatures,doubleton_signatures, DisplayList)
 
         # Print signatures (not their stems) sorted by robustness
-        print_signature_list_1(outfile_signatures_1, DisplayList, stemcountcutoff, totalrobustness,self.SignatureStringsToStems,self.StemCorpusCounts,lxalogfile,FindSuffixesFlag)
+        print_signature_list_1(outfile_signatures_1_name, DisplayList, stemcountcutoff, totalrobustness, self.SignatureStringsToStems, self.StemCorpusCounts, lxalogfile,FindSuffixesFlag)
         
         # Print signatures to html file with svg
-        print_signatures_to_svg (outfile_signatures_svg_html, DisplayList,self.SignatureStringsToStems,FindSuffixesFlag)
+	#print "342 printing siganatures to html"	
+        print_signatures_to_svg (self, 	outfile_signatures_svg_html, DisplayList,self.SignatureStringsToStems,FindSuffixesFlag)
+
+        # Print signature chains to html file with svg
+	#print "345: printing chains in class lexicon."
+	print_signature_chains_to_svg (self, outfile_signature_chains_svg, DisplayList,self.SignatureStringsToStems)
+        #print_signature_chains_to_svg (self, outfile_signature_chains_svg_html, DisplayList,self.SignatureStringsToStems)
 
         # Print suffixes
         suffix_list = print_suffixes(outfile_suffixes, self.Suffixes)

@@ -14,7 +14,6 @@ def print_html_report(outfile, this_lexicon, singleton_signatures, doubleton_sig
          str(singleton_signatures),   str(doubleton_signatures), str(this_lexicon.total_letters_in_stems), str(this_lexicon.total_affix_length_in_signatures) ]
 
 
-    start_an_html_file( outfile)
     start_an_html_table(outfile)
     for lineno in range(7):
                 start_an_html_table_row(outfile)
@@ -22,7 +21,6 @@ def print_html_report(outfile, this_lexicon, singleton_signatures, doubleton_sig
                 add_an_html_table_entry(outfile, values[lineno])
                 end_an_html_table_row(outfile)
     end_an_html_table(outfile)
-
     end_an_html_file(outfile)
 
 
@@ -106,8 +104,9 @@ def initialize_files(this_lexicon, this_file, singleton_signatures, doubleton_si
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def print_signature_list_1(this_file, DisplayList, stemcountcutoff, totalrobustness,SignatureToStems,StemCorpusCounts,lxalogfile,FindSuffixesFlag):
+def print_signature_list_1(this_file_name, DisplayList, stemcountcutoff, totalrobustness,SignatureToStems,StemCorpusCounts,lxalogfile,FindSuffixesFlag):
     print "   Printing signature file."
+    this_file = open (this_file_name, "w")
     runningsum = 0.0
     formatstring1 = '{0:25}{1:>10s} {2:>15s} {3:>25s} {4:>20s}{5:>20s} '
     formatstring2 = '{0:<30}{1:5d} {2:15d} {3:25.3%} {4:20.3%}{5:>20s}'
@@ -250,32 +249,47 @@ def print_signature_list_1_html(this_file, DisplayList, stemcountcutoff, totalro
     this_file.close()
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-
-def print_signatures_to_svg (outfile_html, DisplayList,SignatureToStems,FindSuffixesFlag):
-    this_page = Page()
-
+def add_signatures_to_page(label, Lexicon, DisplayList, SignatureToStems):
+    this_page = Page(label)
     DisplayList = sorted(DisplayList, lambda x, y: cmp(x[2], y[2]), reverse=True)
-    this_page.start_an_html_file(outfile_html)
     column_counts = dict();
     for signo in range(len(DisplayList)):
             (sig,stemcount,robustness,stem) = DisplayList[signo]
-            stemlist = SignatureToStems[sig].keys()
-	    row_no= sig.count("=")+1
-            if row_no not in column_counts:
-		column_counts[row_no] = 1
-	    else:
- 		column_counts[row_no] += 1
-	    col_no = column_counts[row_no]
-	    radius_guide = len(stemlist) * row_no
-	    this_page.print_signature (outfile_html, sig, radius_guide, row_no, col_no)
+            number_of_stems = len(SignatureToStems[sig].keys())
+	    number_of_affixes = sig.count("=") + 1
+	    radius_guide = number_of_stems * number_of_affixes
+    	    this_page.add_signature(sig,stemcount,robustness,radius_guide)
+    return this_page
+# ----------------------------------------------------------------------------------------------------------------------------#
+def print_signatures_to_svg (Lexicon, outfile, DisplayList,SignatureToStems,FindSuffixesFlag):
+    this_page = add_signatures_to_page("", Lexicon, DisplayList, SignatureToStems)
+    this_page.print_signatures(outfile)
+    this_page.end_an_html_file(outfile)
+    outfile.close()
 
-            #if FindSuffixesFlag:
-            #    signature_box = SignatureBox(stemlist, affixlist,FindSuffixesFlag)
-            #else:
-            #    signature_box=SignatureBox(affixlist,stemlist, FindSuffixesFlag)
-            #signature_box.print_signature_box(outfile_html, this_page, 300,300)
-    this_page.end_an_html_file(outfile_html)
-    outfile_html.close()
+# ----------------------------------------------------------------------------------------------------------------------------#
+
+def print_signature_chains_to_svg (Lexicon, outfile,  DisplayList,SignatureToStems):
+    
+
+    (signature_containments, sorted_difference_list) = find_signature_chains(Lexicon)
+    minimum_number_of_signature_links = 3
+    for difference in sorted_difference_list:
+		if len(signature_containments[difference]) < minimum_number_of_signature_links:
+		    continue
+		this_page = add_signatures_to_page(difference, Lexicon, DisplayList, SignatureToStems)
+		for sigpair in signature_containments[difference]:
+		    from_sig = sigpair[0]
+		    to_sig=sigpair[1]
+		    this_page.add_signature_pair_for_arrow (from_sig, to_sig)
+		    #print difference, from_sig, to_sig, "line 283"
+		this_page.print_signatures(outfile)
+
+    this_page.end_an_html_file(outfile)
+    outfile.close()
+
+
+
 
 # ----------------------------------------------------------------------------------------------------------------------------#
 def print_complex_signature_to_svg (outfile_html, sig, lexicon):

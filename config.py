@@ -1,5 +1,5 @@
 config_lxa = {"language": "english",
-'word_count_limit': 10000,
+'word_count_limit': 1000000,
 'infilename': "browncorpus.dx1",
 'data_folder': "../../Dropbox/data/",
 'affixtype': "suffixes",

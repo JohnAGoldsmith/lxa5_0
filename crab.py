@@ -653,7 +653,7 @@ def FindGoodSignaturesInsideBad_crab(Lexicon,   FindSuffixesFlag, verboseflag, S
 	# will be found here. Therefore we must delete the old set of parse-pairs, and replace them
         # with the set of parse-pairs that exactly describe the current signature structure.
 	ReplaceParsePairsFromCurrentSignatureStructure_crab(Lexicon,FindSuffixesFlag )
-	Minimum_Count_In_Signature_To_Serve_As_Exemplar = 5
+	Minimum_Count_In_Signature_To_Serve_As_Exemplar = 25
 	Good_Signature_Exemplars = list()  # signatures that we will look for inside bad signatures
 	for signature in Lexicon.Signatures:
 		if len(Lexicon.SignatureStringsToStems[signature]) > Minimum_Count_In_Signature_To_Serve_As_Exemplar:

@@ -1,18 +1,19 @@
 import math
 
 def start_an_html_file(outfile):
+	#outfile = open (outfile_name, "w")
         outfile.write("<!DOCTYPE html>\n")
         outfile.write("<html>\n")
         outfile.write("<head>\n")
         outfile.write("<link rel=\"stylesheet\" href=\"style.css\">\n")
         outfile.write("</head>\n")
         outfile.write("<body>\n")
-
+	return outfile
        
 def     end_an_html_file(outfile):
         outfile.write("</body>\n")
         outfile.write("</html>\n")
-        outfile.close()
+        #outfile.close()
         
 def start_an_html_table(outfile):
         outfile.write("<table>\n")
@@ -40,35 +41,68 @@ def add_an_html_table_entry(outfile,item):
 def add_an_html_header_entry(outfile,item):
    outfile.write("<th>{0:1s}</th>\n".format(item))
 
-
+	
 
 
 class Page:
-    def __init__(self):
-        self.my_height =5000
+    def __init__(self,label=""):
+	self.my_label =label
         self.my_width=10000
+	self.window_bottom = 0
+	self.window_left = 0
+	self.window_right = 20000
+	self.window_top = 0
 	self.my_column_width = 250
 	self.my_row_height = 200
-        self.Node_dict = dict()
-        self.Arrow_dict = dict()
+	self.highest_row = 1
+        self.Node_to_row_col_dict = dict()   # key is a string (like, a signature string), value is a pair of row and column (indexes, not page-locations)
+        self.Arrow_dict = dict() #key is a string of the form: "sig1 sig2"; value is not currently used
+	self.Signatures = list()
+	self.column_counts = dict()
 
-    def add_arrow(self, outfile, from_node, to_node):
-        from_row, from_column = self.Node_dict[from_node]
-        to_row, to_column     = self.Node_dict[to_node]
-        arrow_code = "<line x1=\"" + {0:d} + "\ y1 = \"" + {1:d} + "\" x2=\"" + {2:d} + "\"y2 = \"" +{3:d} + "\" style=\"strike:rgb(255,0,0); stroke-width:2\" />"
-        outfile.write(arrow_code)
+    def print_arrow(self, outfile, from_node, to_node):
+        from_row, from_column = self.Node_to_row_col_dict[from_node]
+        to_row, to_column     = self.Node_to_row_col_dict[to_node]
+	x1,y1 = self.coor_from_row_col(from_row, from_column)
+	x2,y2= self.coor_from_row_col(to_row, to_column)
+	if self.window_left and (x1 < self.window_left or x2< self.windows_left):
+		return
+	if self.window_right and (x1 > self.window_right or x2 > self.window_right):
+		return
+	if self.window_top and (y1 > self.window_top or y2 > self.window_top):
+		return
+	if self.window_bottom and (y1 < self.window_bottom or y2 < self.window_bottom):
+		return 
 
+	piece1 = "<line x1=\"{0:d}\" y1=\"{1:d}\""
+	piece2 = " x2=\"{2:d}\" y2=\"{3:d}\""
+	piece3 = " style=\"stroke:rgb(255,0,0);stroke-width:\"2\" />"
+        arrow_code = piece1 + piece2 + piece3
+        outfile.write(arrow_code.format(x1,y1,x2,y2) + "\n")
+	
+	
 
     def start_an_html_file(self, outfile):
         start_an_html_file(outfile)
+	return outfile
+
+    def end_an_html_file(self,outfile):
+        end_an_html_file(outfile)
+
+    def start_a_page(self,outfile):
         string1 = "<svg width=\"{0:2d}\" height=\"{1:2d}\">\n"
+	self.my_height = self.highest_row * self.my_row_height + 100
+	max_col = 0
+	for (node,(row,col)) in self.Node_to_row_col_dict.items():
+		if col > max_col:
+		    max_col = col
+	self.my_width = max_col * self.my_column_width + 100
         outfile.write(string1.format(self.my_width,self.my_height))
         return outfile
 
-    def end_an_html_file(self,outfile):
+    def end_a_page(self,outfile):
         outfile.write("</svg>\n")
-        end_an_html_file(outfile)
-
+	return outfile
 
     def print_text(self,outfile,rowno,colno,text):
         (x,y) = self.coor_from_row_col(rowno,colno)
@@ -122,15 +156,55 @@ class Page:
           radius=5 * math.log(count)
           outfile.write( circle_string.format(xcoord,ycoord,radius) )	        	
  
-	
+    #deprecated:
     def print_signature (self,outfile,text, count, rowno, colno  ):
         self.print_circle(outfile, rowno,colno,count)
  	self.print_text(outfile,rowno, colno, text)
 
-	    
+	# this adds the information to the object, but does not print it.
+    def add_signature(self,sig,stemcount,robustness,radius_guide): 
+	self.Signatures.append((sig,stemcount,robustness,radius_guide))
+	row_no= sig.count("=")+1
+        if row_no not in self.column_counts:
+		self.column_counts[row_no] = 1
+	else:
+ 	    self.column_counts[row_no] += 1
+	col_no = self.column_counts[row_no]	
+	self.Node_to_row_col_dict[sig] = ((row_no,col_no))  
+	#self.Signatures.append(sig)
+	if row_no > self.highest_row:
+		self.highest_row = row_no
+
+    def add_signature_pair_for_arrow (self, from_sig, to_sig):
+	signature_pair_string = from_sig + " " + to_sig
+	self.Arrow_dict[signature_pair_string] = (from_sig, to_sig)
+	#print "adding arrow 153"
 
 
-
+    def print_signatures (self, outfile):
+	self.start_a_page(outfile)
+        outstring1 = "<text x=\"80\" y=\"100\" font-family=\"Verdana\" text-anchor=\"middle\" font-size=\"50\">\n"
+	outstring2 = "</text>\n"
+	outfile.write(outstring1 + self.my_label + outstring2)
+	for item in self.Signatures:
+	    (sig,stemcount,robustness,radius_guide) = item
+	    (row_no,col_no) = self.Node_to_row_col_dict[sig]
+	    x,y = self.coor_from_row_col (row_no, col_no)
+	    if self.window_left and x < self.window_left:
+		continue
+	    if self.window_right and x > self.window_right:
+		continue
+	    if self.window_top and y > self.window_top:
+		continue
+	    if self.window_bottom and y < self.window_bottom:
+		continue    
+	    self.print_circle(outfile, row_no,col_no,radius_guide)
+	    self.print_text(outfile,row_no, col_no,sig)
+	    for node_pair in self.Arrow_dict:
+	        (node_key1,node_key2) = node_pair.split()
+	        self.print_arrow(outfile, node_key1, node_key2)
+	self.end_a_page(outfile)    
+	
 
 
 
