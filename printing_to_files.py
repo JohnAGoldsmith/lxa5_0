@@ -292,17 +292,17 @@ def print_signature_chains_to_svg (Lexicon, outfile):
 				this_page.add_pair_to_table((item1,item2))
 		this_page.print_signatures(Lexicon, outfile)
 		this_page.end_a_page(outfile)
-		this_page.print_table(outfile)
 		this_page.end_an_html_file(outfile)
 		
- 		this_page=Page()
-		for sigpair in signature_containments[difference]:
-			    from_sig = sigpair[0]
-			    to_sig=sigpair[1]
-			    this_page.add_signature_pair_for_arrow (from_sig, to_sig)
-		this_page.print_signatures(Lexicon, outfile)
-		this_page.end_a_page(outfile)
-		this_page.end_an_html_file(outfile)
+		if (False):
+	 		this_page=Page()
+			for sigpair in signature_containments[difference]:
+				    from_sig = sigpair[0]
+				    to_sig=sigpair[1]
+				    this_page.add_signature_pair_for_arrow (from_sig, to_sig)
+			this_page.print_signatures(Lexicon, outfile)
+			this_page.end_a_page(outfile)
+			this_page.end_an_html_file(outfile)
 
 
  
@@ -328,6 +328,9 @@ def print_signature_chains_to_svg (Lexicon, outfile):
 	    from_sig = sigpair[0]
 	    to_sig = sigpair[1]
 	    this_page.add_signature_pair_for_arrow(from_sig, to_sig)
+	    this_page.add_pair_to_table((from_sig,to_sig))
+	    for item1, item2 in signature_containments[difference][sigpair]:
+		this_page.add_pair_to_table((item1,item2))
  	this_page.print_signatures(Lexicon, outfile_partial)
 	this_page.end_a_page(outfile_partial)
 	this_page.end_an_html_file(outfile_partial)
