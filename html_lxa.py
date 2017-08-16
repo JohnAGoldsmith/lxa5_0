@@ -19,7 +19,7 @@ def start_an_html_table(outfile):
         outfile.write("<table>\n")
 
 def end_an_html_table(outfile):
-        outfile.write("</table>")
+        outfile.write("</table>\n")
 
 def start_an_html_table_row(outfile):
         outfile.write("<tr>\n")
@@ -34,8 +34,7 @@ def start_an_html_div(outfile, class_type=""):
 def end_an_html_div(outfile):
    outfile.write("\n</div>\n\n")
 
-def add_an_html_table_entry(outfile,item):
-   max_size = 20
+def print_an_html_table_entry(outfile,item):
    outfile.write("<td>{0:1s}</td>\n".format(item))
 
 def add_an_html_header_entry(outfile,item):
@@ -59,6 +58,42 @@ class Page:
         self.Arrow_dict = dict() #key is a string of the form: "sig1 sig2"; value is not currently used
 	self.Signatures = list()
 	self.column_counts = dict()
+	self.Table=list()
+
+    def add_to_table(string):
+	self.Table.append(string)
+	
+   
+    def add_pair_to_table(self,(string1, string2)):
+	self.Table.append((string1,string2))
+
+    def print_table(self,outfile):
+	start_an_html_table(outfile)
+	for item in self.Table:
+	    if len(item) == 2:
+		start_an_html_table_row(outfile)
+		print_an_html_table_entry(outfile,item[0])
+		print_an_html_table_entry(outfile,item[1])
+		end_an_html_table_row(outfile)
+	    else:  
+		start_an_html_table_row(outfile)
+		print_an_html_table_entry(outfile,item)
+		end_an_html_table_row(outfile)
+	end_an_html_table(outfile)
+
+	 	
+
+    def display(self):
+	print "\n\n" + "-"* 20
+	print "Display of Page:"
+	print "Label: ", self.my_label
+	print "Number of nodes:", len(self.Signatures)
+	print "Number of arrows: ", len(self.Arrow_dict)
+	print "Nodes: "
+	for node in self.Signatures:
+		print node
+	print "Number of items in Table:", len(self.Table)
+	print "-"* 20 
 
     def print_arrow(self, outfile, from_node, to_node):
         from_row, from_column = self.Node_to_row_col_dict[from_node]
@@ -162,8 +197,8 @@ class Page:
  	self.print_text(outfile,rowno, colno, text)
 
 	# this adds the information to the object, but does not print it.
-    def add_signature(self,sig,stemcount,robustness,radius_guide): 
-	self.Signatures.append((sig,stemcount,robustness,radius_guide))
+    def add_signature(self,Lexicon, sig): 
+	self.Signatures.append(sig)
 	row_no= sig.count("=")+1
         if row_no not in self.column_counts:
 		self.column_counts[row_no] = 1
@@ -171,23 +206,21 @@ class Page:
  	    self.column_counts[row_no] += 1
 	col_no = self.column_counts[row_no]	
 	self.Node_to_row_col_dict[sig] = ((row_no,col_no))  
-	#self.Signatures.append(sig)
 	if row_no > self.highest_row:
 		self.highest_row = row_no
 
     def add_signature_pair_for_arrow (self, from_sig, to_sig):
 	signature_pair_string = from_sig + " " + to_sig
 	self.Arrow_dict[signature_pair_string] = (from_sig, to_sig)
-	#print "adding arrow 153"
 
 
-    def print_signatures (self, outfile):
+    def print_signatures (self,Lexicon,   outfile):
 	self.start_a_page(outfile)
         outstring1 = "<text x=\"80\" y=\"100\" font-family=\"Verdana\" text-anchor=\"middle\" font-size=\"50\">\n"
 	outstring2 = "</text>\n"
 	outfile.write(outstring1 + self.my_label + outstring2)
-	for item in self.Signatures:
-	    (sig,stemcount,robustness,radius_guide) = item
+	for sig in self.Signatures:
+	    radius_guide = math.log(Lexicon.Robustness[sig]) #  FIX THIS
 	    (row_no,col_no) = self.Node_to_row_col_dict[sig]
 	    x,y = self.coor_from_row_col (row_no, col_no)
 	    if self.window_left and x < self.window_left:
@@ -205,7 +238,7 @@ class Page:
 	        self.print_arrow(outfile, node_key1, node_key2)
 	self.end_a_page(outfile)    
 	
-
+	self.print_table(outfile)
 
 
     def print_box(self, outfile,  this_box,x,y):
@@ -222,7 +255,7 @@ class Page:
         if this_box.genre=="suffix" or this_box.genre=="prefix":
             for morph in this_box.my_string_list:
                 start_an_html_table_row(outfile)
-                add_an_html_table_entry(outfile,morph)
+                print_an_html_table_entry(outfile,morph)
                 end_an_html_table_row(outfile)
             end_an_html_table(outfile)
         else:   
@@ -230,13 +263,13 @@ class Page:
                 for stemno in range(len(this_box.my_string_list)):
                   if colno == 0:
                         start_an_html_table_row(outfile)
-                  add_an_html_table_entry(outfile,this_box.my_string_list[stemno])
+                  print_an_html_table_entry(outfile,this_box.my_string_list[stemno])
                   colno += 1
                   if colno == this_box.number_of_columns:
                         end_an_html_table_row(outfile)
                         colno = 0
                 while colno < this_box.number_of_columns :
-                     add_an_html_table_entry(outfile,"")
+                     print_an_html_table_entry(outfile,"")
                      colno += 1
                 end_an_html_table_row(outfile)
                 end_an_html_table(outfile)
@@ -294,7 +327,7 @@ class Box:
         if self.genre=="suffix" or self.genre=="prefix" or self.genre=="signature":
             for morph in self.my_string_list:
                 start_an_html_table_row(outfile)
-                add_an_html_table_entry(outfile,morph)
+                print_an_html_table_entry(outfile,morph)
                 end_an_html_table_row(outfile)
             end_an_html_table(outfile)
         else:   
@@ -302,13 +335,13 @@ class Box:
             for stemno in range(len(self.my_string_list)):
                 if colno == 0:
                         start_an_html_table_row(outfile)
-                add_an_html_table_entry(outfile,self.my_string_list[stemno])
+                print_an_html_table_entry(outfile,self.my_string_list[stemno])
                 colno += 1
                 if colno == self.number_of_columns:
                     end_an_html_table_row(outfile)
                     colno = 0
                 while colno < self.number_of_columns :
-                    add_an_html_table_entry(outfile,"")
+                    print_an_html_table_entry(outfile,"")
                     colno += 1
                     end_an_html_table_row(outfile)
             end_an_html_table(outfile)

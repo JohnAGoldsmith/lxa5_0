@@ -232,7 +232,8 @@ def FindProtostems_crab(Lexicon, FindSuffixesFlag,verboseflag,Step, maximum_stem
 
         if verboseflag:
             print_report(filename, headerlist, contentlist)
-
+	    Lexicon.Log.append("Minimum stem length:" + str( minimum_stem_length))
+	    Lexicon.Log.append("Number of proto-stems:" + str( len(Protostems)))
 
                 # ----------------------------------------------------------------------------------------------------------------------------#
 
@@ -330,7 +331,8 @@ def CreateStemAffixPairs(Lexicon,  FindSuffixesFlag,Step, verboseflag = False):
                                     reportline = formatstring.format(word,prefix, stem, "affix too long.")
                                     contentlist.append(reportline)
 
-
+	Lexicon.Log.append("Maximum affix length: " + str(MaximumAffixLength))
+        Lexicon.Log.append("Minimum stem length: "  + str(MinimumStemLength))
 
         if verboseflag:
                 print_report(filename, headerlist, contentlist)
@@ -483,8 +485,8 @@ def AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Minim
             SignatureStringsToStems
             StemToSignature
             StemCorpusCounts
-            WordToSig """
-
+            WordToSig 
+	    Robustness """
 
         Lexicon.StemCorpusCounts = dict()
         Lexicon.Affixes = dict()
@@ -501,6 +503,7 @@ def AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Minim
         Lexicon.Suffixes.clear()
         Lexicon.Signatures.clear()
         Lexicon.RawSignatures.clear()
+	Lexicon.Robustness.clear()
 
         Step += 1
         if verboseflag:
@@ -621,10 +624,18 @@ def AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Minim
                 #        reportline=formatstring2.format(stem,signature_string)
                 #        contentlist.append(reportline)
 
+	for sig in Lexicon.SignatureStringsToStems:
+	    Lexicon.Robustness[sig] = compute_robustness(Lexicon, sig)
+
+	signaturelist = Lexicon.SignatureStringsToStems.keys()
+	Lexicon.SignatureListSorted = sorted(signaturelist, key = lambda sig: len(Lexicon.SignatureStringsToStems[sig]), reverse=True)		
+
         temporary_signature_dict.clear()
         if verboseflag:
             print "     End of assigning a signature to each stem."
             print_report(filename, headerlist, contentlist)
+
+	
 
         if verboseflag:
                 print_report(filename, headerlist, contentlist)

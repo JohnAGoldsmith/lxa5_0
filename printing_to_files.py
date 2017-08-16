@@ -6,7 +6,7 @@ from html_lxa import *
 from IPython.display import display 
 
 
-def print_html_report(outfile, this_lexicon, singleton_signatures, doubleton_signatures, DisplayList):
+def print_html_report(outfile, this_lexicon, singleton_signatures, doubleton_signatures):
     leader=["Number of distinct words (types):" , "Total letter count in words " , "Number of signatures: ",
         "Number of singleton signatures (one stem): ", "Number of doubleton signatures (two stems): ",
         "Total number of letters in stems: ",  "Total number of affix letters: "]
@@ -17,10 +17,14 @@ def print_html_report(outfile, this_lexicon, singleton_signatures, doubleton_sig
     start_an_html_table(outfile)
     for lineno in range(7):
                 start_an_html_table_row(outfile)
-                add_an_html_table_entry(outfile, leader[lineno])
-                add_an_html_table_entry(outfile, values[lineno])
+                print_an_html_table_entry(outfile, leader[lineno])
+                print_an_html_table_entry(outfile, values[lineno])
                 end_an_html_table_row(outfile)
     end_an_html_table(outfile)
+
+    for item in this_lexicon.Log:
+	print >>outfile, item, "\n"
+
     end_an_html_file(outfile)
 
 
@@ -104,12 +108,12 @@ def initialize_files(this_lexicon, this_file, singleton_signatures, doubleton_si
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def print_signature_list_1(this_file_name, DisplayList, stemcountcutoff, totalrobustness,SignatureToStems,StemCorpusCounts,lxalogfile,FindSuffixesFlag):
-    print "   Printing signature file."
+def print_signature_list_1(this_file_name, Lexicon, stemcountcutoff, totalrobustness,SignatureToStems,StemCorpusCounts, lxalogfile, FindSuffixesFlag):
+    print "   Printing signature file (list 1)."
     this_file = open (this_file_name, "w")
     runningsum = 0.0
     formatstring1 = '{0:25}{1:>10s} {2:>15s} {3:>25s} {4:>20s}{5:>20s} '
-    formatstring2 = '{0:<30}{1:5d} {2:15d} {3:25.3%} {4:20.3%}{5:>20s}'
+    formatstring2 = '{0:<30}{1:5d} {2:15d} {3:25.3%} {4:20.3%}'
     print >> this_file, "\n" + "-" * 150
     print >> this_file, formatstring1.format("Signature", "Stem count", "Robustness", "Proportion of robustness",
                                              "Running sum", "Example")
@@ -117,17 +121,17 @@ def print_signature_list_1(this_file_name, DisplayList, stemcountcutoff, totalro
 
 
 
-    DisplayList = sorted(DisplayList, lambda x, y: cmp(x[2], y[2]), reverse=True)
-
-    for sig, stemcount, robustness, stem in DisplayList:
-        runningsum += robustness
-        if stemcount < stemcountcutoff:
+    for sig in Lexicon.SignatureListSorted:  
+        robustness = Lexicon.Robustness[sig]
+        stem_count = len(Lexicon.SignatureStringsToStems[sig])
+        runningsum += Lexicon.Robustness[sig]
+        if stem_count < stemcountcutoff:
             break;
         else:
-            robustnessproportion = float(robustness) / totalrobustness
-            runningsumproportion = runningsum / totalrobustness
-            print >> this_file, formatstring2.format(sig, stemcount, robustness, robustnessproportion,
-                                                     runningsumproportion, stem)
+            robustnessproportion = float(robustness) / Lexicon.Robustness[sig]
+            runningsumproportion = runningsum / Lexicon.Robustness[sig]
+            print >> this_file, formatstring2.format(sig, stem_count, robustness, robustnessproportion,
+                                                     runningsumproportion)
     print >> this_file, "-" * 60
 
 
@@ -137,10 +141,10 @@ def print_signature_list_1(this_file_name, DisplayList, stemcountcutoff, totalro
     reversedstemlist = []
     count = 0
     print >> this_file, "*** Stems in each signature"
-    for sig, stemcount, robustness, stem in DisplayList:
+#    for sig, stemcount, robustness, stem in DisplayList:
+    for sig in Lexicon.SignatureListSorted:
         print >> this_file, "\n" + "=" * 45, '{0:30s} \n'.format(sig)
         n = 0
-
         stemlist = SignatureToStems[sig].keys()
         stemlist.sort()
         numberofstems = len(stemlist)
@@ -206,88 +210,130 @@ def print_signature_list_1(this_file_name, DisplayList, stemcountcutoff, totalro
 
     this_file.close()
 
-
-
-    this_file.close()
-
-def print_signature_list_1_html(this_file, DisplayList, stemcountcutoff, totalrobustness):
+def print_signature_list_1_html(this_file,Lexicon, stemcountcutoff, totalrobustness):
     print "   Printing signatures in an  html file."
     runningsum = 0.0
     formatstring1 = '{0:25}{1:>10s} {2:>15s} {3:>25s} {4:>20s}{5:>20s} '
     formatstring2 = '{0:<25}{1:10d} {2:15d} {3:25.3%} {4:20.3%}{5:>20s}'
     headers = ["Signature", "Stem count", "Robustness", "Proportion of robustness",
                                              "Running sum", "Example"]
-    DisplayList = sorted(DisplayList, lambda x, y: cmp(x[2], y[2]), reverse=True)
+    #DisplayList = sorted(DisplayList, lambda x, y: cmp(x[2], y[2]), reverse=True)
 
     start_an_html_file( this_file)
 
     start_an_html_table(this_file)
     start_an_html_table_row(this_file)
     for item in headers:
-        add_an_html_table_entry(this_file, item)
+        print_an_html_table_entry(this_file, item)
     end_an_html_table_row(this_file)
 
-    for sig, stemcount, robustness, stem in DisplayList:
-
-        runningsum += robustness
-        if stemcount < stemcountcutoff:
+#    for sig, stemcount, robustness, stem in DisplayList:
+    for sig in Lexicon.SignatureListSorted:
+	robustness = Lexicon.Robustness[sig]
+	stemcount = len(Lexicon.SignatureStringsToStems[sig])
+	#stem = Lexicon.SignatureStringsToStems[sig][0]	
+        runningsum += Lexicon.Robustness[sig]
+        if len(Lexicon.SignatureStringsToStems[sig])  < stemcountcutoff:
             break;
         else:
             start_an_html_table_row(this_file)
             robustnessproportion = float(robustness) / totalrobustness
             runningsumproportion = runningsum / totalrobustness
-            add_an_html_table_entry(this_file, sig)
-            add_an_html_table_entry(this_file, str(stemcount) )
-            add_an_html_table_entry(this_file, str(robustness))
-            add_an_html_table_entry(this_file, str(robustnessproportion))
-            add_an_html_table_entry(this_file, str(runningsumproportion))
-            add_an_html_table_entry(this_file, stem)
+            print_an_html_table_entry(this_file, sig)
+            print_an_html_table_entry(this_file, str(stemcount) )
+            print_an_html_table_entry(this_file, str(robustness))
+            print_an_html_table_entry(this_file, str(robustnessproportion))
+            print_an_html_table_entry(this_file, str(runningsumproportion))
+            #add_an_html_table_entry(this_file, stem)
         end_an_html_table_row(this_file)
-    end_an_html_table(this_file)
 
     end_an_html_file( this_file)
     this_file.close()
-
+ 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def add_signatures_to_page(label, Lexicon, DisplayList, SignatureToStems):
+def add_signatures_to_page(label, Lexicon, signature_list):
     this_page = Page(label)
-    DisplayList = sorted(DisplayList, lambda x, y: cmp(x[2], y[2]), reverse=True)
-    column_counts = dict();
-    for signo in range(len(DisplayList)):
-            (sig,stemcount,robustness,stem) = DisplayList[signo]
-            number_of_stems = len(SignatureToStems[sig].keys())
-	    number_of_affixes = sig.count("=") + 1
-	    radius_guide = number_of_stems * number_of_affixes
-    	    this_page.add_signature(sig,stemcount,robustness,radius_guide)
+    for sig in signature_list:
+  	    robustness = Lexicon.Robustness[sig]
+    	    this_page.add_signature(Lexicon, sig)
     return this_page
 # ----------------------------------------------------------------------------------------------------------------------------#
-def print_signatures_to_svg (Lexicon, outfile, DisplayList,SignatureToStems,FindSuffixesFlag):
-    this_page = add_signatures_to_page("", Lexicon, DisplayList, SignatureToStems)
-    this_page.print_signatures(outfile)
+def print_signatures_to_svg (Lexicon, outfile,FindSuffixesFlag):
+    this_page = add_signatures_to_page("", Lexicon, Lexicon.SignatureListSorted)
+    this_page.print_signatures(Lexicon, outfile)
     this_page.end_an_html_file(outfile)
     outfile.close()
 
 # ----------------------------------------------------------------------------------------------------------------------------#
 
-def print_signature_chains_to_svg (Lexicon, outfile,  DisplayList,SignatureToStems):
+def print_signature_chains_to_svg (Lexicon, outfile):
     
-
+    graphics_folder = Lexicon.graphicsfolder
     (signature_containments, sorted_difference_list) = find_signature_chains(Lexicon)
-    minimum_number_of_signature_links = 3
+    minimum_number_of_signature_links =  1
     for difference in sorted_difference_list:
-		if len(signature_containments[difference]) < minimum_number_of_signature_links:
+	outfile = open (graphics_folder + "signature_chain_full_lattice_" + difference + ".html", "w")
+	outfile_partial = open (graphics_folder + "signature_chain_partial_lattice_" + difference + ".html", "w")
+	start_an_html_file(outfile)
+	start_an_html_file(outfile_partial)
+
+	if len(signature_containments[difference]) < minimum_number_of_signature_links:
 		    continue
-		this_page = add_signatures_to_page(difference, Lexicon, DisplayList, SignatureToStems)
+
+	# 1. full lattice
+	if (True):
+		this_page = add_signatures_to_page(difference, Lexicon,  Lexicon.SignatureListSorted)
 		for sigpair in signature_containments[difference]:
-		    from_sig = sigpair[0]
-		    to_sig=sigpair[1]
-		    this_page.add_signature_pair_for_arrow (from_sig, to_sig)
-		    #print difference, from_sig, to_sig, "line 283"
-		this_page.print_signatures(outfile)
+			    from_sig = sigpair[0]
+			    to_sig=sigpair[1]
+			    this_page.add_signature_pair_for_arrow (from_sig, to_sig)
+			    this_page.add_pair_to_table((from_sig,to_sig))
+			    for item1, item2 in signature_containments[difference][sigpair]:
+				this_page.add_pair_to_table((item1,item2))
+		this_page.print_signatures(Lexicon, outfile)
+		this_page.end_a_page(outfile)
+		this_page.print_table(outfile)
+		this_page.end_an_html_file(outfile)
+		
+ 		this_page=Page()
+		for sigpair in signature_containments[difference]:
+			    from_sig = sigpair[0]
+			    to_sig=sigpair[1]
+			    this_page.add_signature_pair_for_arrow (from_sig, to_sig)
+		this_page.print_signatures(Lexicon, outfile)
+		this_page.end_a_page(outfile)
+		this_page.end_an_html_file(outfile)
 
-    this_page.end_an_html_file(outfile)
-    outfile.close()
 
+ 
+		outfile.close()
+
+	# 2. only signatures related to this signature's chain
+	relevant_signatures = dict()
+	signature_robustness_rank_dict = dict()
+	for n in range(len(Lexicon.SignatureListSorted)):
+	    signature_robustness_rank_dict[ Lexicon.SignatureListSorted[n] ] = n
+		
+	for sigpair in signature_containments[difference]:
+	    from_sig = sigpair[0]
+	    to_sig=sigpair[1]
+	    if from_sig not in relevant_signatures:
+	        relevant_signatures[from_sig]= 1
+	    if to_sig not in relevant_signatures:
+		relevant_signatures[to_sig] = 1
+	relevant_signatures_list = relevant_signatures.keys()	
+        relevant_signatures_list.sort(key = lambda x:signature_robustness_rank_dict[x],reverse=True)
+	this_page = add_signatures_to_page("", Lexicon, relevant_signatures.keys(),)
+	for sigpair in signature_containments[difference]:
+	    from_sig = sigpair[0]
+	    to_sig = sigpair[1]
+	    this_page.add_signature_pair_for_arrow(from_sig, to_sig)
+ 	this_page.print_signatures(Lexicon, outfile_partial)
+	this_page.end_a_page(outfile_partial)
+	this_page.end_an_html_file(outfile_partial)
+
+        outfile_partial.close()
+	
 
 
 
@@ -308,7 +354,7 @@ def print_complex_signature_to_svg (outfile_html, sig, lexicon):
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def print_signature_list_3(this_file, signature_feeding_outfile, lxalogfile, Lexicon,  DisplayList, stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
+def print_signature_list_3(this_file, signature_feeding_outfile, lxalogfile, Lexicon,  stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
 
 # this function not used, should be DELETED.
 
@@ -391,13 +437,15 @@ def print_signature_list_3(this_file, signature_feeding_outfile, lxalogfile, Lex
 # ----------------------------------------------------------------------------------------------------------------------------#
 # We find signatures which are more finely divided by a later signature (the later signature is shorter, with a longer stem).
 # Signature feeding 
-def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  DisplayList, stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
+def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
 
     start_an_html_file (signature_feeding_outfile)
     stemlist = []
 
-    for sig, stemcount, robustness, stem in DisplayList:
+    for sig in Lexicon.SignatureListSorted:
         stemlist = SignatureToStems[sig]
+	robustness = Lexicon.Robustness[sig]
+	stemcount = len(stemlist)
         numberofstems = len(stemlist)
         temp_signatures_with_stems = dict()
 
@@ -459,15 +507,15 @@ def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  Disp
         for sig1  in signature_list:
 	    start_an_html_table(signature_feeding_outfile)
             start_an_html_table_row(signature_feeding_outfile)
-            add_an_html_table_entry(signature_feeding_outfile, sig1)
+            print_an_html_table_entry(signature_feeding_outfile, sig1)
             end_an_html_table_row(signature_feeding_outfile)
             colno=0
             for chunk in temp_signatures_with_stems[sig1]:
                 if colno == 0:
                     colno = 1
                     start_an_html_table_row(signature_feeding_outfile)
-                    add_an_html_table_entry(signature_feeding_outfile, "")
-                add_an_html_table_entry(signature_feeding_outfile, chunk)
+                    print_an_html_table_entry(signature_feeding_outfile, "")
+                print_an_html_table_entry(signature_feeding_outfile, chunk)
                 colno += 1
                 if colno == number_of_columns:
                     end_an_html_table_row(signature_feeding_outfile)
@@ -522,7 +570,7 @@ def print_suffixes(outfile, Suffixes):
         if suffix == "":
                 suffix = "NULL"
         print >> outfile, "{:12s}{:9,d}".format(suffix, Suffixes[suffix])
-
+	
     outfile.close()
     return suffixlist
 
@@ -815,12 +863,12 @@ def print_words(outfile, outfile_html, logfile,words, WordToSig, ColumnWidth):
     end_an_html_table_row(outfile_html)
     for word in wordlist:
         start_an_html_table_row(outfile_html)
-        add_an_html_table_entry(outfile_html,word)
+        print_an_html_table_entry(outfile_html,word)
         for n in range(len(WordToSig[word])):
             # sig = MakeStringFromSignature(WordToSig[word][n], ColumnWidth)
             stem, sig = WordToSig[word][n]
-            add_an_html_table_entry(outfile_html,stem)
-            add_an_html_table_entry(outfile_html,sig)
+            print_an_html_table_entry(outfile_html,stem)
+            print_an_html_table_entry(outfile_html,sig)
         end_an_html_table_row(outfile_html)
 
         print >> outfile_html

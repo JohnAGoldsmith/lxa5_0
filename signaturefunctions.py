@@ -124,35 +124,23 @@ def locallymorerobust(sig1, sig2):
         return 1
     return 0
 
+def compute_robustness(Lexicon, sig_string):
+    sig_list = MakeSignatureListFromSignatureString(sig_string)
+    number_of_affixes = len(sig_list)
+    number_of_stems = len(Lexicon.SignatureStringsToStems)
+    total_stem_length = 0
+    for stem in sig_list:
+        total_stem_length += len(stem)
+    robustness = (number_of_affixes - 1) * total_stem_length
+    letters_in_sig = 0
+    for affix in sig_list:
+        letters_in_sig += len(affix)
+    robustness += letters_in_sig * (number_of_stems - 1)
+    return robustness
 
-def globallymorerobust(sig1, sig2):
-    sig1_string = str(sig1[0])
-    sig2_string = str(sig2[0])
-    siglist1 = MakeSignatureListFromSignatureString(sig1_string)
-    siglist2 = MakeSignatureListFromSignatureString(sig2_string)
-    numberofaffixes1 = len(siglist1)
-    numberofaffixes2 = len(siglist2)
-    numberofstems1 = len(sig1[1])
-    numberofstems2 = len(sig2[1])
-    total_stem_length_1 = 0
-    total_stem_length_2 = 0
-    for stem in sig1[1]:
-        total_stem_length_1 += len(stem)
-    for stem in sig2[1]:
-        total_stem_length_2 += len(stem)
-    robustness1 = (numberofaffixes1 - 1) * total_stem_length_1
-    robustness2 = (numberofaffixes2 - 1) * total_stem_length_2
-    lettersinsig1 = 0
-    lettersinsig2 = 0
-    for affix in siglist1:
-        lettersinsig1 += len(affix)
-    for affix in siglist2:
-        lettersinsig2 += len(affix)
-    robustness1 += lettersinsig1 * (numberofstems1 - 1)
-    robustness2 += lettersinsig2 * (numberofstems2 - 1)
-    # print sig1[0], robustness1, sig2[0],  robustness2
-    return robustness1 - robustness2
-
+def globallymorerobust(sig_string1, sig_string2):
+    return compute_robustness(Lexicon, sig_string1) - compute_robustness(Lexicon, sig_string2)
+  
 
 def SortSignaturesByLocalRobustness(
         siglist):  # if sig1 has more affixes than sig2, it is more locally robust; if two sigs have the same number of affixes, the one with more letters in the affixes is more locally
@@ -568,7 +556,7 @@ def find_signature_chains(lexicon):
     difference_list.sort(key=lambda x: len(signature_containments[x]), reverse=True)
 
     formatstring = "{{0:10s} {1:5d {2:15s} {3:5d}}"
-    if (True):
+    if (False):
 	    for difference in difference_list:
 		print difference, "573 signature functions"
 		for sigpair in signature_containments[difference]:

@@ -132,6 +132,7 @@ class CLexicon:
         self.StemToAffix = {}  # value is a Dict whose keys are affixes.
         self.StemToSignature = {}  # value is a list of pairs of the form (stem, sig-string) where the sig-string is a string with "=" as separator. This was changed June 2017 to allow more than one sig. 
         self.SignatureStringsToStems = {} 
+	self.SignatureListSorted = dict() #sorted by robustness
         self.Signatures={} ; #key is string, value is a Signature object
         self.RawSignatures=dict(); # key is signature-string, and value is a string of stems. These signatures occur only once (or are bad for some other reason), and we want to find what's good inside them.
         self.UnexplainedContinuations = {}
@@ -145,8 +146,10 @@ class CLexicon:
         self.SignatureBiographies=dict()
         self.MinimumStemLength = 2
         self.MaximumAffixLength = 5
+	self.Robustness = dict()
+        self.TotalRobustnessInSignatures = 0
 
-        self.TotalRobustInSignatures = 0
+	self.Log = list() 
 
         self.total_word_count = 0
         self.word_letter_count = 0
@@ -296,57 +299,57 @@ class CLexicon:
         outfile_suffixes                = open(self.outfolder + "Suffixes_iter"+ suffix+".txt", "w")
         outfile_stems_and_unanalyzed_words = open(self.outfolder + "StemsAndUnanalyzedWords_iter"+ suffix+".txt", "w") 
 
-        # 1  Create a list of signatures, sorted by number of stems in each. DisplayList is that list. Its 4-tuples   have the signature, the number of stems, and the signature's robustness, and a sample stem
+        # 1  Create a list of signatures, sorted by number of stems in each.  
 
         ColumnWidth = 35
         stemcountcutoff = 1
-        SortedListOfSignatures = sorted(self.SignatureStringsToStems.items(), lambda x, y: cmp(len(x[1]), len(y[1])),
+	# Sort signatures by number of stems:
+        SortedListOfSignatures = sorted(self.SignatureStringsToStems.keys(), lambda x, y: cmp(len(x[1]), len(y[1])),
                                         reverse=True)
-
-        DisplayList = []
-        for sig, stems in SortedListOfSignatures:
-            if len(stems) < stemcountcutoff:
-                continue;
-            if sig in self.SignatureStringsToStems:
-                stems = self.SignatureStringsToStems[sig].keys()
-                DisplayList.append((sig, len(stems), getrobustness(sig, stems), stems[0]))
-        DisplayList.sort
+	if (False):
+		DisplayList = []
+		for sig, stems in SortedListOfSignatures:
+		    if len(stems) < stemcountcutoff:
+		        continue;
+		    if sig in self.SignatureStringsToStems:
+		        stems = self.SignatureStringsToStems[sig].keys()
+		        DisplayList.append((sig, len(stems), self.Robustness(sig), stems[0]))
+		DisplayList.sort()
 
         singleton_signatures = 0
         doubleton_signatures = 0
 
-        for sig, stemcount, robustness, stem in DisplayList:
-            if stemcount == 1:
+	for sig in SortedListOfSignatures:
+            if len(self.SignatureStringsToStems[sig]) == 1:
                 singleton_signatures += 1
-            elif stemcount == 2:
+            elif len(self.SignatureStringsToStems[sig]) == 2:
                 doubleton_signatures += 1
 
         totalrobustness = 0
-        for sig, stemcount, robustness, stem in DisplayList:
-            totalrobustness += robustness
+
+        for sig in SortedListOfSignatures:
+	    stems = self.SignatureStringsToStems[sig].keys()
+            totalrobustness += self.Robustness[sig] 
 
         #initialize_files(self, outfile_signatures_1, singleton_signatures, doubleton_signatures, DisplayList)
         #initialize_files(self, lxalogfile, singleton_signatures, doubleton_signatures, DisplayList)
         #initialize_files(self, "console", singleton_signatures, doubleton_signatures, DisplayList)
 
         if False:
-            for sig, stemcount, robustness in DisplayList:
+            for sig, stemcount, in DisplayList:
                 if len(self.SignatureStringsToStems[sig]) > 5:
                     self.Multinomial(sig, FindSuffixesFlag)
         # Print html index
-        print_html_report(outfile_index, self, singleton_signatures,doubleton_signatures, DisplayList)
+        print_html_report(outfile_index, self, singleton_signatures,doubleton_signatures)
 
         # Print signatures (not their stems) sorted by robustness
-        print_signature_list_1(outfile_signatures_1_name, DisplayList, stemcountcutoff, totalrobustness, self.SignatureStringsToStems, self.StemCorpusCounts, lxalogfile,FindSuffixesFlag)
+        print_signature_list_1(outfile_signatures_1_name, self, stemcountcutoff, totalrobustness, self.SignatureStringsToStems, self.StemCorpusCounts, lxalogfile,FindSuffixesFlag)
         
         # Print signatures to html file with svg
-	#print "342 printing siganatures to html"	
-        print_signatures_to_svg (self, 	outfile_signatures_svg_html, DisplayList,self.SignatureStringsToStems,FindSuffixesFlag)
+        print_signatures_to_svg (self, 	outfile_signatures_svg_html,  FindSuffixesFlag)
 
         # Print signature chains to html file with svg
-	#print "345: printing chains in class lexicon."
-	print_signature_chains_to_svg (self, outfile_signature_chains_svg, DisplayList,self.SignatureStringsToStems)
-        #print_signature_chains_to_svg (self, outfile_signature_chains_svg_html, DisplayList,self.SignatureStringsToStems)
+	print_signature_chains_to_svg (self, outfile_signature_chains_svg)
 
         # Print suffixes
         suffix_list = print_suffixes(outfile_suffixes, self.Suffixes)
@@ -355,10 +358,10 @@ class CLexicon:
         print_stems(outfile_stemtowords, outfile_stems_and_unanalyzed_words, self,  suffix_list)
 
         # print the stems of each signature to html:
-        print_signature_list_1_html(outfile_signatures_html, DisplayList, stemcountcutoff, totalrobustness)
+        print_signature_list_1_html(outfile_signatures_html, self,  stemcountcutoff, totalrobustness)
 
         # print signature feeding structures:
-        print_signature_list_2(outfile_signature_feeding, lxalogfile, self, DisplayList, stemcountcutoff,  totalrobustness, self.SignatureStringsToStems, self.StemCorpusCounts,  FindSuffixesFlag)
+        print_signature_list_2(outfile_signature_feeding, lxalogfile, self, stemcountcutoff,  totalrobustness, self.SignatureStringsToStems, self.StemCorpusCounts,  FindSuffixesFlag)
 
         # print WORDS of each signature:
         print_words(outfile_wordstosigs, outfile_wordstosigs_html, lxalogfile, self.Words, self.WordToSig, ColumnWidth)
@@ -629,7 +632,7 @@ def TestForCommonEdge(stemlist, outfile, threshold, FindSuffixesFlag):
 
 
 # 
-def getrobustness(sig, stems):
+def delete_me_getrobustness(sig, stems):
     # ----------------------------------------------------------------------------------------------------------------------------#
     sig_string_list = sig.split("=")
     countofsig = len(sig_string_list)
@@ -649,24 +652,7 @@ def getrobustness(sig, stems):
     # ----------------------------------------------------------------------------------------------------------------------------#
     return robustness
 
-
-# ----------------------------------------------------------------------------------------------------------------------------#
-
-# The following function is not used, and does the same as the one above. Delete it.
-# ---------------------------------------------------------#
-def FindSignature_LetterCountSavings(Signatures, sig):
-    affixlettercount = 0
-    stemlettercount = 0
-    numberOfAffixes = len(sig)
-    numberOfStems = len(Signatures[sig])
-    for affix in sig:
-        affixlettercount += len(affix) + 1
-    for stem in Signatures[sig]:
-        stemlettercount += len(stem) + 1
-    lettercountsavings = affixlettercount * (numberOfStems - 1) + stemlettercount * (numberOfAffixes - 1)
-    return lettercountsavings
-
-
+ 
 # ----------------------------------------------------------------------------------------------------------------------------#
 
 # --
