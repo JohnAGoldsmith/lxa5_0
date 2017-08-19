@@ -281,7 +281,7 @@ class CLexicon:
         filenames_html = [  "Signatures_html", "Index", "WordToSig_html"] 
         lxalogfile = open(self.outfolder + "Log", "w")
 
-        outfile_signatures_1_name 	= "Signatures_iter"+ suffix+".txt"
+        outfile_signatures_1_name 	= self.outfolder + "Signatures_iter"+ suffix+".txt"
  	#outfile_signatures_chains_svg_name = "Signatures_graphic_chains_iter"+ suffix+".html"
         #outfile_signatures_1            = open(self.outfolder + "Signatures_iter"+ suffix+".txt", "w")
         #outfile_signatures_2            = open(self.outfolder + "Signatures_"+ suffix+"2.txt", "w")  

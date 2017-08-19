@@ -549,7 +549,6 @@ def find_signature_chains(lexicon):
 			signature_containments[difference][sigpair][(stem1,stem2)] = 1
 		    else: 
 			signature_containments[difference][sigpair][(stem1,stem2)]+= 1
-		    #print "567", difference, sigpair
 
 	
     difference_list = signature_containments.keys()
@@ -558,7 +557,6 @@ def find_signature_chains(lexicon):
     formatstring = "{{0:10s} {1:5d {2:15s} {3:5d}}"
     if (False):
 	    for difference in difference_list:
-		print difference, "573 signature functions"
 		for sigpair in signature_containments[difference]:
 		    print difference, sigpair, signature_containments[difference][sigpair]
     return (signature_containments,difference_list)			

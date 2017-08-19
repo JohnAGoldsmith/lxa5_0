@@ -797,24 +797,37 @@ def	pull_single_letter_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag=True):
 		continue
 	    if "NULL" in signature_string:
 		continue
-	    edge_letter=None
-	    if FindSuffixesFlag:
-	    	for this_stem in Lexicon.SignatureStringsToStems[signature_string].keys():
+	    common_edge_letters=None
+	    previous_common_edge_letters = None
+	    continue_flag = True
+	    edge_length = 0
+	    this_sig_stems = Lexicon.SignatureStringsToStems[signature_string].keys()
+	    while continue_flag:
+		edge_length += 1
+		previous_common_edge_letters = common_edge_letters
+		common_edge_letters = None		    	
+		for this_stem in this_sig_stems:
+		    if continue_flag == False:
+			break	
 		    if FindSuffixesFlag:
-			    if edge_letter == None:
-				edge_letter = this_stem[-1]
-			    else:
-				if this_stem[-1] != edge_letter:
-				   edge_letter = None
-				   break
+			if common_edge_letters == None:
+			    common_edge_letters = this_stem[-1 * edge_length:]
+			else:
+			    if this_stem[-1*edge_length:] != common_edge_letters:
+				common_edge_letters = previous_common_edge_letters
+				continue_flag = False
+				break
 		    else:
-			    if edge_letter == None:
-				edge_letter = this_stem[0]
-			    else:
-				if this_stem[0] != edge_letter:
-				    edge_letter = None
-				    break
-	        if edge_letter:
+			if common_edge_letters == None:
+			    common_edge_letters = this_stem[:edge_length]
+			else:
+			    if this_stem[:edge_length] != common_edge_letters:
+				common_edge_letters = previous_common_edge_letters
+				continue_flag = False
+				break
+	    if common_edge_letters:
+		    length_of_CEL = len (common_edge_letters)
+		    print "Crab  line 821,", signature_string, common_edge_letters
 		    count_of_changes_made += 1
 		    signature_list = signature_string.split("=")
 	    	    for affix in signature_list:
@@ -825,11 +838,11 @@ def	pull_single_letter_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag=True):
 					word = stem
 				    else:
 					word = stem + affix
-				    new_stem = stem[:-1]
+				    new_stem = stem[:-1*length_of_CEL]
 				    if affix == "NULL":
-					new_suffix = edge_letter
+					new_suffix = common_edge_letters
 				    else:
-				        new_suffix = edge_letter + affix
+				        new_suffix = common_edge_letters + affix
 			    	    broken_word_2 = new_stem + " " + new_suffix
 			    else: 
 				    if affix == "NULL":
@@ -837,11 +850,11 @@ def	pull_single_letter_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag=True):
 				    else:
 					word = affix + stem
 				    broken_word_1 = affix + " " + stem
-				    new_stem = stem[1:]
+				    new_stem = stem[length_of_CEL:]
 				    if affix == "NULL":
-					new_affix = edge_letter
+					new_affix = common_edge_letters
 				    else:
-				        new_prefix = affix + edge_letter
+				        new_prefix = affix + common_edge_letters
 			    	    broken_word_2 = new_prefix +   " " + new_stem
 			    Lexicon.ParseDict[broken_word_2] = 1
 			    del Lexicon.ParseDict[broken_word_1]

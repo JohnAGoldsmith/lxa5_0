@@ -101,7 +101,7 @@ if True:
     MakeSignatures_Crab(Lexicon, FindSuffixesFlag, Lexicon.MinimumStemLength)
 
 if True:
-    print "     Printing signatures."
+    print "Printing signatures."
     suffix = "1"
     Lexicon.printSignatures(g_encoding, FindSuffixesFlag,suffix)
 
