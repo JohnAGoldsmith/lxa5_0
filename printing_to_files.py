@@ -3,7 +3,7 @@ from class_alternation import *
 from signaturefunctions import *
 #from svg import *
 from html_lxa import *
-from IPython.display import display 
+#from IPython.display import display 
 
 
 def print_html_report(outfile, this_lexicon, singleton_signatures, doubleton_signatures):

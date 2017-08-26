@@ -116,7 +116,7 @@ if True:
 
     print "  4. Shift letters from stem to affix (min stem count = 1)."
     while True:
-		number_of_changes = pull_letters_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag)
+		number_of_changes = pull_a_letter_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag)
 		print "   4a. Shift letters from stem to affix. Number of changes: ", str(number_of_changes) + ".",
 		if number_of_changes == 0:
 			print "   Finished recomputing signatures with letter-shifting."

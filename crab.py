@@ -79,7 +79,7 @@ def MakeSignatures_Crab(Lexicon, FindSuffixesFlag,   verboseflag = False):
 	# 5 Pull single letter from edge of stems
 	print "  2. Shifting letters from stem to affix."
 	while True:
-		number_of_changes = pull_letters_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag)
+		number_of_changes = pull_a_letter_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag)
 		print "   >> Shift letters from stem to affix. Number of changes: ", str(number_of_changes) + "."
 		if number_of_changes == 0:
 			print "  2. Finished shifting letters."
@@ -783,59 +783,40 @@ def	ReplaceParsePairsFromCurrentSignatureStructure_crab(Lexicon,FindSuffixesFlag
 #	return None
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def	pull_letters_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag=True):
+def	pull_a_letter_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag=True):
 # ----------------------------------------------------------------------------------------------------------------------------#
 	# This is accomplished by changing the ParsePairs, and then recomputing signatures.
 	# If a signature contains NULL, we skip it.
 	# When we "create" a new parse, there is a good chance that the parse already exists.
 	# In that case, we do nothing!
-	print "crab 792, starting pulling of letters to suffixes."
 	MinimumNumberOfStems = 2
 	count_of_changes_made = 0
 	for signature_string in Lexicon.Signatures:
-	    #print signature_string, "795"
 	    if len(Lexicon.SignatureStringsToStems[signature_string]) < MinimumNumberOfStems:
 		continue
 	    if "NULL" in signature_string:
 		continue
-	    common_edge_letters=None
-	    previous_common_edge_letters = None
+	    common_edge_letter=None
 	    continue_flag = True
-	    edge_length = 0
 	    this_sig_stems = Lexicon.SignatureStringsToStems[signature_string].keys()
 	    if len (this_sig_stems) < 2:
 		continue
-	    while continue_flag:
-		edge_length += 1
-		previous_common_edge_letters = common_edge_letters
-		common_edge_letters = None		    	
-		for this_stem in this_sig_stems:
-		    if continue_flag == False:
-			break	
-		    if FindSuffixesFlag:
-			if common_edge_letters == None:
-			    common_edge_letters = this_stem[-1 * edge_length:]
-			else:
-			    if this_stem[-1*edge_length:] != common_edge_letters:
-				common_edge_letters = previous_common_edge_letters
-				continue_flag = False
-				break
-			    if len(this_stem) == edge_length:
-				common_edge_letters = previous_common_edge_letters
-				continue_flag = False
-				print "crab 826 ", this_stem, signature_string, common_edge_letters
-				break
+	    for this_stem in this_sig_stems:
+		if FindSuffixesFlag:		    	
+		    if common_edge_letter == None:
+			common_edge_letter = this_stem[-1]
+			continue
+		    if this_stem[-1] != common_edge_letter:
+			continue_flag = False
+			break
+		else:
+		    if common_edge_letters == None:
+			common_edge_letter = this_stem[-1]
 		    else:
-			if common_edge_letters == None:
-			    common_edge_letters = this_stem[:edge_length]
-			else:
-			    if this_stem[:edge_length] != common_edge_letters:
-				common_edge_letters = previous_common_edge_letters
-				continue_flag = False
-				break
-	    if common_edge_letters:
-		    length_of_CEL = len (common_edge_letters)
-		    print "Crab  line 821,", signature_string, common_edge_letters
+			if this_stem[-1] != common_edge_letter:
+			    continue_flag = False
+			    break
+	    if continue_flag:
 		    count_of_changes_made += 1
 		    signature_list = signature_string.split("=")
 	    	    for affix in signature_list:
@@ -846,27 +827,23 @@ def	pull_letters_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag=True):
 					word = stem
 				    else:
 					word = stem + affix
-				    new_stem = stem[:-1*length_of_CEL]
-				    #if len(new_stem) == 0:
-				    #	print "crab 849 ", word
+				    new_stem = stem[:-1]
 				    if affix == "NULL":
-					new_suffix = common_edge_letters
+					new_suffix = common_edge_letter
 				    else:
-				        new_suffix = common_edge_letters + affix
+				        new_suffix = common_edge_letter + affix
 			    	    broken_word_2 = new_stem + " " + new_suffix
-				    if word == "activity":
-					print "crab 850  activity. New stem:", new_stem, "new suffix: ", new_suffix, "CEL ", common_edge_letters, "broken word ", broken_word_2, "number of stems ", len(Lexicon.SignatureStringsToStems[signature_string]), Lexicon.SignatureStringsToStems[signature_string]
 			    else: 
 				    if affix == "NULL":
 					word = stem
 				    else:
 					word = affix + stem
 				    broken_word_1 = affix + " " + stem
-				    new_stem = stem[length_of_CEL:]
+				    new_stem = stem[1:]
 				    if affix == "NULL":
-					new_affix = common_edge_letters
+					new_affix = common_edge_letter
 				    else:
-				        new_prefix = affix + common_edge_letters
+				        new_prefix = affix + common_edge_letter
 			    	    broken_word_2 = new_prefix +   " " + new_stem
 			    Lexicon.ParseDict[broken_word_2] = 1
 			    del Lexicon.ParseDict[broken_word_1]
