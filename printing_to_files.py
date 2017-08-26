@@ -109,7 +109,7 @@ def initialize_files(this_lexicon, this_file, singleton_signatures, doubleton_si
 
 # ----------------------------------------------------------------------------------------------------------------------------#
 def print_signature_list_1(this_file_name, Lexicon, stemcountcutoff, totalrobustness,SignatureToStems,StemCorpusCounts, lxalogfile, FindSuffixesFlag):
-    print "   Printing signature file (list 1)."
+    print "     Printing signature file (list 1)."
     this_file = open (this_file_name, "w")
     runningsum = 0.0
     formatstring1 = '{0:25}{1:>10s} {2:>15s} {3:>25s} {4:>20s}{5:>20s} '
@@ -211,7 +211,7 @@ def print_signature_list_1(this_file_name, Lexicon, stemcountcutoff, totalrobust
     this_file.close()
 
 def print_signature_list_1_html(this_file,Lexicon, stemcountcutoff, totalrobustness):
-    print "   Printing signatures in an  html file."
+    print "     Printing signatures in an html file."
     runningsum = 0.0
     formatstring1 = '{0:25}{1:>10s} {2:>15s} {3:>25s} {4:>20s}{5:>20s} '
     formatstring2 = '{0:<25}{1:10d} {2:15d} {3:25.3%} {4:20.3%}{5:>20s}'
@@ -560,7 +560,7 @@ def print_suffixes(outfile, Suffixes):
     print >> outfile, "--------------------------------------------------------------"
     print >> outfile, "        Suffixes "
     print >> outfile, "--------------------------------------------------------------"
-    print "   Printing suffixes."
+    print "     Printing suffixes."
     suffixlist = list(Suffixes.keys())
     suffixlist.sort(key=lambda suffix: Suffixes[suffix], reverse=True)
     for suffix in suffixlist:
@@ -588,7 +588,7 @@ def print_stems(outfile1, outfile_stems_and_unanalyzed_words, Lexicon, suffixlis
     print >> outfile1, "--------------------------------------------------------------"
     print >> outfile1, "---  Stems and their words"
     print >> outfile1, "--------------------------------------------------------------"
-    print "   Printing stems and their words."
+    print "     Printing stems and their words."
     StemCounts = dict()
     for stem in stems:
         print >> outfile1, '{:15}'.format(stem),
@@ -617,7 +617,7 @@ def print_stems(outfile1, outfile_stems_and_unanalyzed_words, Lexicon, suffixlis
     print >> outfile_stems_and_unanalyzed_words, "--------------------------------------------------------------"
     print >> outfile_stems_and_unanalyzed_words, "---  Stems and unanalyzed words"
     print >> outfile_stems_and_unanalyzed_words, "--------------------------------------------------------------"
-    print "   Printing stems and their words along with unanalyzed words."
+    print "     Printing stems and their words along with unanalyzed words."
     StemCounts = dict()
     for item in stems_and_unanalyzed_words:
         # print >> outfile_stems_and_unanalyzed_words, '{:15}'.format(item),
@@ -836,11 +836,11 @@ def print_words(outfile, outfile_html, logfile,words, WordToSig, ColumnWidth):
         if len(WordToSig[word]) > maxnumberofsigs:
             maxnumberofsigs = len(WordToSig[word])
     print >> logfile, "How many words have multiple analyses?"
-    print "   How many words have multiple analyses?"
+    print "     How many words have multiple analyses?"
     for i in range(maxnumberofsigs):
         if i in ambiguity_counts:
-            print >> logfile, "{:4d}{:10,d}".format(i, ambiguity_counts[i])
-            print             "{:4d}{:10,d}".format(i, ambiguity_counts[i])
+            print >> logfile, "  {:4d}{:10,d}".format(i, ambiguity_counts[i])
+            print             "  {:4d}{:10,d}".format(i, ambiguity_counts[i])
 
     wordlist = WordToSig.keys()
     wordlist.sort()

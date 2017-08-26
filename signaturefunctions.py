@@ -179,8 +179,6 @@ def EvaluateSignatures(Lexicon, outfile):
 def FindGoodSignatureListFromInsideAnother(target_affixes_list, siglist):
     good_affixes_set = set()
     
-
-
     for sig_string in siglist:
         these_affixes = set(MakeSignatureListFromSignatureString(sig_string))
         if these_affixes.issubset(set(target_affixes_list)):

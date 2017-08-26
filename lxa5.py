@@ -101,7 +101,7 @@ if True:
     MakeSignatures_Crab(Lexicon, FindSuffixesFlag, Lexicon.MinimumStemLength)
 
 if True:
-    print "Printing signatures."
+    print "  *  Printing signatures."
     suffix = "1"
     Lexicon.printSignatures(g_encoding, FindSuffixesFlag,suffix)
 
@@ -114,14 +114,14 @@ if True:
     print "  3. Find good signatures inside bad."
     FindGoodSignaturesInsideBad_crab(Lexicon,  FindSuffixesFlag,verboseflag)
 
-    print "    Shifting a single letter from stem to affix."
+    print "  4. Shift letters from stem to affix (min stem count = 1)."
     while True:
-		number_of_changes = pull_single_letter_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag)
-		print "  6a. Shift a letter from stem to affix. Number of changes: ", number_of_changes, ".",
+		number_of_changes = pull_letters_from_edge_of_stems_crab(Lexicon,FindSuffixesFlag)
+		print "   4a. Shift letters from stem to affix. Number of changes: ", str(number_of_changes) + ".",
 		if number_of_changes == 0:
-			print " Recompute signatures with these changes."
+			print "   Finished recomputing signatures with letter-shifting."
 			break
-                print " Go through the signatures again."
+                print "   Recompute signatures."
 		AssignAffixesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag)
 		MinimumStemCountInSignature = 1
 		AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, MinimumStemCountInSignature, Step=-1)
