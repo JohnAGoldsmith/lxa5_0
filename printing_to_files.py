@@ -128,8 +128,8 @@ def print_signature_list_1(this_file_name, Lexicon, stemcountcutoff, totalrobust
         if stem_count < stemcountcutoff:
             break;
         else:
-            robustnessproportion = float(robustness) / Lexicon.Robustness[sig]
-            runningsumproportion = runningsum / Lexicon.Robustness[sig]
+            robustnessproportion = float(robustness) / Lexicon.TotalRobustnessInSignatures
+            runningsumproportion = runningsum / Lexicon.TotalRobustnessInSignatures
             print >> this_file, formatstring2.format(sig, stem_count, robustness, robustnessproportion,
                                                      runningsumproportion)
     print >> this_file, "-" * 60

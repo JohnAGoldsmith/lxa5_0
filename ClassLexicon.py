@@ -330,6 +330,7 @@ class CLexicon:
         for sig in SortedListOfSignatures:
 	    stems = self.SignatureStringsToStems[sig].keys()
             totalrobustness += self.Robustness[sig] 
+	self.TotalRobustnessInSignatures = totalrobustness
 
         #initialize_files(self, outfile_signatures_1, singleton_signatures, doubleton_signatures, DisplayList)
         #initialize_files(self, lxalogfile, singleton_signatures, doubleton_signatures, DisplayList)
