@@ -125,17 +125,19 @@ def locallymorerobust(sig1, sig2):
     return 0
 
 def compute_robustness(Lexicon, sig_string):
+
     sig_list = MakeSignatureListFromSignatureString(sig_string)
     number_of_affixes = len(sig_list)
-    number_of_stems = len(Lexicon.SignatureStringsToStems)
+    number_of_stems = len(Lexicon.SignatureStringsToStems[sig_string])
     total_stem_length = 0
-    for stem in sig_list:
+    for stem in Lexicon.SignatureStringsToStems[sig_string]:
         total_stem_length += len(stem)
-    robustness = (number_of_affixes - 1) * total_stem_length
+    stem_robustness = (number_of_affixes - 1) * total_stem_length
     letters_in_sig = 0
     for affix in sig_list:
         letters_in_sig += len(affix)
-    robustness += letters_in_sig * (number_of_stems - 1)
+    affix_robustness = letters_in_sig * (number_of_stems - 1)
+    robustness = stem_robustness + affix_robustness
     return robustness
 
 def globallymorerobust(sig_string1, sig_string2):
