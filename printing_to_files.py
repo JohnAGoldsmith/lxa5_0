@@ -269,14 +269,14 @@ def print_signatures_to_svg (Lexicon, outfile,FindSuffixesFlag):
 def print_signature_chains_to_svg (Lexicon, outfile):
     
     graphics_folder = Lexicon.graphicsfolder
-    (signature_containments, sorted_difference_list) = find_signature_chains(Lexicon)
+    (signature_containments, sorted_difference_list , signature_containments_2, signature_containments_3) = find_signature_chains(Lexicon)
     minimum_number_of_signature_links =  1
     for difference in sorted_difference_list:
 	outfile = open (graphics_folder + "signature_chain_full_lattice_" + difference + ".html", "w")
-	outfile_partial = open (graphics_folder + "signature_chain_partial_lattice_" + difference + ".html", "w")
+	outfile_partial = open (graphics_folder + "signature_chain_partial_lattice_morph_" + difference + ".html", "w")
 	start_an_html_file(outfile)
 	start_an_html_file(outfile_partial)
-
+	
 	if len(signature_containments[difference]) < minimum_number_of_signature_links:
 		    continue
 
@@ -334,9 +334,43 @@ def print_signature_chains_to_svg (Lexicon, outfile):
  	this_page.print_signatures(Lexicon, outfile_partial)
 	this_page.end_a_page(outfile_partial)
 	this_page.end_an_html_file(outfile_partial)
-
         outfile_partial.close()
-	
+    # 3. only signatures related to this signature's chain, one file for arrows leaving a specific sig. 
+    outfile_From_sig   = open (graphics_folder + "signature_chain_partial_lattice_to_sig_" + difference + ".html", "w")
+    start_an_html_file(outfile_From_sig)
+    #start_an_html_file(outfile_to_sig)
+    relevant_signatures = dict()
+    signature_robustness_rank_dict = dict()
+    for n in range(len(Lexicon.SignatureListSorted)):
+	    signature_robustness_rank_dict[ Lexicon.SignatureListSorted[n] ] = n		
+    for from_sig in Lexicon.SignatureListSorted:
+	if from_sig not in signature_containments_2:
+		continue
+	relevant_signatures = dict()
+	relevant_signatures[from_sig] = 1
+	outfile_From_sig = open (graphics_folder + "signature_chain_partial_lattice_from_sig_" + from_sig + ".html", "w")
+	for to_sig in signature_containments_2[from_sig]:
+	    if to_sig not in relevant_signatures:
+		relevant_signatures[to_sig] = 1
+    	relevant_signatures_list = relevant_signatures.keys()	
+    	relevant_signatures_list.sort(key = lambda x:signature_robustness_rank_dict[x],reverse=True)
+    	this_page = add_signatures_to_page("", Lexicon, relevant_signatures.keys(),)
+	 
+    	 
+        
+	for to_sig in signature_containments_2[from_sig]:
+	  
+	    this_page.add_signature_pair_for_arrow(from_sig, to_sig)
+	    this_page.add_pair_to_table((from_sig,to_sig))
+	    for diff in signature_containments_2[from_sig][to_sig]:
+	        for item1, item2 in signature_containments_2[from_sig][to_sig][diff]:
+	            this_page.add_pair_to_table((item1,item2))
+	 
+        this_page.print_signatures(Lexicon, outfile_From_sig)
+        this_page.end_a_page(outfile_From_sig)
+        this_page.end_an_html_file(outfile_From_sig)
+        outfile_From_sig.close()
+
 
 
 

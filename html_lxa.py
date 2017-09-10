@@ -131,7 +131,7 @@ class Page:
 	for (node,(row,col)) in self.Node_to_row_col_dict.items():
 		if col > max_col:
 		    max_col = col
-	self.my_width = max_col * self.my_column_width + 100
+	self.my_width = max_col * self.my_column_width + 400
         outfile.write(string1.format(self.my_width,self.my_height))
         return outfile
 
@@ -176,7 +176,7 @@ class Page:
 	    
 	    
     def coor_from_row_col (self, rowno, colno):
-	x = self.my_column_width * (colno)
+	x = self.my_column_width * (colno) + rowno * 30 # the 30 gives it a slant so the lines don't go through nodes unintentionally
 	y = self.my_height - self.my_row_height * (rowno)
         return (x,y)
 
@@ -235,6 +235,7 @@ class Page:
 	    self.print_text(outfile,row_no, col_no,sig)
 	    for node_pair in self.Arrow_dict:
 	        (node_key1,node_key2) = node_pair.split()
+
 	        self.print_arrow(outfile, node_key1, node_key2)
 	self.end_a_page(outfile)    
 	

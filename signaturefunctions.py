@@ -555,11 +555,49 @@ def find_signature_chains(lexicon):
     difference_list.sort(key=lambda x: len(signature_containments[x]), reverse=True)
 
     formatstring = "{{0:10s} {1:5d {2:15s} {3:5d}}"
-    if (False):
+    signature_containments_2 = dict()
+    if (True):
 	    for difference in difference_list:
 		for sigpair in signature_containments[difference]:
-		    print difference, sigpair, signature_containments[difference][sigpair]
-    return (signature_containments,difference_list)			
+		    (sig1,sig2) = sigpair
+		    if sig1 not in signature_containments_2:
+			signature_containments_2[sig1] = dict()
+		    if sig2 not in signature_containments_2[sig1]:
+		        signature_containments_2[sig1][sig2] = dict()
+		    if difference not in signature_containments_2[sig1][sig2]:
+			signature_containments_2[sig1][sig2][difference] = dict()
+		    for stempair in signature_containments[difference][sigpair]:			   
+			    signature_containments_2[sig1][sig2][difference][stempair] = 1
+    if (False):
+	    for sig1 in signature_containments_2:
+		for sig2 in signature_containments_2[sig1]:
+		    for difference in signature_containments_2[sig1][sig2]:
+			for stempair in signature_containments_2[sig1][sig2][difference]:
+			    print sig1, sig2, difference, stempair	     	
+	
+    signature_containments_3 = dict()
+    if (True):
+	    for difference in difference_list:
+		for sigpair in signature_containments[difference]:
+		    (sig1,sig2) = sigpair
+		    if sig2 not in signature_containments_3:
+			signature_containments_3[sig2] = dict()
+		    if sig1 not in signature_containments_3[sig2]:
+		        signature_containments_3[sig2][sig1] = dict()
+		    if difference not in signature_containments_3[sig2][sig1]:
+			signature_containments_3[sig2][sig1][difference] = dict()
+		    for stempair in signature_containments[difference][sigpair]:
+			    signature_containments_3[sig2][sig1][difference][stempair] =1
+    if (False):
+	    for sig2 in signature_containments_3:
+		for sig1 in signature_containments_3[sig2]:
+		    for difference in signature_containments_3[sig2][sig1]:
+			for stempair in signature_containments_3[sig2][sig1][difference]:
+			    print sig2, sig1, difference, stempair
+
+
+	    
+    return (signature_containments,difference_list, signature_containments_2, signature_containments_3)			
 
 #June 2017
 # ----------------------------------------------------------------------------------------------------------------------------#
