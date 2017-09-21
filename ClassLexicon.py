@@ -148,15 +148,16 @@ class CLexicon:
         self.MaximumAffixLength = 5
 	self.Robustness = dict()
         self.TotalRobustnessInSignatures = 0
-
 	self.Log = list() 
-
         self.total_word_count = 0
         self.word_letter_count = 0
         self.total_letters_in_stems = 0
         self.total_letters_in_analyzed_words = 0
         self.total_affix_length_in_signatures = 0
         self.number_of_analyzed_words =  0
+        self.signature_containments_1 = dict()
+        self.signature_containments_2 = dict()
+        self.signature_containments_3 = dict()
 
     def get_all_signatures (self,word):
 	sig_set = list()

@@ -269,26 +269,27 @@ def print_signatures_to_svg (Lexicon, outfile,FindSuffixesFlag):
 def print_signature_chains_to_svg (Lexicon, outfile):
     
     graphics_folder = Lexicon.graphicsfolder
-    (signature_containments, sorted_difference_list , signature_containments_2, signature_containments_3) = find_signature_chains(Lexicon)
+    sorted_difference_list = find_signature_chains(Lexicon)
+
     minimum_number_of_signature_links =  1
     for difference in sorted_difference_list:
 	outfile = open (graphics_folder + "signature_chain_full_lattice_" + difference + ".html", "w")
 	outfile_partial = open (graphics_folder + "signature_chain_partial_lattice_morph_" + difference + ".html", "w")
 	start_an_html_file(outfile)
 	start_an_html_file(outfile_partial)
-	
-	if len(signature_containments[difference]) < minimum_number_of_signature_links:
+	 
+	if len(Lexicon.signature_containments_1[difference]) < minimum_number_of_signature_links:
 		    continue
 
 	# 1. full lattice
 	if (True):
 		this_page = add_signatures_to_page(difference, Lexicon,  Lexicon.SignatureListSorted)
-		for sigpair in signature_containments[difference]:
+		for sigpair in Lexicon.signature_containments_1[difference]:
 			    from_sig = sigpair[0]
 			    to_sig=sigpair[1]
 			    this_page.add_signature_pair_for_arrow (from_sig, to_sig)
 			    this_page.add_pair_to_table((from_sig,to_sig))
-			    for item1, item2 in signature_containments[difference][sigpair]:
+			    for item1, item2 in Lexicon.signature_containments_1[difference][sigpair]:
 				this_page.add_pair_to_table((item1,item2))
 		this_page.print_signatures(Lexicon, outfile)
 		this_page.end_a_page(outfile)
@@ -296,7 +297,7 @@ def print_signature_chains_to_svg (Lexicon, outfile):
 		
 		if (False):
 	 		this_page=Page()
-			for sigpair in signature_containments[difference]:
+			for sigpair in Lexicon.signature_containments_1[difference]:
 				    from_sig = sigpair[0]
 				    to_sig=sigpair[1]
 				    this_page.add_signature_pair_for_arrow (from_sig, to_sig)
@@ -314,7 +315,7 @@ def print_signature_chains_to_svg (Lexicon, outfile):
 	for n in range(len(Lexicon.SignatureListSorted)):
 	    signature_robustness_rank_dict[ Lexicon.SignatureListSorted[n] ] = n
 		
-	for sigpair in signature_containments[difference]:
+	for sigpair in Lexicon.signature_containments_1[difference]:
 	    from_sig = sigpair[0]
 	    to_sig=sigpair[1]
 	    if from_sig not in relevant_signatures:
@@ -324,12 +325,12 @@ def print_signature_chains_to_svg (Lexicon, outfile):
 	relevant_signatures_list = relevant_signatures.keys()	
         relevant_signatures_list.sort(key = lambda x:signature_robustness_rank_dict[x],reverse=True)
 	this_page = add_signatures_to_page("", Lexicon, relevant_signatures.keys(),)
-	for sigpair in signature_containments[difference]:
+	for sigpair in Lexicon.signature_containments_1[difference]:
 	    from_sig = sigpair[0]
 	    to_sig = sigpair[1]
 	    this_page.add_signature_pair_for_arrow(from_sig, to_sig)
 	    this_page.add_pair_to_table((from_sig,to_sig))
-	    for item1, item2 in signature_containments[difference][sigpair]:
+	    for item1, item2 in Lexicon.signature_containments_1[difference][sigpair]:
 		this_page.add_pair_to_table((item1,item2))
  	this_page.print_signatures(Lexicon, outfile_partial)
 	this_page.end_a_page(outfile_partial)
@@ -344,12 +345,12 @@ def print_signature_chains_to_svg (Lexicon, outfile):
     for n in range(len(Lexicon.SignatureListSorted)):
 	    signature_robustness_rank_dict[ Lexicon.SignatureListSorted[n] ] = n		
     for from_sig in Lexicon.SignatureListSorted:
-	if from_sig not in signature_containments_2:
+	if from_sig not in Lexicon.signature_containments_2:
 		continue
 	relevant_signatures = dict()
 	relevant_signatures[from_sig] = 1
 	outfile_From_sig = open (graphics_folder + "signature_chain_partial_lattice_from_sig_" + from_sig + ".html", "w")
-	for to_sig in signature_containments_2[from_sig]:
+	for to_sig in Lexicon.signature_containments_2[from_sig]:
 	    if to_sig not in relevant_signatures:
 		relevant_signatures[to_sig] = 1
     	relevant_signatures_list = relevant_signatures.keys()	
@@ -358,12 +359,12 @@ def print_signature_chains_to_svg (Lexicon, outfile):
 	 
     	 
         
-	for to_sig in signature_containments_2[from_sig]:
+	for to_sig in Lexicon.signature_containments_2[from_sig]:
 	  
 	    this_page.add_signature_pair_for_arrow(from_sig, to_sig)
 	    this_page.add_pair_to_table((from_sig,to_sig))
-	    for diff in signature_containments_2[from_sig][to_sig]:
-	        for item1, item2 in signature_containments_2[from_sig][to_sig][diff]:
+	    for diff in Lexicon.signature_containments_2[from_sig][to_sig]:
+	        for item1, item2 in Lexicon.signature_containments_2[from_sig][to_sig][diff]:
 	            this_page.add_pair_to_table((item1,item2))
 	 
         this_page.print_signatures(Lexicon, outfile_From_sig)

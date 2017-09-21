@@ -523,8 +523,10 @@ def PullOffSuffix(sig_target, shift, StemToWord, Signatures, outfile):
 # ----------------------------------------------------------------------------------------------------------------------------#
 def find_signature_chains(lexicon):
     # ----------------------------------------------------------------------------------------------------------------------------#
-# "Chain" here simply refers to inclusion of words under 2 or more signatures. e.g. Null=s contains some words that are also in ed-ing-ings .
-    signature_containments = dict()
+# "Chain" or "containment" here simply refers to inclusion of words under 2 or more signatures. e.g. Null=s contains some words that are also in ed-ing-ings .
+     
+
+    lexicon.signature_containments_1 = dict()
     wordtosig=lexicon.WordToSig
     for word in wordtosig:
         if wordtosig[word]  and len(wordtosig[word]) >1:
@@ -541,63 +543,63 @@ def find_signature_chains(lexicon):
 			stem1length = len(stem1)
 			difference = stem2[stem1length:]
                         sigpair=(sigs[i][1],sigs[j][1])
-                    if difference not in signature_containments:
-                        signature_containments[difference] = dict()
-                    if sigpair not in signature_containments[difference]:
-			signature_containments[difference][sigpair] = dict()
-		    if (stem1,stem2) not in signature_containments[difference][sigpair]:
-			signature_containments[difference][sigpair][(stem1,stem2)] = 1
+                    if difference not in lexicon.signature_containments_1:
+                        lexicon.signature_containments_1[difference] = dict()
+                    if sigpair not in lexicon.signature_containments_1[difference]:
+			lexicon.signature_containments_1[difference][sigpair] = dict()
+		    if (stem1,stem2) not in lexicon.signature_containments_1[difference][sigpair]:
+			lexicon.signature_containments_1[difference][sigpair][(stem1,stem2)] = 1
 		    else: 
-			signature_containments[difference][sigpair][(stem1,stem2)]+= 1
+			lexicon.signature_containments_1[difference][sigpair][(stem1,stem2)]+= 1
 
 	
-    difference_list = signature_containments.keys()
-    difference_list.sort(key=lambda x: len(signature_containments[x]), reverse=True)
+    difference_list = lexicon.signature_containments_1.keys()
+    difference_list.sort(key=lambda x: len(lexicon.signature_containments_1[x]), reverse=True)
 
     formatstring = "{{0:10s} {1:5d {2:15s} {3:5d}}"
-    signature_containments_2 = dict()
+    lexicon.signature_containments_2 = dict()
     if (True):
 	    for difference in difference_list:
-		for sigpair in signature_containments[difference]:
+		for sigpair in lexicon.signature_containments_1[difference]:
 		    (sig1,sig2) = sigpair
-		    if sig1 not in signature_containments_2:
-			signature_containments_2[sig1] = dict()
-		    if sig2 not in signature_containments_2[sig1]:
-		        signature_containments_2[sig1][sig2] = dict()
-		    if difference not in signature_containments_2[sig1][sig2]:
-			signature_containments_2[sig1][sig2][difference] = dict()
-		    for stempair in signature_containments[difference][sigpair]:			   
-			    signature_containments_2[sig1][sig2][difference][stempair] = 1
+		    if sig1 not in lexicon.signature_containments_2:
+			lexicon.signature_containments_2[sig1] = dict()
+		    if sig2 not in lexicon.signature_containments_2[sig1]:
+		        lexicon.signature_containments_2[sig1][sig2] = dict()
+		    if difference not in lexicon.signature_containments_2[sig1][sig2]:
+			lexicon.signature_containments_2[sig1][sig2][difference] = dict()
+		    for stempair in lexicon.signature_containments_1[difference][sigpair]:			   
+			    lexicon.signature_containments_2[sig1][sig2][difference][stempair] = 1
     if (False):
-	    for sig1 in signature_containments_2:
-		for sig2 in signature_containments_2[sig1]:
-		    for difference in signature_containments_2[sig1][sig2]:
-			for stempair in signature_containments_2[sig1][sig2][difference]:
+	    for sig1 in lexicon.signature_containments_2:
+		for sig2 in lexicon.signature_containments_2[sig1]:
+		    for difference in lexicon.signature_containments_2[sig1][sig2]:
+			for stempair in lexicon.signature_containments_2[sig1][sig2][difference]:
 			    print sig1, sig2, difference, stempair	     	
 	
-    signature_containments_3 = dict()
+    lexicon.signature_containments_3 = dict()
     if (True):
 	    for difference in difference_list:
-		for sigpair in signature_containments[difference]:
+		for sigpair in lexicon.signature_containments_1[difference]:
 		    (sig1,sig2) = sigpair
-		    if sig2 not in signature_containments_3:
-			signature_containments_3[sig2] = dict()
-		    if sig1 not in signature_containments_3[sig2]:
-		        signature_containments_3[sig2][sig1] = dict()
-		    if difference not in signature_containments_3[sig2][sig1]:
-			signature_containments_3[sig2][sig1][difference] = dict()
-		    for stempair in signature_containments[difference][sigpair]:
-			    signature_containments_3[sig2][sig1][difference][stempair] =1
+		    if sig2 not in lexicon.signature_containments_3:
+			lexicon.signature_containments_3[sig2] = dict()
+		    if sig1 not in lexicon.signature_containments_3[sig2]:
+		        lexicon.signature_containments_3[sig2][sig1] = dict()
+		    if difference not in lexicon.signature_containments_3[sig2][sig1]:
+			lexicon.signature_containments_3[sig2][sig1][difference] = dict()
+		    for stempair in lexicon.signature_containments_1[difference][sigpair]:
+			    lexicon.signature_containments_3[sig2][sig1][difference][stempair] =1
     if (False):
-	    for sig2 in signature_containments_3:
-		for sig1 in signature_containments_3[sig2]:
-		    for difference in signature_containments_3[sig2][sig1]:
-			for stempair in signature_containments_3[sig2][sig1][difference]:
+	    for sig2 in lexicon.signature_containments_3:
+		for sig1 in lexicon.signature_containments_3[sig2]:
+		    for difference in lexicon.signature_containments_3[sig2][sig1]:
+			for stempair in lexicon.signature_containments_3[sig2][sig1][difference]:
 			    print sig2, sig1, difference, stempair
 
 
 	    
-    return (signature_containments,difference_list, signature_containments_2, signature_containments_3)			
+    return  difference_list 			
 
 #June 2017
 # ----------------------------------------------------------------------------------------------------------------------------#
