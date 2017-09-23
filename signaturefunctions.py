@@ -521,7 +521,7 @@ def PullOffSuffix(sig_target, shift, StemToWord, Signatures, outfile):
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def find_signature_chains(lexicon):
+def find_signature_chains_3(lexicon):
     # ----------------------------------------------------------------------------------------------------------------------------#
 # "Chain" or "containment" here simply refers to inclusion of words under 2 or more signatures. e.g. Null=s contains some words that are also in ed-ing-ings .
      

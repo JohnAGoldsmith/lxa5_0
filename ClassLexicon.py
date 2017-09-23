@@ -271,6 +271,102 @@ class CLexicon:
 
         return count
 
+
+
+
+
+
+# ----------------------------------------------------------------------------------------------------------------------------#
+    def find_signature_chains(self):
+    # ----------------------------------------------------------------------------------------------------------------------------#
+# "Chain" or "containment" here simply refers to inclusion of words under 2 or more signatures. e.g. Null=s contains some words that are also in ed-ing-ings .
+     
+
+	    self.signature_containments_1 = dict()
+	    wordtosig=self.WordToSig
+	    for word in wordtosig:
+		if wordtosig[word]  and len(wordtosig[word]) >1:
+		    sigs = wordtosig[word]
+		    for i in range(len(sigs)-1):
+			(stem1,sig1) = sigs[i]
+		        for j in range(i+1,len(sigs)):
+			    (stem2,sig2) = sigs[j]
+			    if len(stem1) > len(stem2):
+				stem2length = len(stem2)
+				difference = stem1[stem2length:]
+				sigpair= (sigs[j][1],sigs[i][1])
+			    else:
+				stem1length = len(stem1)
+				difference = stem2[stem1length:]
+		                sigpair=(sigs[i][1],sigs[j][1])
+		            if difference not in self.signature_containments_1:
+		                self.signature_containments_1[difference] = dict()
+		            if sigpair not in self.signature_containments_1[difference]:
+				self.signature_containments_1[difference][sigpair] = dict()
+			    if (stem1,stem2) not in self.signature_containments_1[difference][sigpair]:
+				self.signature_containments_1[difference][sigpair][(stem1,stem2)] = 1
+			    else: 
+				self.signature_containments_1[difference][sigpair][(stem1,stem2)]+= 1
+
+	
+	    difference_list = self.signature_containments_1.keys()
+	    difference_list.sort(key=lambda x: len(self.signature_containments_1[x]), reverse=True)
+
+	    formatstring = "{{0:10s} {1:5d {2:15s} {3:5d}}"
+	    self.signature_containments_2 = dict()
+	    if (True):
+		    for difference in difference_list:
+			for sigpair in self.signature_containments_1[difference]:
+			    (sig1,sig2) = sigpair
+			    if sig1 not in self.signature_containments_2:
+				self.signature_containments_2[sig1] = dict()
+			    if sig2 not in self.signature_containments_2[sig1]:
+				self.signature_containments_2[sig1][sig2] = dict()
+			    if difference not in self.signature_containments_2[sig1][sig2]:
+				self.signature_containments_2[sig1][sig2][difference] = dict()
+			    for stempair in self.signature_containments_1[difference][sigpair]:			   
+				    self.signature_containments_2[sig1][sig2][difference][stempair] = 1
+	    if (False):
+		    for sig1 in self.signature_containments_2:
+			for sig2 in self.signature_containments_2[sig1]:
+			    for difference in self.signature_containments_2[sig1][sig2]:
+				for stempair in self.signature_containments_2[sig1][sig2][difference]:
+				    print sig1, sig2, difference, stempair	     	
+	
+	    self.signature_containments_3 = dict()
+	    if (True):
+		    for difference in difference_list:
+			for sigpair in self.signature_containments_1[difference]:
+			    (sig1,sig2) = sigpair
+			    if sig2 not in self.signature_containments_3:
+				self.signature_containments_3[sig2] = dict()
+			    if sig1 not in self.signature_containments_3[sig2]:
+				self.signature_containments_3[sig2][sig1] = dict()
+			    if difference not in self.signature_containments_3[sig2][sig1]:
+				self.signature_containments_3[sig2][sig1][difference] = dict()
+			    for stempair in self.signature_containments_1[difference][sigpair]:
+				    self.signature_containments_3[sig2][sig1][difference][stempair] =1
+	    if (False):
+		    for sig2 in self.signature_containments_3:
+			for sig1 in self.signature_containments_3[sig2]:
+			    for difference in self.signature_containments_3[sig2][sig1]:
+				for stempair in self.signature_containments_3[sig2][sig1][difference]:
+				    print sig2, sig1, difference, stempair
+
+
+		    
+	    return  difference_list 			
+
+
+
+
+
+
+
+
+
+
+
     # --------------------------------------------------------------------------------------------------------------------------#
     def printSignatures(self,  encoding, FindSuffixesFlag, suffix = ""): 
  
@@ -596,7 +692,7 @@ def TestForCommonEdge(stemlist, outfile, threshold, FindSuffixesFlag):
             else:
                 FinalLetterCount[commonstring] += 1
         if len(
-                FinalLetterCount) == 0:  # this will happen if all of the stems are of the same length and too short to do this.
+                FinalLetterCount) == 0:  # this will happen if all of the stems are of the same length and too short to do self.
             continue
         sorteditems = sorted(FinalLetterCount, key=FinalLetterCount.get, reverse=True)  # sort by value
         CommonLastString = sorteditems[0]

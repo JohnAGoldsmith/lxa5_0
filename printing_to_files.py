@@ -269,7 +269,7 @@ def print_signatures_to_svg (Lexicon, outfile,FindSuffixesFlag):
 def print_signature_chains_to_svg (Lexicon, outfile):
     
     graphics_folder = Lexicon.graphicsfolder
-    sorted_difference_list = find_signature_chains(Lexicon)
+    sorted_difference_list = Lexicon.find_signature_chains()
 
     minimum_number_of_signature_links =  1
     for difference in sorted_difference_list:
