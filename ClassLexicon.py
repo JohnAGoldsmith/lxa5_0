@@ -395,6 +395,7 @@ class CLexicon:
         outfile_SigExtensions           = open(self.outfolder + "SigExtensions_iter"+ suffix+".txt", "w")
         outfile_suffixes                = open(self.outfolder + "Suffixes_iter"+ suffix+".txt", "w")
         outfile_stems_and_unanalyzed_words = open(self.outfolder + "StemsAndUnanalyzedWords_iter"+ suffix+".txt", "w") 
+	outfile_overlapping_signatures  = open(self.outfolder + "Overlapping_signatures.txt", "w" )
 
         # 1  Create a list of signatures, sorted by number of stems in each.  
 
@@ -448,6 +449,9 @@ class CLexicon:
 
         # Print signature chains to html file with svg
 	print_signature_chains_to_svg (self, outfile_signature_chains_svg)
+
+	# Print overlapping signatures
+	print_signature_overlaps(self, outfile_overlapping_signatures)
 
         # Print suffixes
         suffix_list = print_suffixes(outfile_suffixes, self.Suffixes)

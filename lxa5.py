@@ -13,6 +13,7 @@ import sys
 import sys
 import time
 
+from richter import *
 
 
 from collections import defaultdict
@@ -24,7 +25,8 @@ from lxa_module import *
 from read_data import *
 from crab import *
 from config import *
-FSA_flag = False
+from fsa import *
+FSA_flag =True
 
 
 # -------------------------------------------------------------------------------------------------------#
@@ -52,7 +54,7 @@ Initialization(argparse, config_lxa,FSA_flag)
 # and it is X + NULL in a differrent signature
 # WordToSig  is a Map. its keys are words.       Its values are *lists* of signatures.
 # StemCorpusCounts is a map. Its keys are words. 	 Its values are corpus counts of stems.
-# SignatureToStems is a dict: its keys are tuples of strings, and its values are dicts of stems. We don't need both this and Signatures!
+# SignatureStringsToStems is a dict: its keys are tuples of strings, and its values are dicts of stems. We don't need both this and Signatures!
 
 Lexicon = CLexicon()
 Lexicon.infolder = config_lxa["complete_infilename"]
@@ -150,20 +152,79 @@ if True:
     #Lexicon.printSignatures(FileObject, g_encoding, FindSuffixesFlag,suffix)
     Lexicon.printSignatures(g_encoding, FindSuffixesFlag,suffix)
 
+if True:
+    #alchemist_file = "~/Dropbox/data/english/GoldStandard/EnglishGS12.xml"
+    alchemist_file = "../../Dropbox/data/english/GoldStandard/EnglishGS12.xml" 
+    #lxa_file = "~/Dropbox/data/english/lxa/signatures.txt" 
+    lxa_file = "../../Dropbox/data/english/lxa/WordToSig_iter_1.txt" 
+    print "Gold standard evaluation of results."
+    run(alchemist_file, lxa_file)
 
 
 if False:
     print
     "5. Printing signature transforms for each word."
-    #printWordsToSigTransforms(Lexicon.SignatureToStems, Lexicon.WordToSig, Lexicon.StemCorpusCounts,
-    #                          FileObject["SigTransforms"], g_encoding, FindSuffixesFlag)
-    printWordsToSigTransforms(Lexicon.SignatureToStems, Lexicon.WordToSig, Lexicon.StemCorpusCounts,
+    printWordsToSigTransforms(Lexicon.SignatureStringsToStems, Lexicon.WordToSig, Lexicon.StemCorpusCounts,
                               g_encoding, FindSuffixesFlag)
 
 if False:
     print
     "6. Slicing signatures."
     SliceSignatures(Lexicon, g_encoding, FindSuffixesFlag, FileObject["Log"])
+
+
+splitEndState = True
+morphology= FSA_lxa(splitEndState)
+
+if True:
+	print "7. Adding signatures to the FSA."
+	AddSignaturesToFSA(Lexicon, Lexicon.SignatureStringsToStems, morphology,FindSuffixesFlag) 
+
+if True:
+	print "8. Printing the FSA."
+        outfile_FSA = open(Lexicon.outfolder + "FSA.txt", "w" )
+	#print >>outfile_FSA, "#", language, shortfilename, numberofwords
+	morphology.printFSA(outfile_FSA) 
+
+
+if True:
+	print "9. Printing graphs of the FSA."
+        graphicsfolder = Lexicon.outfolder   + "fsa/" 
+	print "graphics folder is" , graphicsfolder , " ( " , Lexicon.outfolder , " ) " 
+	for state in morphology.States:	
+		# do not print the entire graph:
+		#if state == morphology.startState:
+		#	continue
+		###
+		graph = morphology.createPySubgraph(state) 
+		# if the graph has 3 edges or fewer, do not print it:	
+
+	 	if len(graph.edges()) < 2:
+	 		continue
+ 		print "printing fsa portion: ", state
+		
+ 
+		graph.layout(prog='dot')
+		filename = graphicsfolder + 'morphology' + str(state.index) + '.png'
+		graph.draw(filename) 
+		if (True):
+			filename = graphicsfolder + 'morphology' + str(state.index) + '.dot'
+			graph.write(filename)
+  	
+#---------------------------------------------------------------------------------#	
+#	5d. Print FSA again, with these changes.
+#---------------------------------------------------------------------------------# 
+
+ 
+ 
+if False:
+	print "10. Parsing all words through FSA."
+	morphology.parseWords(Lexicon.WordToSig.keys(), outfile_WordParses)
+	
+if False:	
+	print "11. Printing all the words' parses."
+	morphology.printAllParses(outfile_WordParses)
+
 
   
 # ------------------------------------------------------------------------------------------#
