@@ -265,9 +265,43 @@ def print_signatures_to_svg (Lexicon, outfile,FindSuffixesFlag):
     outfile.close()
 
 # ----------------------------------------------------------------------------------------------------------------------------#
+def print_signature_overlaps (Lexicon, outfile):
+        formatstring = "   %-15s    %-15s " 
+	sigpair_to_stem_dict = dict()
+	for difference in Lexicon.signature_containments_1:
+		for sigpair in Lexicon.signature_containments_1[difference]:
+			from_sig = sigpair[0]
+			to_sig = sigpair[1]
+			for item1, item2 in Lexicon.signature_containments_1[difference][sigpair]:
+				output_line = list()
+				output_line.append(difference)
+				output_line.append(from_sig)
+				output_line.append(to_sig)
+				key = "  +  ".join(output_line)
+				if key not in sigpair_to_stem_dict:
+					sigpair_to_stem_dict[key] = list()
+				sigpair_to_stem_dict[key].append( item1 + "=" + item2 )
+	sigpair_list = sigpair_to_stem_dict.keys()
+	sigpair_list.sort(key = lambda sig_pair: len( sigpair_to_stem_dict[sig_pair]), reverse=True )
+	for line in sigpair_list:
+		print >>outfile, "\n" , line
+                sigpair_to_stem_dict[line].sort()
+		for stem_pair in sigpair_to_stem_dict[line]:
+			this_stem_pair = stem_pair.split("=")
+			print >>outfile, formatstring % (this_stem_pair[0], this_stem_pair[1] ) 			
+			#print >>outfile, this_stem_pair
+
+ 
+
+
+# ----------------------------------------------------------------------------------------------------------------------------#
+
+#  FIX THIS -- make it just print. The actual computations are done in a Class Lexicon function...
 
 def print_signature_chains_to_svg (Lexicon, outfile):
-    
+
+    Lexicon.find_signature_chains
+
     graphics_folder = Lexicon.graphicsfolder
     sorted_difference_list = Lexicon.find_signature_chains()
 
