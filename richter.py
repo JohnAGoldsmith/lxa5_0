@@ -3,6 +3,9 @@
 #   Author: Clayton Norris
 
 
+
+
+
 #####  Takes a computer-generated morphological analysis from Linguistica and compares it to human-generated
 #####  output from Alchemist, returning the Precision and Recall values of morphemes analyzed and of cuts created.
 #####
@@ -15,16 +18,61 @@
 
 import re
 import xml.etree.ElementTree as ET
+import mmap
 # import mmapPiequ                      PUT THIS BACK IN ! (I guess)
+
+
+
+
+
+
+################################
+################################
+################################
+####### Class Definitions
+################################
+
+class Word:
+    
+    def __init__(self,key,morpheme_list,id = 0):
+        self.key = key
+        self.length = len(key)
+        self.morpheme_list = morpheme_list
+        self.cuts_list = list()
+        #self.getCuts()
+        self.stem = morpheme_list[0]
+        self.root = ""   ### Could possibly be used to differentiate between "mak" and "make" in "making"
+        #print " 44 making new CWord" , key
+
+    def getCuts(self):
+        cuts_list = list()
+        morphs = self.morpheme_list
+        for x in range(0,(len(self.morpheme_list))):
+            cuts_list.append(cuts_list[x] + len(morphs[x]))
+        self.cuts = cuts_list[1:-1]
+    
+
+#    def addInterp(self,interp):
+#        self.morpheme_list = list(set(self.morpheme_list).union(set(interp)))
+#        self.getCuts()
+
+    def display(self):
+        result = key + "+" + morpheme_list.join("+")
+	return result
+
+################################
+####### Alchemist
+################################
+
 def readAlchemist205File(filename):
     
+    print " 68 reading alchemist 2 file" 
     tree = ET.parse(filename)
     root = tree.getroot()
     morphemeinfo = root[3]
     wordinfo = root[2]
     morphlist = []
     worddict = dict()
-    
     testmorphs = dict()
     
     for morph in morphemeinfo:
@@ -35,18 +83,27 @@ def readAlchemist205File(filename):
         key = word.get("key")
         for morph in word:
             if int(morph.get("morphemeindex")) != -1:
+                print "\n86", word.get("key"), morph.get("key")
                 m = morphlist[int(morph.get("morphemeindex"))]
                 if (m != key):
                     localmorphs.append(m)
+                    print "m:", m, key,
                 else:
                     localmorphs.append("NULL")
             else:
                 localmorphs.append("NULL")
+            print 
+            print "final", key, localmorphs
+            print 
+#        if key in worddict: #account for multiple interpretations of the word
+#            worddict[key].addInterp(localmorphs)
+#        else:
+#            worddict[key] = Word(key,localmorphs)
 
-        if key in worddict: #account for multiple interpretations of the word
-            worddict[key].addInterp(localmorphs)
-        else:
-            worddict[key] = Word(key,localmorphs)
+	worddict[key] = Word(key, localmorphs)
+	
+	formatstring = "{}   {}"
+
     return worddict
 
 
@@ -68,7 +125,7 @@ def readAlchemist205File(filename):
 """
 def readAlchemist300File(filename):
     
-    
+    print " 122  reading alchemist 3 file" 
     tree = ET.parse(filename)
     root = tree.getroot()
     morphemes = root[1]
@@ -89,11 +146,11 @@ def readAlchemist300File(filename):
                     wordmorphs.append(wordtext[start:end])
             if len(wordmorphs) == 0:
                 wordmorphs.append("NULL") #Keeping with the Lxa formatting, NULL means it has no morphemes
-            if wordtext in wordlist: #account for multiple interpretations of the word
-                    wordlist[wordtext].addInterp(wordmorphs)
-            else:
-                wordlist[wordtext] = Word(wordtext,wordmorphs)
-
+#            if wordtext in wordlist: #account for multiple interpretations of the word
+#                    wordlist[wordtext].addInterp(wordmorphs)											 
+#            else:
+#                wordlist[wordtext] = Word(wordtext,wordmorphs)
+            wordlist[wordtext] = Word(wordtext,wordmorphs)
     return wordlist
 ####################################
 ### read method that checks the version for you
@@ -114,6 +171,9 @@ def readAlchemistFile(filename):
         return readAlchemist300File(filename)
 
 
+################################
+####### Linguistica
+################################
 
 ####################################
 #Input from Linguistica xml:
@@ -134,21 +194,30 @@ def readLxaFile(filename):
     word_dict = dict()
     with open (filename) as word_file:
 	for line in word_file:
+	    if line[0]=="#":
+		continue
  	    if ":" in line:
 		cuts = list()
 		chunks = line.split()
 		word = chunks.pop(0)
 		colon = chunks.pop(0)
+		morpheme_list = list()
+		current_pointer_loc = 0
 		while chunks:
-		    stem = chunks.pop(0)
-		    stem_length = len(stem)
-		    sig = chunks.pop(0)
-		    cuts.append(stem_length)
-		if stem_length < len(word):
+		    this_stem = chunks.pop(0)
+		    stem_length = len(this_stem)
+		    sig_we_do_not_care = chunks.pop(0)
+		    cuts.append(stem_length- current_pointer_loc)
+		    this_morpheme = this_stem[current_pointer_loc: ]
+		    current_pointer_loc = stem_length
+		    morpheme_list.append(this_morpheme)
+		if stem_length < len(word):  # the last chunk
 		    cuts.append(len(word))
-		word_dict[word] = cuts
-		print word, cuts, "\n"   
-                               
+		    this_morpheme = word[current_pointer_loc:]
+		    morpheme_list.append(this_morpheme)
+		word_dict[word] = Word(word, morpheme_list)
+    return word_dict 
+                                     
     word_file.close()
 
 #    morphsect = sects[0].split("***" ) #[1] is empty, [2] is title, [3] is section 1, [4] is section 2
@@ -189,25 +258,33 @@ def readLxaFile(filename):
     rDenominator = sum(relevant) adds 1 for every morpheme from Alchemist
 """
 
-def checkPrecRecbyMorph(alchlist,lxalist):
+def checkPrecRecbyMorph(alchemist_dict,lxa_dict):
     # Lists are given as dictionaries word:[morphemes]
-    alchwords = alchlist.keys()
-    lxawords =lxalist.keys()
+
+    print " Check pre rcall by morphs" 
+
+    alchwords = alchemist_dict.keys()
+    lxawords =lxa_dict.keys()
     overlap = list(set(lxawords).intersection(set(alchwords))) # list of words that are in both outputs
+    
+    
     errors = dict ()
     numerator = 0.0
     pDenominator = 0.0
     rDenominator = 0.0
-    
+    formatstring = "{:18} {:30} {:30} {:30}"
     for word in overlap:
-        alcmorphs = alchlist.get(word).morphemes
-        lxamorphs = lxalist.get(word).morphemes
+	#print alchemist_dict[word].key
+	#print lxa_dict[word].key, "275"
+        alcmorphs = alchemist_dict[word].morpheme_list
+        lxamorphs = lxa_dict[word].morpheme_list
         relrec = list(set(alcmorphs).intersection(set(lxamorphs)))
         numerator += len(relrec)
         pDenominator += len(lxamorphs)
         rDenominator += len(alcmorphs)
         if alcmorphs != lxamorphs:
             errors [word] =( alcmorphs, lxamorphs, relrec)
+            print formatstring.format(word, alcmorphs, lxamorphs, relrec)
     print "Morpheme Precision : {0} , Recall : {1}".format(numerator/pDenominator,numerator/rDenominator)
     return errors
 
@@ -219,6 +296,10 @@ def checkPrecRecbyCut(alchlist,lxalist):
     overlap = list(set(lxawords).intersection(set(alchwords)))
     overlap.sort()
    
+    print " size of lxa words" , len(lxawords)
+    print " size of alchemist words" , len(alchwords)
+    print " size of overlap" , len(overlap)
+
     errors = dict ()
     numerator = 0.0
     pDenominator = 0.0
@@ -242,21 +323,35 @@ def checkPrecRecbyCut(alchlist,lxalist):
 ########   Usage Functions
 ##################################
 
-def getAlch():
-    return readAlchemist205File("../EnglishGS12.xml")
-def getLxa():
-    return readLxaFile("../english_words.txt")
-def runCuts():
-    return checkPrecRecbyCut(getAlch(),getLxa())
-def runMorphs():
-    return checkPrecRecbyMorph(getAlch(),getLxa())
 
-def runErrors(alchfile = "../EnglishGS12.xml",lxafile ="../english_words.txt"):
-    print "244", alchfile, lxafile
+
+def get_alchemist_dict(filename):
+    return readAlchemist205File(filename)
+
+def get_lxa_dict(filename):
+
+    return readLxaFile(filename)
+def runCuts():
+    return checkPrecRecbyCut(get_alchemist_dict(),get_lxa_dict())
+
+
+def runMorphs(alchemist_dict, lxa_dict):
+    print " in runMorphs" 
+    return checkPrecRecbyMorph(alchemist_dict,lxa_dict)
+
+
+
+def runErrors(alch_file, lxa_file):
+    
+    print "244", alch_file, lxa_file
+	
     print "Reading Alchemist files..."
-    alch = readAlchemistFile(alchfile)
+    alchemist_dict = readAlchemistFile(alch_file)
+    print len(alch)    
+
     print "Complete. Reading Linguistica files..."
-    lxa = readLxaFile(lxafile)
+    lxa_dict = readLxaFile(lxa_file)
+
     print "Complete. Calculating precision and recall values...\n"
     cErrors = checkPrecRecbyCut(alch,lxa)
     mErrors = checkPrecRecbyMorph(alch,lxa)
@@ -279,38 +374,18 @@ def runErrors(alchfile = "../EnglishGS12.xml",lxafile ="../english_words.txt"):
 
     return output
 
-def run(alchfile = "../EnglishGS12.xml",lxafile ="../english_words.txt"):
-    runErrors(alchfile,lxafile)
-
-
-################################
-################################
-################################
-####### Class Definitions
-################################
-
-class Word:
+def run():
+    lxa_filename ="/home/ja-goldsmith/Dropbox/data/english/lxa/WordToSig_iter_1.txt"
+#    alchemist_filename = "/home/ja-goldsmith/Dropbox/data/english/GoldStandard/EnglishGS12.xml"
+    alchemist_filename = "/home/ja-goldsmith/Dropbox/lxa/alchemist/EnglishGS15-alchemist3-part1.xml"
     
-    def __init__(self,key,morphemes,id = 0):
-        self.key = key
-        self.length = len(key)
-        self.morphemes = morphemes
-        self.getCuts()
-        self.stem = morphemes[0]
-        self.root = ""   ### Could possibly be used to differentiate between "mak" and "make" in "making"
-
-    def getCuts(self):
-        cuts = [0]
-        morphs = self.morphemes
-        for x in range(0,(len(morphs))):
-            cuts.append(cuts[x] + len(morphs[x]))
-        self.cuts = cuts[1:-1]
+    lxa_dict = get_lxa_dict(lxa_filename)
+    alchemist_dict = get_alchemist_dict(alchemist_filename)
     
+    runMorphs(alchemist_dict, lxa_dict)
+    #runErrors(alch_file,lxa_file)
 
-    def addInterp(self,interp):
-        self.morphemes = list(set(self.morphemes).union(set(interp)))
-        self.getCuts()
-
+run()
 
 
 
