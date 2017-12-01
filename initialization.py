@@ -57,7 +57,7 @@ def Initialization(argparse,config_lxa,FSA_flag):
 
     config_lxa["graphicsfolder"]  = config_lxa["outfolder"] + "graphics/"
     
-
+    print "line 60", config_lxa["graphicsfolder"]
     if not os.path.exists(config_lxa["graphicsfolder"]):
         os.makedirs(config_lxa["graphicsfolder"])
 

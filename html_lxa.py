@@ -188,7 +188,7 @@ class Page:
           outfile.write( circle_string.format(xcoord,ycoord,radius) )	
         else:
           circle_string =  "<circle cx=\"{0:3d}\" cy=\"{1:3d}\" r=\"{2:1f}\"  stroke=\"black\" stroke-width=\"3\" fill=\"red\" />\n"
-          radius=5 * math.log(count)
+          radius=15 * math.log(count)
           outfile.write( circle_string.format(xcoord,ycoord,radius) )	        	
  
     #deprecated:

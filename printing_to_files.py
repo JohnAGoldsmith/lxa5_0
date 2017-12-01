@@ -345,9 +345,9 @@ def print_signature_chains_to_svg (Lexicon, outfile):
 
 	# 2. only signatures related to this signature's chain
 	relevant_signatures = dict()
-	signature_robustness_rank_dict = dict()
+	signature_robustness_rank_list = list()
 	for n in range(len(Lexicon.SignatureListSorted)):
-	    signature_robustness_rank_dict[ Lexicon.SignatureListSorted[n] ] = n
+	    signature_robustness_rank_list.append(Lexicon.SignatureListSorted[n])
 		
 	for sigpair in Lexicon.signature_containments_1[difference]:
 	    from_sig = sigpair[0]
@@ -357,7 +357,7 @@ def print_signature_chains_to_svg (Lexicon, outfile):
 	    if to_sig not in relevant_signatures:
 		relevant_signatures[to_sig] = 1
 	relevant_signatures_list = relevant_signatures.keys()	
-        relevant_signatures_list.sort(key = lambda x:signature_robustness_rank_dict[x],reverse=True)
+        relevant_signatures_list.sort(key = lambda x:signature_robustness_rank_list     ,reverse=True)
 	this_page = add_signatures_to_page("", Lexicon, relevant_signatures.keys(),)
 	for sigpair in Lexicon.signature_containments_1[difference]:
 	    from_sig = sigpair[0]

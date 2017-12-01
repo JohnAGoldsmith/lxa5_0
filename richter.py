@@ -377,7 +377,7 @@ def runErrors(alch_file, lxa_file):
 def run():
     lxa_filename ="/home/ja-goldsmith/Dropbox/data/english/lxa/WordToSig_iter_1.txt"
 #    alchemist_filename = "/home/ja-goldsmith/Dropbox/data/english/GoldStandard/EnglishGS12.xml"
-    alchemist_filename = "/home/ja-goldsmith/Dropbox/lxa/alchemist/EnglishGS15-alchemist3-part1.xml"
+    alchemist_filename = "/home/ja-goldsmith/Dropbox/data/english/GoldStandard/EnglishGS15-alchemist3-part1.xml"
     
     lxa_dict = get_lxa_dict(lxa_filename)
     alchemist_dict = get_alchemist_dict(alchemist_filename)

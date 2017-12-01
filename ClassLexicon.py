@@ -134,7 +134,7 @@ class CLexicon:
         self.SignatureStringsToStems = {} 
 	self.SignatureListSorted = dict() #sorted by robustness
         self.Signatures={} ; #key is string, value is a Signature object
-        self.RawSignatures=dict(); # key is signature-string, and value is a string of stems. These signatures occur only once (or are bad for some other reason), and we want to find what's good inside them.
+        self.RawSignatures=dict(); # key is signature-string, and value is a string of stems. These signatures normally occur only once (or are bad for some other reason), and we want to find what's good inside them. They are a source of generalizations to mine!
         self.UnexplainedContinuations = {}
         self.RemovedSignatureList = list()
         self.UnlikelyStems = {}
@@ -201,7 +201,7 @@ class CLexicon:
             linelist = list()
             formatstring = "{0:20s}   {1:20s} {2:10s} {3:20s}"
         count = 0
-        MinimumNumberOfStemsInSignaturesCheckedForRebalancing = 5
+        MinimumNumberOfStemsInSignaturesCheckedForRebalancing = 25
         SortedListOfSignatures = sorted(self.SignatureStringsToStems.items(), lambda x, y: cmp(len(x[1]), len(y[1])),
                                         reverse=True)
         maximumlengthofsignature = 0
@@ -213,7 +213,7 @@ class CLexicon:
             numberofstems = len(self.SignatureStringsToStems[sig_string])
 
             if numberofstems < MinimumNumberOfStemsInSignaturesCheckedForRebalancing:
-                print >> outfile, "       Too few stems to shift material from suffixes", sig_string, numberofstems
+                print >> outfile, "       Too few stems to shift material from suffixes", sig_string, len( numberofstems )
                 continue
             # print >>outfile, "{:20s} count: {:4d} ".format(sig_string,   numberofstems),
             shiftingchunk, shiftingchunkcount = TestForCommonEdge(self.SignatureStringsToStems[sig_string], outfile,

@@ -13,7 +13,7 @@ import sys
 import sys
 import time
 
-from richter import *
+#  from richter import *
 
 
 from collections import defaultdict
@@ -152,7 +152,7 @@ if True:
     #Lexicon.printSignatures(FileObject, g_encoding, FindSuffixesFlag,suffix)
     Lexicon.printSignatures(g_encoding, FindSuffixesFlag,suffix)
 
-if True:
+if False:
     #alchemist_file = "~/Dropbox/data/english/GoldStandard/EnglishGS12.xml"
     alchemist_file = "../../Dropbox/data/english/GoldStandard/EnglishGS12.xml" 
     #lxa_file = "~/Dropbox/data/english/lxa/signatures.txt" 

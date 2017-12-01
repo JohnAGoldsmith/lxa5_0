@@ -474,6 +474,10 @@ def AssignAffixesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Key=""):
 
  # ----------------------------------------------------------------------------------------------------------------------------#
 
+def fn_number_of_affixes(sig) :
+    return len(sig.split("="))
+    
+
 def AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, MinimumStemCountInSignature, Step=-1):
 
         """ This assumes parse pairs in Lexicon.Parses, and  creates:
@@ -557,6 +561,8 @@ def AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Minim
 					    else:
 						    thisword = affix + stem
 					thisword=remove_parentheses(thisword)
+					if thisword not in Lexicon.WordBiographies:
+					        Lexicon.WordBiographies[thisword] = list()
                                         Lexicon.WordBiographies[thisword].append("5. Too few stems in sig: " + stem + " " + signature_string +  " (minimum is " + str( MinimumStemCountInSignature) + ".)")
                                 if signature_string not in Lexicon.SignatureBiographies:
                                         Lexicon.SignatureBiographies[signature_string] = list()
@@ -610,8 +616,11 @@ def AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Minim
                         if stem not in Lexicon.StemToWord:
                                 Lexicon.StemToWord[stem] = dict()
                         Lexicon.StemToWord[stem][word] = 1
-                        Lexicon.StemCorpusCounts[stem] += Lexicon.WordCounts[word]
-                        Lexicon.WordBiographies[word].append(str(Step) + " In signature " + signature_string)
+                        if stem not in Lexicon.StemCorpusCounts:
+                                Lexicon.StemCorpusCounts[stem] = 0
+                        if word in Lexicon.WordCounts:
+                                Lexicon.StemCorpusCounts[stem] += Lexicon.WordCounts[word]
+                                Lexicon.WordBiographies[word].append(str(Step) + " In signature " + signature_string)
 
 
                 this_signature.add_stem(stem)
@@ -623,18 +632,16 @@ def AssignSignaturesToEachStem_crab(Lexicon, FindSuffixesFlag,verboseflag, Minim
 	for sig in Lexicon.SignatureStringsToStems:
 	    Lexicon.Robustness[sig] = compute_robustness(Lexicon, sig)
 
-	signaturelist = Lexicon.SignatureStringsToStems.keys()
-	Lexicon.SignatureListSorted = sorted(signaturelist, key = lambda sig: len(Lexicon.SignatureStringsToStems[sig]), reverse=True)		
-
-        temporary_signature_dict.clear()
+	#signaturelist = Lexicon.SignatureStringsToStems.keys()
+	##signaturelist.sort(key = fn_number_of_affixes, reverse=True)		
+        #for i in range  (len(signaturelist)):
+        #        print i, signaturelist[i]
+        
+ 
         if verboseflag:
             print_report(filename, headerlist, contentlist)
 
-	
-
-        if verboseflag:
-                print_report(filename, headerlist, contentlist)
-
+ 
 
 
 
@@ -659,20 +666,25 @@ def FindGoodSignaturesInsideBad_crab(Lexicon,   FindSuffixesFlag, verboseflag, S
 	# will be found here. Therefore we must delete the old set of parse-pairs, and replace them
         # with the set of parse-pairs that exactly describe the current signature structure.
 	ReplaceParsePairsFromCurrentSignatureStructure_crab(Lexicon,FindSuffixesFlag )
-	Minimum_Count_In_Signature_To_Serve_As_Exemplar = 5
+	Minimum_Count_In_Signature_To_Serve_As_Exemplar = 25
 	Good_Signature_Exemplars = list()  # signatures that we will look for inside bad signatures
 	for signature in Lexicon.Signatures:
 		if len(Lexicon.SignatureStringsToStems[signature]) > Minimum_Count_In_Signature_To_Serve_As_Exemplar:
 			Good_Signature_Exemplars.append(signature)
+			#print "667 crab", signature, len(Lexicon.SignatureStringsToStems[signature])
 
         formatstring1 = "Bad: {0:20s} Corrected: {1:50s}"
         formatstring2 = "     {0:10s}={1:6s}     to {2:15s}"
+        RawSignatureList = list (Good_Signature_Exemplars)
+
+        
+        RawSignatureList.sort(key = fn_number_of_affixes, reverse=True)
+        #for sig in RawSignatureList:
+        #    print sig, "676", len(Lexicon.SignatureStringsToStems[sig])
         for sig_string in Lexicon.RawSignatures:
             sig_list = MakeSignatureListFromSignatureString(sig_string)
             good_sig_list = FindGoodSignatureListFromInsideAnother(sig_list, Good_Signature_Exemplars)
             good_sig_string = "=".join(good_sig_list)
-
-
             if len(good_sig_string) == 0:
                 continue
             number_of_stems = len(Lexicon.RawSignatures[sig_string])

@@ -2,6 +2,8 @@ from copy import deepcopy
 
 # -------------      Some short utility functions ---------------------------------------
 
+ 		
+
 def remove_parentheses (word):
     temp = list()
     for i in range(len(word)):
