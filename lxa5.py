@@ -187,7 +187,7 @@ if True:
 	morphology.printFSA(outfile_FSA) 
 
 
-if True:
+if False:
 	print "9. Printing graphs of the FSA."
         graphicsfolder = Lexicon.outfolder   + "fsa/" 
 	print "graphics folder is" , graphicsfolder , " ( " , Lexicon.outfolder , " ) " 
