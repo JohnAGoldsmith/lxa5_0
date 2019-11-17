@@ -1,5 +1,5 @@
 import math
-from class_alternation import *
+#from class_alternation import *
 from signaturefunctions import *
 #from svg import *
 from html_lxa import *

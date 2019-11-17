@@ -1,74 +1,68 @@
 import string
 
-def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
+def read_dx1(infile, Lexicon, BreakAtHyphensFlag, wordcountlimit):
+            punctuation = "$(),;.:-?%&\\1234567890[]\"\/'"
+            for line in infile:
+            #for line in filelines:
 
-        punctuation = "$(),;.:-?\\1234567890[]\"\'" 
-        if datatype == "DX1":
-            for line in filelines:
                 pieces = line.split()
                 word = pieces[0]
                 if '#' in word:
-                    print "We cannot accept a word with # in it.", word
+                    #print "We cannot accept a word with # in it.", word
                     continue
                 if '=' in word:
-                    print "We cannot accept a word with = in it.", word
-                    continue    
+                    #print "We cannot accept a word with = in it.", word
+                    continue
+                if len(word) == 1 and word in punctuation:
+                    #print ("We cannot accept a one-character word consisting of punctuation:", word)
+                    continue
                 if len(pieces) > 1:
                     count = int(pieces[1])
                 else:
                     count = 1
-                
                 #word.translate(None, string.punctuation)
                 if (BreakAtHyphensFlag and '-' in word):
                     words = word.split('-')
                     for word in words:
-                        while len(word) > 0 and word[-1] in punctuation:
-                            word= word[:-1]  
-                        while len(word) > 0 and word[0] in punctuation:
-                            word= word[1:]                            
-                        if word not in Lexicon.WordCounts:
+                        #if word == "&":
+                        #    print 24
+                        while word and word[-1] in punctuation:
+                            word = word[:-1]
+                        while word and word[0] in punctuation:
+                            word = word[1:]
+                        if word not in Lexicon.Word_counts_dict:
                             Lexicon.WordBiographies[word] = list()
-                            Lexicon.WordCounts[word] = 0
-                        Lexicon.WordCounts[word] += count
-                        if len(Lexicon.WordCounts) >= wordcountlimit:
+                            Lexicon.Word_counts_dict[word] = 0
+                        Lexicon.Word_counts_dict[word] += count
+                        if len(Lexicon.Word_counts_dict) >= wordcountlimit:
                             break
                 else:
-                    while len(word) > 0 and word[-1] in punctuation:
-                            word= word[:-1]    
-                    while len(word) > 0 and word[0] in punctuation:
-                            word= word[1:]   
-                    if word not in Lexicon.WordCounts:
+                    while word and word[-1] in punctuation:
+                            word = word[:-1]
+                    while word and word[0] in punctuation:
+                            word = word[1:]
+                    if word not in Lexicon.Word_counts_dict:
                         Lexicon.WordBiographies[word] = list()
-                        Lexicon.WordCounts[word] = 0
-                    Lexicon.WordCounts[word] = count
-                    if len(Lexicon.WordCounts) >= wordcountlimit:
+                        Lexicon.Word_counts_dict[word] = 0
+                        Lexicon.Word_list_forward_sort.append(word)
+                        Lexicon.Word_list_reverse_sort.append(word)
+                    Lexicon.Word_counts_dict[word] = count
+                    if len(Lexicon.Word_counts_dict) >= wordcountlimit:
                         break
-
-                Lexicon.WordList.AddWord(word)
                 Lexicon.WordBiographies[word] = list()
-        else:
+
+            Lexicon.sort_words()
+
+def read_corpus(infile, Lexicon, BreakAtHyphensFlag, wordcountlimit):
+            punctuation = "$(),;.:-?\\1234567890[]\"\'"
             tokencount = 0
             typecount = 0
-            for line in filelines:
+            for line in infile:
                 if tokencount - wordcountlimit > 0:
                     break
                 for token in line.split():
-                    if len(token) == 0:
-                        continue;
-                    while len(token) > 0 and token[-1] in punctuation:
-                            token= token[:-1]
-                    if len(token)==0:
-                        continue
-                    for iterations in range(3):                            
-                            if token[-1] in punctuation:
-                                token = token[:-1]
-                            if len(token) == 0:
-                                break
-                    if len(token) == 0:
-                        continue
- 		    
-		    exclude = set(string.punctuation)
-		    word = "".join(ch for ch in token if ch not in exclude)	
+                    exclude = set(string.punctuation)
+                    word = "".join(ch for ch in token if ch not in exclude)
                     if token in Lexicon.WordCounts:
                         Lexicon.WordCounts[token] += 1
                         tokencount += 1
@@ -77,7 +71,13 @@ def read_data(datatype, filelines, Lexicon,BreakAtHyphensFlag,wordcountlimit):
                         Lexicon.WordCounts[token] = 1
                         tokencount += 1
                         typecount += 1
-                     
                     Lexicon.WordList.AddWord(token)
                     Lexicon.Corpus.append(token)
                     Lexicon.WordBiographies[token] = list()
+
+def read_data(datatype,infile, Lexicon, BreakAtHyphensFlag, wordcountlimit):
+        if datatype == "DX1":
+            read_dx1(infile, Lexicon, BreakAtHyphensFlag, wordcountlimit)
+        else:
+            read_corpus(infile, Lexicon, BreakAtHyphensFlag, wordcountlimit)
+        infile.close()
