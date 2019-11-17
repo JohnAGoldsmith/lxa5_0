@@ -78,30 +78,28 @@ class Page:
         outstring2 = "</text>\n"
         if len(text) < 15:
             outfile.write(outstring1.format(x,y) + text + outstring2)
-        elif len(text)<30:
+	else:
     	    text_height = self.my_row_height * row_factor
     	    sig_list = text.split("=")
     	    number_of_affixes = len(sig_list)
-    	    half = number_of_affixes / 2
-    	    first_line_list = sig_list[0:half]
-    	    second_line_list = sig_list[half:number_of_affixes]
-    	    outstring1 = "<text x=\"{}\" y=\"{}\" font-family=\"Verdana\" text-anchor=\"middle\" font-size=\"20\">\n"
-    	    outstring2 = "</text>\n"
-    	    outfile.write(outstring1.format(x,y) + "=".join(first_line_list) + outstring2)
-    	    outfile.write(outstring1.format(x,y + text_height) + "=".join(second_line_list) + outstring2)
-        else:
-    	    text_height = self.my_row_height * row_factor
-    	    sig_list = text.split("=")
-    	    number_of_affixes = len(sig_list)
-    	    third = number_of_affixes/3
-    	    first_line_list = sig_list[0:third]
-    	    second_line_list = sig_list[third:2 * third]
-    	    third_line_list = sig_list[2*third:number_of_affixes]
-    	    outstring1 = "<text x=\"{}\" y=\"{}\" font-family=\"Verdana\" text-anchor=\"middle\" font-size=\"20\">\n"
-    	    outstring2 = "</text>\n"
-    	    outfile.write(outstring1.format(x,y) + "=".join(first_line_list) + outstring2)
-    	    outfile.write(outstring1.format(x,y + text_height) + "=".join(second_line_list) +outstring2)
-    	    outfile.write(outstring1.format(x,y + 2* text_height) + "=".join(third_line_list) + outstring2)
+	    if  len(text)<30:
+	    	    half = number_of_affixes / 2
+	    	    first_line_list = sig_list[0:half]
+	    	    second_line_list = sig_list[half:number_of_affixes]
+	    	    outstring1 = "<text x=\"{}\" y=\"{}\" font-family=\"Verdana\" text-anchor=\"middle\" font-size=\"20\">\n"
+	    	    outstring2 = "</text>\n"
+	    	    outfile.write(outstring1.format(x,y) + "=".join(first_line_list) + outstring2)
+	    	    outfile.write(outstring1.format(x,y + text_height) + "=".join(second_line_list) + outstring2)
+            else:
+	    	    third = number_of_affixes/3
+	    	    first_line_list = sig_list[0:third]
+	    	    second_line_list = sig_list[third:2 * third]
+	    	    third_line_list = sig_list[2*third:number_of_affixes]
+	    	    outstring1 = "<text x=\"{}\" y=\"{}\" font-family=\"Verdana\" text-anchor=\"middle\" font-size=\"20\">\n"
+	    	    outstring2 = "</text>\n"
+	    	    outfile.write(outstring1.format(x,y) + "=".join(first_line_list) + outstring2)
+	    	    outfile.write(outstring1.format(x,y + text_height) + "=".join(second_line_list) +outstring2)
+	    	    outfile.write(outstring1.format(x,y + 2* text_height) + "=".join(third_line_list) + outstring2)
 
 
 
@@ -128,9 +126,10 @@ class Page:
         #print_signature_box(self,outfile,this_signature_box,x,y)
 
     def print_box(self, outfile,  this_box,x,y):
-        # x and y are the lower left points of the box, in Page-logical units, where the origin of the Page is its lower left-hand corner
-        #this_box.number_of_columns = int(len(this_box.my_string_list)/this_box.max_column_height + 0.5)
-        startpoint_x = x
+        """ x and y are the lower left points of the box, in Page-logical units, where the origin of the Page is its lower left-hand corner
+        this_box.number_of_columns = int(len(this_box.my_string_list)/this_box.max_column_height + 0.5)
+	"""        
+	startpoint_x = x
         startpoint_y = self.my_height - y - this_box.my_height
         if this_box.genre == "suffix":
                 div_class="suffixclass"
@@ -174,7 +173,6 @@ class Stack:
 
 
 class Box:
-
     def __init__(self, string_list,genre="None"):
         if genre == "signature":
             self.my_string_list = string_list.split("=")
@@ -202,13 +200,13 @@ class Box:
             for stem in templist:
                 newstem=stem[::-1]
                 self.my_string_list.append(newstem)
+
     def print_box(self,  outfile, genre= "neutral" ):
         start_an_html_div(outfile, class_type=genre)
         if self.genre == "suffix":
                 div_class="suffixclass"
         else:
                 div_class="neutral"
-
         start_an_html_table(outfile)
         if self.genre=="suffix" or self.genre=="prefix" or self.genre=="signature":
             for morph in self.my_string_list:
@@ -231,32 +229,7 @@ class Box:
                     colno += 1
                     end_an_html_table_row(outfile)
             end_an_html_table(outfile)
-        #end_an_html_div(outfile)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         end_an_html_div(outfile)
-
-
-
 
 class SignatureBox:
     def __init__(self,stem_list,affix_list,FindSuffixesFlag):

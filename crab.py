@@ -1,10 +1,10 @@
-import math
+#import math
 import sys
 
 from printing_to_files import *
 from signaturefunctions import *
 from ClassLexicon import *
-from ClassLexicon import Signature
+#from ClassLexicon import Signature
 from SigLattice import *
 
 
@@ -123,7 +123,7 @@ def widen_scope_of_signatures(Lexicon, affix_type):
         stem_collection = dict(Lexicon.SuffixToStem[affix_1])
         for stem in stems_assigned_to_signatures:
             if stem in stem_collection:
-                del stem_collection[stem]            
+                del stem_collection[stem]
         for i in range(1,len(sig)):
             for affix  in sig_list:
                 new_stem_dict = dict()
@@ -148,7 +148,6 @@ def widen_scope_of_signatures(Lexicon, affix_type):
                         print >>thisfile,  stem, affix,
                     print >>thisfile
                     stems_assigned_to_signatures[stem] = 1
-        # print >>thisfile
     print >>thisfile,  "Number of parses:", len(Lexicon.Parses)
 
     thisfile.close()
@@ -254,7 +253,33 @@ def find_protostems_crab(Lexicon, affix_type,verboseflag, maximum_stem_length=-1
 
 
 # ---------------------------------------------------------------------------#
-
+def verbose_report_on_stem_affix_pairs(Lexicon,affix_type):
+            filename = "3_parse_pairs.txt"
+            headerlist = [ "List of parse pairs"]
+            contentlist = list()
+            linelist = list()
+            formatstring = "{0:20s}   {1:20s} {2:10s} {3:20s}"
+            templist=list()
+            print_report(filename, headerlist, contentlist)
+            affix =  ""
+            for item in Lexicon.Parses:
+                if affix_type == "suffix":
+                    stem = item[0]
+                    affix = item[1]
+                    templist.append (stem +' ' + affix )
+                    word = join(stem, affix, affix_type)
+                    Lexicon.WordBiographies[word].append(" "+ stem + "=" + affix)
+                else: # affix_type = "prefix"
+                    affix = item[0]
+                    stem= item[1]
+                    templist.append (affix + ' ' + stem)
+                    word = join(stem, affix, affix_type)
+                    Lexicon.WordBiographies[word].append(" "+ affix +   "=" + stem)
+            templist.sort()
+            for item in templist:
+                    contentlist.append(item)
+            print_report(filename, headerlist, contentlist)
+# ---------------------------------------------------------------------------#
 def create_stem_affix_pairs(Lexicon,  affix_type, verboseflag):
         # This function creates the pairs in Parses. Most words have multiple appearances.
         # Step = 2.
@@ -270,7 +295,6 @@ def create_stem_affix_pairs(Lexicon,  affix_type, verboseflag):
         wordlist.sort()
         column_no = 0
         NumberOfColumns = 8
-        #words_with_null_suffix = dict()
         for i in range(len(wordlist)):
                 if i % 5000 == 0:
                     if verboseflag == False:
@@ -334,33 +358,7 @@ def create_stem_affix_pairs(Lexicon,  affix_type, verboseflag):
 
         #Step += 1
         if verboseflag:
-
-            filename = "3_parse_pairs.txt"
-            headerlist = [ "List of parse pairs"]
-            contentlist = list()
-            linelist = list()
-            formatstring = "{0:20s}   {1:20s} {2:10s} {3:20s}"
-            templist=list()
-            print_report(filename, headerlist, contentlist)
-            affix =  ""
-            for item in Lexicon.Parses:
-                if affix_type == "suffix":
-                    stem = item[0]
-                    affix = item[1]
-                    templist.append (stem +' ' + affix )
-                    word = join(stem, affix, affix_type)
-                    Lexicon.WordBiographies[word].append(" "+ stem + "=" + affix)
-                else: # affix_type = "prefix"
-                    affix = item[0]
-                    stem= item[1]
-                    templist.append (affix + ' ' + stem)
-                    word = join(stem, affix, affix_type)
-                    Lexicon.WordBiographies[word].append(" "+ affix +   "=" + stem)
-            templist.sort()
-            for item in templist:
-                    contentlist.append(item)
-            print_report(filename, headerlist, contentlist)
-
+            verbose_report_on_stem_affix_pairs(Lexicon, affix_type)            
  # ----------------------------------------------------------------------------------------------------------------------------#
 def verbose_helper_assign_affixes(Lexicon,filename,headerlist,contentlist):
     formatstring2 = "{0:15s} {1:15s}"
@@ -388,7 +386,6 @@ def assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, Step=-1):
 
         Lexicon.StemCorpusCounts = dict()
         Lexicon.Affixes = dict()
-        #Lexicon.SignatureStringsToStems = dict()
         Lexicon.Signatures = dict()
         Lexicon.StemToSignature = dict()
         Lexicon.StemCorpusCounts = dict()
@@ -399,7 +396,6 @@ def assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, Step=-1):
         formatstring2 = "{0:15s} {1:15s}"
         formatstring3 = "\n{0:15s} {1:15s} {2:10s} "
         formatstring4 = "\n{0:15s} {1:15s} {2:10s} {3:20s}"
-
         if verboseflag:
                 filename = "4_protostems_and_their_affix_sets.txt"
                 headerlist = [ "Link stems to the set of their affixes."]
@@ -420,8 +416,6 @@ def assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, Step=-1):
                 ParseList.append((stem,affix))
             ParseList.sort(key=lambda (x,y) : x+" "+y)
             for stem,affix in ParseList:
-                if stem == "direct":
-                    pass
                 if not affix:
                     affix = "NULL"
                 if stem not in Lexicon.StemToWord:
@@ -449,8 +443,9 @@ def assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, Step=-1):
                 Lexicon.StemToAffix[stem][affix] = 1
                 if affix not in Affixes:
                     Affixes[affix] = 0
-                Lexicon.Prefixes[affix] += 1
+                Affixes[affix] += 1
                 Lexicon.WordBiographies[word].append( " This split:" + affix + "=" + stem )
+
             if verboseflag:
                 verbose_helper_assign_affixes(Lexicon,filename,headerlist,contentlist)
  # ----------------------------------------------------------------------------------------------------------------------------#
@@ -695,7 +690,7 @@ def RebalanceSignatureBreaks_crab(Lexicon, threshold, outfile, FindSuffixesFlag,
         print_report(filename, headerlist, contentlist)
 
         return count
- 
+
 # ----------------------------------------------------------------------------------------------------------------------------#
 def	replace_parse_pairs_from_current_signature_structure_crab(Lexicon, affix_type = "suffix"):
 # ----------------------------------------------------------------------------------------------------------------------------#
