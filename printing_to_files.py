@@ -233,7 +233,8 @@ def print_signatures_to_svg (outfile_html, DisplayList,Signatures,FindSuffixesFl
                 column_counts[row_no] += 1
             col_no = column_counts[row_no]
             radius_guide = len(stemlist) * row_no
-            this_page.print_signature (outfile_html, sig, radius_guide, row_no, col_no)
+            stem_count = len(stemlist)
+            this_page.print_signature (outfile_html, sig, radius_guide, row_no, col_no, stem_count)
 
             #if FindSuffixesFlag:
             #    signature_box = SignatureBox(stemlist, affixlist,FindSuffixesFlag)

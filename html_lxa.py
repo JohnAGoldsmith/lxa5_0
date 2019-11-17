@@ -46,7 +46,7 @@ class Page:
     def __init__(self):
 
         self.my_height =2000
-        self.my_width=1000
+        self.my_width=20000
         self.Node_dict = dict()
         self.Arrow_dict = dict()
         self.my_column_width = 250
@@ -108,7 +108,9 @@ class Page:
         y = self.my_height - self.my_row_height * (rowno)
         return (x,y)
 
-    def print_circle (self, outfile, rowno,colno, count = 10):
+    def print_circle (self, outfile, rowno,colno, count = 10,stem_count = 10):
+        outstring1 = "<text x=\"{}\" y=\"{}\" font-family=\"Verdana\" text-anchor=\"middle\" font-size=\"20\">"
+        outstring2 = "</text>\n"
         (xcoord,ycoord) = self.coor_from_row_col (rowno, colno)
         if count == 1:
           circle_string =  "<circle cx=\"{0:3d}\" cy=\"{1:3d}\" r=\"{2:1d}\"  stroke=\"black\" stroke-width=\"3\" fill=\"red\" />\n"
@@ -118,10 +120,10 @@ class Page:
           circle_string =  "<circle cx=\"{0:3d}\" cy=\"{1:3d}\" r=\"{2:1f}\"  stroke=\"black\" stroke-width=\"3\" fill=\"red\" />\n"
           radius=5 * math.log(count)
           outfile.write( circle_string.format(xcoord,ycoord,radius) )
+        outfile.write(outstring1.format(xcoord,ycoord) + str(stem_count) + outstring2)
 
-
-    def print_signature (self,outfile,text, count, rowno, colno  ):
-        self.print_circle(outfile, rowno,colno,count)
+    def print_signature (self,outfile,text, count, rowno, colno,stem_count  ):
+        self.print_circle(outfile, rowno,colno,count,stem_count)
         self.print_text(outfile,rowno, colno, text)
         #print_signature_box(self,outfile,this_signature_box,x,y)
 
