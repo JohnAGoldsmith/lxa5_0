@@ -81,7 +81,7 @@ def MakeSignatures_Crab_2(Lexicon, affix_type, prefix, suffix, verboseflag = Fal
 
     replace_parse_pairs_from_current_signature_structure_crab(Lexicon,  affix_type )
 
-    widen_scope_of_signatures(Lexicon, affix_type)
+    widen_scope_of_signatures(Lexicon, affix_type, Lexicon.MinimumStemLength)
 
     print   "6. Number of parses", len(Lexicon.Parses)
 
@@ -100,7 +100,7 @@ def MakeSignatures_Crab_2(Lexicon, affix_type, prefix, suffix, verboseflag = Fal
 #-----------------------------------------------------------------------------#
 #          Widen stems in sigantures: Crab2
 #-----------------------------------------------------------------------------#
-def widen_scope_of_signatures(Lexicon, affix_type):
+def widen_scope_of_signatures(Lexicon, affix_type, minimum_stem_length):
     """
     Find all stems that go with each affix.
     Sort signatures by number of affixes, in decreasing order.
@@ -108,7 +108,7 @@ def widen_scope_of_signatures(Lexicon, affix_type):
     a signature; but don't allow a stem to be in more than
     one such signature (the longest is the best)
     """
-    Lexicon.widen_scope_of_affixes(affix_type)
+    Lexicon.widen_scope_of_affixes(affix_type, minimum_stem_length)
     signatures = Lexicon.get_signatures_sorted_by_affix_count(affix_type)
     stems_assigned_to_signatures = dict()
     if affix_type == "prefix":
@@ -358,7 +358,7 @@ def create_stem_affix_pairs(Lexicon,  affix_type, verboseflag):
 
         #Step += 1
         if verboseflag:
-            verbose_report_on_stem_affix_pairs(Lexicon, affix_type)            
+            verbose_report_on_stem_affix_pairs(Lexicon, affix_type)
  # ----------------------------------------------------------------------------------------------------------------------------#
 def verbose_helper_assign_affixes(Lexicon,filename,headerlist,contentlist):
     formatstring2 = "{0:15s} {1:15s}"
@@ -515,12 +515,6 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
         stemlist = Lexicon.StemToAffix.keys()
         stemlist.sort()
 
-
-        #   1. We determine which signatures have too few stems, typically only one stem.
-        #   However, that condition is only imposed the first time through -- later,
-        #   we consciously create signatures with only one stem.
-
-
         temp_sig_dict = dict()
         if verboseflag:
                 print "     Assign a signature to each stem (occasionally two)."
@@ -535,8 +529,6 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
                         temp_sigs_with_too_few_stems.append(sig)
 
         for stem in stemlist:
-            if stem == "direct":
-                pass
             signature_list = Lexicon.StemToAffix[stem]
             signature_string = dict_to_sorted_string (signature_list)
             number_of_stems_this_sig = temp_sig_dict[signature_string]
@@ -548,17 +540,6 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
             contentlist.append(reportline)
 
             this_signature = Lexicon.accept_stem_and_signature(stem, signature_string)
-
-#            if signature_string not in Lexicon.Signatures:
-#                this_signature = Signature(signature_string)
-#                Lexicon.Signatures[signature_string] = this_signature
-#            else:
-#                this_signature = Lexicon.Signatures[signature_string]#
-
-#            if stem not in Lexicon.StemToSignature:#
-#                Lexicon.StemToSignature[stem] = list()
-#            Lexicon.StemToSignature[stem].append(signature_string)
-#            Lexicon.StemCorpusCounts[stem] = 0
 
                 # 2e. Update  Signature biography.
             if signature_string not in Lexicon.SignatureBiographies:
@@ -585,11 +566,7 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
                 Lexicon.WordBiographies[word].append(prefix + " In signature " + signature_string)
 
             this_signature.add_stem(stem)
-            #print 573, stem, signature_string, this_signature.get_stems()
             this_signature.add_affix(deepcopy(Lexicon.StemToAffix[stem]))
-                #if verboseflag:
-                #        reportline=formatstring2.format(stem,signature_string)
-                #        contentlist.append(reportline)
 
         temp_sig_dict.clear()
         if verboseflag:
@@ -598,98 +575,6 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
 
         if verboseflag:
                 print_report(filename, headerlist, contentlist)
-
-
-
-
-
-    # ----------------------------------------------------------------------------------------------------------------------------#
-def RebalanceSignatureBreaks_crab(Lexicon, threshold, outfile, FindSuffixesFlag,verboseflag = True):
-        # this version is much faster, and does not recheck each signature; it only changes stems.
-        # NOTE! This needs to be updated to utilize CLexicon.Signatures
-        # ----------------------------------------------------------------------------------------------------------------------------#
-        if FindSuffixesFlag:
-            affix_type = "suffix"
-        else:
-            affix_type = "prefix"
-        if verboseflag:
-            print "Rebalance signature breaks."
-            filename = "6_Rebalance_signature_breaks.txt"
-            headerlist = [ " "]
-            contentlist = list()
-            linelist = list()
-            formatstring = "{0:20s}   {1:20s} {2:10s} {3:20s}"
-        count = 0
-        MinimumNumberOfStemsInSignaturesCheckedForRebalancing = 5
-        SortedListOfSignatures = sorted(Lexicon.SignatureStringsToStems.items(), lambda x, y: cmp(len(x[1]), len(y[1])),
-                                        reverse=True)
-        maximumlengthofsignature = 0
-        for (sig_string, wordlist) in SortedListOfSignatures:
-            if len(sig_string) > maximumlengthofsignature:
-                maximumlengthofsignature = len(sig_string)
-        for (sig_string, wordlist) in SortedListOfSignatures:
-            sig_list = MakeSignatureListFromSignatureString(sig_string)
-            numberofstems = len(Lexicon.SignatureStringsToStems[sig_string])
-
-            if numberofstems < MinimumNumberOfStemsInSignaturesCheckedForRebalancing:
-                print >> outfile, "       Too few stems to shift material from suffixes", sig_string, numberofstems
-                continue
-            shiftingchunk, shiftingchunkcount = TestForCommonEdge(Lexicon.SignatureStringsToStems[sig_string],
-                                                                  outfile,
-                                                                  threshold,
-                                                                  FindSuffixesFlag)
-
-            if shiftingchunkcount > 0:
-                print >> outfile, sig_string, " " * (maximumlengthofsignature - len(sig_string)),
-                print >> outfile, "Stem count: {:4d} {:5s} count: {:5d}".format(numberofstems, shiftingchunk,
-                                                                                shiftingchunkcount)
-            else:
-                print >> outfile, sig_string, " " * (maximumlengthofsignature - len(sig_string)),
-                print >> outfile, "Stem count: {:4d}.".format(numberofstems)
-            if len(shiftingchunk) > 0:
-                count += 1
-                chunklength = len(shiftingchunk)
-                newsignature = list()
-                for affix in sig_list:
-                    if affix_type == "suffixes":
-                        newaffix = shiftingchunk + affix
-                    else:
-                        newaffix = affix + shiftingchunk
-                    newsignature.append(newaffix)
-
-                if shiftingchunkcount >= numberofstems * threshold:
-                    ChangeFlag = True
-                    stems_to_change = list(Lexicon.SignatureStringsToStems[sig_string])
-                    for stem in stems_to_change:
-                        if FindSuffixesFlag:
-                            if stem[-1 * chunklength:] != shiftingchunk:
-                                continue
-                        else:
-                            if stem[:chunklength] != shiftingchunk:
-                                continue
-
-                        if FindSuffixesFlag:
-                            newstem = stem[:len(stem) - chunklength]
-                            for affix in sig_list:
-                                if not affix:
-                                    affix_t = "NULL"
-                                else:
-                                    affix_t = affix
-                                del Lexicon.Parses[(stem, affix_t)]
-                                newaffix = shiftingchunk + affix_t
-                                Lexicon.Parses[(newstem, newaffix)] = 1
-                                #print "615 {0:20s} {1:20s} {2:20s} {3:20s}".format(stem, affix, newstem,  newaffix )
-                        else:
-                            newstem = stem[chunklength:]
-                            for affix in sig_list:
-                                del Lexicon.Parses[(affix, stem)]
-                                newaffix = affix + shiftingchunk
-                                Lexicon.Parses[(newaffix, newstem)] = 1
-
-        outfile.flush()
-        print_report(filename, headerlist, contentlist)
-
-        return count
 
 # ----------------------------------------------------------------------------------------------------------------------------#
 def	replace_parse_pairs_from_current_signature_structure_crab(Lexicon, affix_type = "suffix"):
@@ -722,14 +607,45 @@ def	replace_parse_pairs_from_current_signature_structure_crab(Lexicon, affix_typ
 
 
 
+# ----------------------------------------------------------------------------------------------------------------------------#
+def	compare_stems (Lexicon,affix_type):
+# ----------------------------------------------------------------------------------------------------------------------------
+    stems = Lexicon.get_stems()
+    temp = dict()
+
+    for stemno in range(len(stems)):
+        stem1 = stems[stemno]
+        sequence_count = 1
+        j = stemno + 1
+        while j < len(stems) and stems[j].startswith(stem1):
+            stem2 = stems[j]
+            sig1 = Lexicon.StemToSignature[stem1]
+            sig2 = Lexicon.StemToSignature[stem2]
+            buckle = Buckle(stem1, stem2, sig1, sig2, affix_type)
+            j += 1
+            diff = buckle.m_difference
+
+            if diff not in temp:
+                temp[diff] = list()
+            temp[diff].append(buckle)
+
+            if j == stemno + 1:
+                sequence_count += 1
+
+            else:
+                sequence_count = 0
 
 
 
+            #print 717, buckle.m_stem1, buckle.m_stem2, diff
+    difflist = sorted(temp.keys(), key = lambda x:len(temp[x]))
 
-
-
-
-
+    for diff in difflist:
+        subdifflist = sorted(temp[diff], key = lambda x:x.m_sigstring2)
+        subdifflist = sorted(temp[diff], key = lambda x:x.m_sigstring1)
+        print "\n", diff
+        for item in subdifflist:
+                print   item.m_sigstring1, item.m_sigstring2
 # ----------------------------------------------------------------------------------------------------------------------------#
 
 

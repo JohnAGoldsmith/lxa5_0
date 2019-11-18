@@ -43,6 +43,24 @@ def splitsignature(signature, maxlength=80):
     outlist.append("=".join(line))
     return outlist
 
+class Buckle:
+    """
+    A Buckle is a pair of stems in which the first is a prefix of the second.
+    """
+    m_stem1 = ""
+    m_stem2 = ""
+    m_sigstring1 = ""
+    m_sigstring2 = ""
+    m_difference = ""
+    m_affix_type = ""
+    def __init__(self, stem1, stem2,sigstring1, sigstring2, affix_type):
+       self.m_stem1 = stem1
+       self.m_stem2 = stem2
+       self.m_sigstring1 = sigstring1
+       self.m_sigstring2 = sigstring2
+       self.m_difference = stem2[len(stem1):]
+       self.m_affix_type = affix_type
+
 
 class CWordList:
     def __init__(self):
@@ -137,7 +155,7 @@ class CLexicon:
         self.Corpus = list()
         self.MinimumStemLength = 3
         self.MaximumStemLength = 100
-        self.MaximumAffixLength = 5
+        self.MaximumAffixLength = 6
         self.Parses = dict()
         #self.PossibleSuffixes={}
         self.Prefixes = {}
@@ -175,8 +193,10 @@ class CLexicon:
         self.total_affix_length_in_signatures = 0
         self.number_of_analyzed_words =  0
 
-
-
+    def get_stems(self):
+        return sorted(self.StemToSignature.keys())
+    def get_number_of_stems():
+        return len(self.StemToSignatures)
 
 
 
@@ -200,7 +220,7 @@ class CLexicon:
 
     # not currently used, probably get rid of.
     def clear_memory_of_analysis_except_parses_and_affixes(self):
-        
+
         self.Prefixes = dict()
         self.PrefixToStem = dict()
         self.Signatures = dict()
@@ -215,7 +235,7 @@ class CLexicon:
         self.Word_list_forward_sort = list()
         self.Word_list_reverse_sort = list()
         self.Word_sort_clean_flag = False
-        
+
         self.word_letter_count = 0
         self.number_of_analyzed_words = 0
         self.total_letters_in_analyzed_words = 0
@@ -416,6 +436,7 @@ class CLexicon:
         outfile_signatures_html         = open(self.outfolder + prefix + "Signatures_iter"+ suffix+".html", "w")
         outfile_signatures_details      = open(self.outfolder + prefix + "Signature_Details_iter"+ suffix+".txt", "w")
         outfile_index                   = open(self.outfolder + prefix + "Index_iter"+ suffix+".html", "w")
+        outfile_words = open(self.outfolder + prefix + "Words"+ suffix + ".txt", "w")
         outfile_wordstosigs             = open(self.outfolder + prefix + "WordToSig_iter"+ suffix+".txt", "w")
         outfile_wordstosigs_html        = open(self.outfolder + prefix + "WordToSig_iter"+ suffix+".html", "w")
         outfile_stemtowords             = open(self.outfolder + prefix + "StemToWords_iter"+ suffix+".txt", "w")
@@ -486,7 +507,7 @@ class CLexicon:
         print_signature_list_2(outfile_signature_feeding, lxalogfile, self, DisplayList, totalrobustness,  FindSuffixesFlag)
 
         # print WORDS of each signature:
-        print_words(self, outfile_wordstosigs, outfile_wordstosigs_html, lxalogfile,   ColumnWidth)
+        print_words(self, outfile_words, outfile_wordstosigs, outfile_wordstosigs_html, lxalogfile,   ColumnWidth)
 
         print_parses(outfile_parses, self)
 
@@ -494,7 +515,7 @@ class CLexicon:
         #print_unlikelysignatures(outfile_unlikelysignatures, self.UnlikelySignatureStringsToStems, ColumnWidth)
 
     ## -------  widen_scope_of_affixes                              ------- #
-    def widen_scope_of_affixes(self, affix_type):
+    def widen_scope_of_affixes(self, affix_type, minimum_stem_length=1):
         if affix_type == "suffix":
             for suffix in self.Suffixes:
                 suffix_length = len(suffix)
@@ -504,7 +525,7 @@ class CLexicon:
                 for i in range(first_word,last_word):
                     word = self.Word_list_reverse_sort[i]
                     stem_length = len(word) - suffix_length
-                    if stem_length < 1:
+                    if stem_length < minimum_stem_length:
                         continue
                     new_stem = word[:stem_length]
                     #print 466, suffix, word, new_stem
@@ -521,7 +542,7 @@ class CLexicon:
                 for i in range(first_word,last_word):
                     word = Words[i]
                     stem_length = word.len() - prefix_length
-                    if stem_length < 1:
+                    if stem_length < minimum_stem_length:
                         continue
                     new_stem = self.Words[i][:stem_length]
                     self.PrefixToStem[prefix][new_stem] = 1
@@ -564,7 +585,7 @@ class CLexicon:
 
     # ----------------------------------------------------------------------------------------------------------------------------#
     def produce_lexicon_report(self):
-        
+
         # remove this first part that uses member variables in Lexicon.
         reportlist = list()
         formatstring = "{0:20s}{1:20s}"
@@ -613,7 +634,7 @@ class CLexicon:
         reportlist.append("Number of analyzed words:" +  str(len(self.WordToSig)))
         reportlist.append("Total analyzed word letter count:" + str(total_letters_in_analyzed_words))
         reportlist.append("total_affix_length_in_signatures:" + str(total_affix_length_in_signatures))
-        reportlist.append("total_stem_length_in_signatures:" + str(total_affix_length_in_signatures))        
+        reportlist.append("total_stem_length_in_signatures:" + str(total_affix_length_in_signatures))
         return reportlist
 
 class Word:

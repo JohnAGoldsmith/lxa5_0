@@ -71,7 +71,7 @@ print "\n1. Finished reading word list.\n"
 # --------------------------------------------------------------------##
 #        Initialize some output files
 # --------------------------------------------------------------------##
- 
+
 #print "we have not done anything yet, in main lxa5.py file"
 #initialize_files(Lexicon, "console", 0, 0, config_lxa["language"])
 
@@ -79,7 +79,7 @@ print "\n1. Finished reading word list.\n"
 #        For finite state automaton
 # --------------------------------------------------------------------##
 
-if False:    
+if False:
     splitEndState = True
     morphology = FSA_lxa(splitEndState)
 
@@ -93,13 +93,13 @@ if True:
 
     print "2. Crab 1: Make signatures.", config_lxa["affix_type"]
     MakeSignatures_Crab_1(Lexicon, config_lxa["affix_type"], Lexicon.MinimumStemLength)
- 
+
     print "3. Printing signatures."
     suffix = "1"
     prefix = "1"
     Lexicon.printSignatures(config_lxa["encoding"], config_lxa["affix_type"], prefix, suffix)
 
-
+    compare_stems(Lexicon,config_lxa["affix_type"])
 
 if True:
     print "3. Crab 2: Widen scope of affixes."
@@ -108,7 +108,7 @@ if True:
     MakeSignatures_Crab_2(Lexicon, config_lxa["affix_type"],   prefix, suffix, verboseflag)
 
     Lexicon.printSignatures(config_lxa["encoding"], config_lxa["affix_type"], prefix, suffix)
-    
+
     #replace_parse_pairs_from_current_signature_structure_crab(Lexicon, config_lxa["affix_type"] )
     #widen_scope_of_signatures(Lexicon, config_lxa["affix_type"])
 
@@ -123,7 +123,7 @@ if True:
     #                                     MinimumStemCountInSignature,
     #                                     prefix)
          # 4 --------------------------------------------------------------------
-     
+
 
 if config_lxa["dynamics"] and config_lxa["datatype"]  == "CORPUS":
     dynamics_file = open(config_lxa["outfolder"] + "dynamics.txt", "w")
@@ -273,7 +273,7 @@ if config_lxa["FSA"]:
 
 if False:
     morphology_copy = morphology.MakeCopy()
-    
+
     initialParseChain = ParseChain()
     CompletedParses = list()
     IncompleteParses = list()

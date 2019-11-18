@@ -719,9 +719,34 @@ def print_all_words(outfile, WordCounts, WordToSig):
             print >> outfile, '  {0:<28}'.format(word), ":", WordCounts[word]
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def print_words(Lexicon, outfile, outfile_html, logfile,   ColumnWidth):
-    # ----------------------------------------------------------------------------------------------------------------------------#
+def print_words(Lexicon, outfile_words, outfile, outfile_html, logfile,   ColumnWidth):
+# ----------------------------------------------------------------------------------------------------------------------------#
     formatstring = "{0:15s} {1:30s} "
+    Lexicon.sort_words()
+    wordlist = Lexicon.Word_list_forward_sort
+    print >> outfile_words, "***"
+    print >> outfile_words, "\n" + "-" * 70
+    print >> outfile_words, "Words"
+    print >> outfile_words, "-" * 70
+    MINLENGTH = 1
+    for word in wordlist:
+        j = 0
+        for i in range(MINLENGTH,len(word)):
+            if word[:i] in Lexicon.StemToSignature:
+                print >>outfile_words,  word[j:i] + " ",
+                j = i
+        print >>outfile_words, word[j:]
+        if word in Lexicon.WordToSig:
+            for n in range(len(Lexicon.WordToSig[word])):
+                stem, sig = Lexicon.WordToSig[word][n]
+                print >> outfile_words, "\t",formatstring.format(stem, sig)
+
+    outfile_words.close()
+
+
+
+
+
     Lexicon.sort_words()
     print >> outfile, "***"
     print >> outfile, "\n" + "-" * 70
@@ -729,7 +754,7 @@ def print_words(Lexicon, outfile, outfile_html, logfile,   ColumnWidth):
     print >> outfile, "-" * 70
     maxnumberofsigs = 0
     ambiguity_counts = dict()
-    for word in Lexicon.Word_list_forward_sort:
+    for word in wordlist:
         if word in Lexicon.WordToSig:
             ambiguity = len(Lexicon.WordToSig[word])
             if ambiguity not in ambiguity_counts:
@@ -743,9 +768,6 @@ def print_words(Lexicon, outfile, outfile_html, logfile,   ColumnWidth):
         if i in ambiguity_counts:
             print >> logfile, "{:4d}{:10,d}".format(i, ambiguity_counts[i])
             print             "{:4d}{:10,d}".format(i, ambiguity_counts[i])
-#    wordlist = Lexicon.WordToSig.keys()
-#    wordlist.sort()
-    wordlist = Lexicon.Word_list_forward_sort
 
     for word in wordlist:
         #print >>outfile, 737, word
@@ -758,16 +780,9 @@ def print_words(Lexicon, outfile, outfile_html, logfile,   ColumnWidth):
                 piece = word[current_left_edge:i]
                 broken_word =  broken_word + " " +  piece
                 current_left_edge = i
-                #print >> outfile, piece,
-        #print "::",word[current_left_edge:]
         broken_word += " " + word[current_left_edge:]
 
         print >>outfile, formatstring.format(word, broken_word)
-
-
-        #print "\n",753, broken_word
-#        print >>outfile, word[current_left_edge:]
-
         if word not in Lexicon.WordToSig:
             continue
         for n in range(len(Lexicon.WordToSig[word])):
