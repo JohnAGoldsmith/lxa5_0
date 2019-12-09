@@ -25,6 +25,7 @@ from read_data import *
 from crab import *
 from config import *
 from initialization import *
+from family import *
 
 Initialization(argparse, config_lxa)
 # ----------------------------------------------------------------------------#
@@ -99,9 +100,12 @@ if True:
     prefix = "1"
     Lexicon.printSignatures(config_lxa["encoding"], config_lxa["affix_type"], prefix, suffix)
 
-    compare_stems(Lexicon,config_lxa["affix_type"])
+    #compare_stems(Lexicon,config_lxa["affix_type"])
 
-if True:
+    find_families(Lexicon, config_lxa["affix_type"])
+
+
+if False:
     print "3. Crab 2: Widen scope of affixes."
     prefix =  "2"
 

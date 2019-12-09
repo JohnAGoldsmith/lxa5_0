@@ -1,6 +1,7 @@
 import math
 import sys
 import enum
+import operator
 from printing_to_files import *
 from signaturefunctions import *
 
@@ -105,45 +106,61 @@ class CWordList:
 ## -------                                                      ------- #
 
 class Signature:
-    def __init__(self,affix_side="suffix",stems=None,affixes=None):
-        #self.type=affixside
+    def __init__(self,affix_side,signature_string):
         self.affix_side = affix_side
+        self.affixes_list = signature_string_to_signature_list(signature_string)
         self.stem_counts = dict()
-        self.affixes = list()
-
-        #self.slots=list()
-        #self.slots.append(list())
-        #self.slots.append(list())
-
+        #if stems:
+        #    for stem in stems:
+        #        self.stem_counts[stem] = 1
+        self.affixes_count_dict = dict()
+        self.robustness = 0
+        self.robustness_clean = False
+        self.affixes_list.sort()
+        self.name = ""
         if self.affix_side != affix_side:
             return None
-        self.name = ""
-            #self.stems = deepcopy(stems)
-        self.affixes = deepcopy(affixes)
+
     def add_stem(self,stem, count = 1):
-        #if self.affix_side == "suffix":
         if not self.stem_counts:
             self.stem_counts = dict()
         self.stem_counts[stem] = count
     def add_affix(self,affix):
-        if not self.affixes:
-            self.affixes = list()
-        self.affixes.append(affix)
+        if affix in self.affixes_list:
+            return
+        self.affixes_list.append(affix)
+    def get_affix_length(self):
+        return len(self.affixes_list)
     def get_stems(self):
         return sorted(self.stem_counts.keys())
-    def get_robustness(self):
-        stem_letters = 0
-        affix_letters = 0
-        for affix in self.affixes:
-            if affix == "NULL":
-                affix_letters += 1
-            else:
-                affix_letters += len(affix)
-        for stem in self.stems:
-            stem_letters += len(stem)
-        return stem_letters * (len(affixes)-1) + affix_letters * (len(stems)-1)
-
-
+    def get_affix_list(self):
+        return self.affixes_list
+    def get_affix_string(self):
+        #print 142, make_signature_string_from_signature_list(self.affixes_list)
+        return make_signature_string_from_signature_list(self.affixes_list)
+    def get_affix_count(self, affix):
+        return len(self.affixes_dict[affix])
+    def get_internal_robustness(self):
+        if self.robustness_clean:
+	    #print 145, self.robustness
+            return self.robustness
+        else:
+            robustness = 0
+            affixes_length = 0
+            for affix in self.affixes_list:
+                if affix == "NULL":
+                    affixes_length += 1
+                else:
+                    affixes_length += len(affix)
+            robustness += affixes_length * (len(self.stem_counts) - 1)
+            stems_length = 0
+            for stem in self.stem_counts:
+                stems_length += len(stem)
+            robustness += stems_length * (len(self.affixes_list) - 1)
+            self.robustness = robustness
+            self.robustness_clean = True
+	    #print 162, self.robustness
+            return robustness
 ## -------                                                      ------- #
 ##              Class Lexicon                                   ------- #
 ## -------                                                      ------- #
@@ -153,9 +170,10 @@ class CLexicon:
         #static variable:
         reportnumber = 1
         self.Corpus = list()
+        self.Families = list()
         self.MinimumStemLength = 3
         self.MaximumStemLength = 100
-        self.MaximumAffixLength = 6
+        self.MaximumAffixLength = 15
         self.Parses = dict()
         #self.PossibleSuffixes={}
         self.Prefixes = {}
@@ -166,14 +184,14 @@ class CLexicon:
         self.ReverseWordList = list()
         self.RemovedSignatureList = list()
             #self.SignatureStringsToStems = {}
-        self.Signatures={} ; #key is string, value is a Signature object
+        self.Signatures=dict() ; #key is string, value is a Signature object
         #self.Signatures_suffixal_list = list()
         self.Signatures_containment = dict() # key is signature string, value is list of subsignature strings
         self.SignatureBiographies=dict()
         self.StemCorpusCounts = {}
         self.StemToSignature = {}  # value is a list of pairs of the form (stem, sig-string) where the sig-string is a string with "=" as separator.
         self.StemToWord = {}
-        self.StemToAffix = {}  # value is a Dict whose keys are affixes.
+        self.StemToAffix_dict = {}  # value is a Dict whose keys are affixes.
         self.Suffixes = {}
         self.SuffixToStem= dict()
         self.TotalRobustInSignatures = 0
@@ -193,6 +211,7 @@ class CLexicon:
         self.total_affix_length_in_signatures = 0
         self.number_of_analyzed_words =  0
 
+
     def get_stems(self):
         return sorted(self.StemToSignature.keys())
     def get_number_of_stems():
@@ -205,9 +224,10 @@ class CLexicon:
     ## -------                                                      ------- #
 
     # ----------------------------------------------------------------------------------------------------------------------------#  ------------------------------------------------------------------------------------------------------#
-    def accept_stem_and_signature(self, stem, signature_string):
+    def accept_stem_and_signature(self, affix_side, stem, signature_string):
             if signature_string not in self.Signatures:
-                this_signature = Signature(signature_string)
+                
+                this_signature = Signature(affix_side, signature_string)
                 self.Signatures[signature_string] = this_signature
             else:
                 this_signature = self.Signatures[signature_string]
@@ -248,6 +268,9 @@ class CLexicon:
     def get_signatures_sorted_by_affix_count(self, affix_type):
         #print "188\n ", sorted(self.Signatures.keys(), key = get_affix_count,reverse=True)
         return sorted(self.Signatures.keys(), key = get_affix_count,reverse=True)
+    def get_signatures_sorted_by_robustness(self):
+	return sorted(self.Signatures.items(),key= lambda f: get_robustnessf[1], reverse=True)
+	
     def sort_words(self):
         self.Word_list_forward_sort.sort()
         self.Word_list_reverse_sort.sort(key = lambda x: x[::-1])
@@ -463,7 +486,7 @@ class CLexicon:
             stems = sorted(signature.get_stems())
             exemplar_stem = stems[0]
             stem_count = len(stems)
-            robustness = getrobustness (sig,stems)
+            robustness = get_robustness (sig,stems)
             DisplayList.append((sig, len(stems), robustness, exemplar_stem))
             if stem_count == 1:
                 singleton_signatures += 1
@@ -813,7 +836,7 @@ def TestForCommonEdge(stemlist, outfile, threshold, FindSuffixesFlag):
 
 
 #
-def getrobustness(sig, stems):
+def get_robustness(sig, stems):
     # ----------------------------------------------------------------------------------------------------------------------------#
     sig_string_list = sig.split("=")
     countofsig = len(sig_string_list)

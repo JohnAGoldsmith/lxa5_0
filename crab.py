@@ -365,7 +365,7 @@ def verbose_helper_assign_affixes(Lexicon,filename,headerlist,contentlist):
     stemlist = Lexicon.StemToWord.keys()
     stemlist.sort()
     for stem in stemlist:
-        affixset = Lexicon.StemToAffix[stem].keys()
+        affixset = Lexicon.StemToAffix_dict[stem].keys()
         affixset.sort()
         reportline = formatstring2.format(stem, "=".join(affixset), len(affixset) )
         contentlist.append(reportline)
@@ -376,7 +376,7 @@ def assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, Step=-1):
         """ This assumes parse pairs in Lexicon.Parses, and  creates:
             Affixes
             StemToWord
-            StemToAffix
+            StemToAffix_dict
             SignatureStringsToStems
             StemToSignature
             StemCorpusCounts
@@ -391,7 +391,7 @@ def assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, Step=-1):
         Lexicon.StemCorpusCounts = dict()
         Lexicon.StemToWord = dict()
         Lexicon.WordToSig = dict()
-        Lexicon.StemToAffix = dict()
+        Lexicon.StemToAffix_dict = dict()
         Lexicon.Suffixes = dict()
         formatstring2 = "{0:15s} {1:15s}"
         formatstring3 = "\n{0:15s} {1:15s} {2:10s} "
@@ -420,10 +420,10 @@ def assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, Step=-1):
                     affix = "NULL"
                 if stem not in Lexicon.StemToWord:
                     Lexicon.StemToWord[stem] = dict()
-                    Lexicon.StemToAffix[stem] = dict()
+                    Lexicon.StemToAffix_dict[stem] = dict()
                 word = join(stem, affix, affix_type)
                 Lexicon.StemToWord[stem][word] = 1
-                Lexicon.StemToAffix[stem][affix] = 1
+                Lexicon.StemToAffix_dict[stem][affix] = 1
                 if affix not in Affixes:
                     Affixes[affix] = 0
                 Affixes[affix] += 1
@@ -437,10 +437,10 @@ def assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, Step=-1):
             for affix, stem  in ParseList:
                 if stem not in Lexicon.StemToWord:
                     Lexicon.StemToWord[stem] = dict()
-                    Lexicon.StemToAffix[stem] = dict()
+                    Lexicon.StemToAffix_dict[stem] = dict()
                 word = join(stem, affix, affix_type)
                 Lexicon.StemToWord[stem][word] = 1
-                Lexicon.StemToAffix[stem][affix] = 1
+                Lexicon.StemToAffix_dict[stem][affix] = 1
                 if affix not in Affixes:
                     Affixes[affix] = 0
                 Affixes[affix] += 1
@@ -456,7 +456,7 @@ def add_to_raw_signatures(Lexicon, affix_type, stem, signature_string, number_of
     Lexicon.RawSignatures[signature_string].append(stem)
     reportline = formatstring4.format(stem, signature_string,"Too few stems",   str(number_of_stems_this_sig)  )
     contentlist.append(reportline)
-    for affix in Lexicon.StemToAffix[stem]:
+    for affix in Lexicon.StemToAffix_dict[stem]:
         thisword = join(stem, affix, affix_type)
     Lexicon.WordBiographies[thisword].append("5. Too few stems in sig: " + signature_string)
     if signature_string not in Lexicon.SignatureBiographies:
@@ -472,7 +472,7 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
         """ This assumes parse pairs in Lexicon.Parses, and  creates:
             Affixes
             StemToWord
-            StemToAffix
+            StemToAffix_dict
             SignatureStringsToStems
             StemToSignature
             StemCorpusCounts
@@ -492,34 +492,29 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
         formatstring3 = "\n{0:15s} {1:15s} {2:10s} "
         formatstring4 = "\n{0:15s} {1:15s} {2:10s} {3:20s}"
 
-
         Lexicon.StemToSignature.clear()
         Lexicon.WordToSig.clear()
-        #Lexicon.SignatureStringsToStems.clear()
         Lexicon.StemToWord.clear()
         Lexicon.Suffixes.clear()
         Lexicon.Signatures.clear()
         Lexicon.RawSignatures.clear()
 
-
         if verboseflag:
                 filename = "5_assigning_signatures.txt"
                 headerlist = [ "5. Assign a single signature to each stem."]
                 contentlist = list()
-
                 formatstring  = "{0:20s}  {1:15s} {2:20s}{3:10s}"
                 formatstring3 = "{0:20s}  {1:15s} {2:15s}"
                 formatstring2 = "{0:20s}  {1:30s} "
                 formatstring1 = "{0:20s}"
 
-        stemlist = Lexicon.StemToAffix.keys()
+        stemlist = Lexicon.StemToAffix_dict.keys()
         stemlist.sort()
-
         temp_sig_dict = dict()
         if verboseflag:
                 print "     Assign a signature to each stem (occasionally two)."
         for stem in stemlist:
-                sig = dict_to_sorted_string(Lexicon.StemToAffix[stem])  #MakeSignatureStringFromAffixDict(Lexicon.StemToAffix[stem])
+                sig = sig_dict_to_string(Lexicon.StemToAffix_dict[stem])  #MakeSignatureStringFromAffixDict(Lexicon.StemToAffix[stem])
                 if sig not in temp_sig_dict:
                         temp_sig_dict[sig] = 0
                 temp_sig_dict[sig] += 1
@@ -529,8 +524,8 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
                         temp_sigs_with_too_few_stems.append(sig)
 
         for stem in stemlist:
-            signature_list = Lexicon.StemToAffix[stem]
-            signature_string = dict_to_sorted_string (signature_list)
+            signature_list = sig_dict_to_list(Lexicon.StemToAffix_dict[stem])
+            signature_string = sig_list_to_sig_string(signature_list)
             number_of_stems_this_sig = temp_sig_dict[signature_string]
             if number_of_stems_this_sig < MinimumStemCountInSignature:
                 contentlist = add_to_raw_signatures(Lexicon, affix_type, stem, signature_string, number_of_stems_this_sig, contentlist )
@@ -539,7 +534,7 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
             reportline = formatstring4.format(stem, signature_string, "Enough stems in this signature", str(number_of_stems_this_sig) )
             contentlist.append(reportline)
 
-            this_signature = Lexicon.accept_stem_and_signature(stem, signature_string)
+            this_signature = Lexicon.accept_stem_and_signature(affix_type, stem, signature_string)
 
                 # 2e. Update  Signature biography.
             if signature_string not in Lexicon.SignatureBiographies:
@@ -566,7 +561,8 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
                 Lexicon.WordBiographies[word].append(prefix + " In signature " + signature_string)
 
             this_signature.add_stem(stem)
-            this_signature.add_affix(deepcopy(Lexicon.StemToAffix[stem]))
+            #this_signature.add_affix(deepcopy(Lexicon.StemToAffix[stem]))
+            this_signature.add_affix(affix)
 
         temp_sig_dict.clear()
         if verboseflag:
@@ -643,9 +639,9 @@ def	compare_stems (Lexicon,affix_type):
     for diff in difflist:
         subdifflist = sorted(temp[diff], key = lambda x:x.m_sigstring2)
         subdifflist = sorted(temp[diff], key = lambda x:x.m_sigstring1)
-        print "\n", diff
-        for item in subdifflist:
-                print   item.m_sigstring1, item.m_sigstring2
+        #print "\n", 646, diff
+        # for item in subdifflist:
+        # print 648,  item.m_sigstring1, item.m_sigstring2
 # ----------------------------------------------------------------------------------------------------------------------------#
 
 

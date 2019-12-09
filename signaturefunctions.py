@@ -2,6 +2,20 @@ from copy import deepcopy
 
 # -------------      Some short utility functions ---------------------------------------
 
+def list_contains(list1, list2):
+    for item in list2:
+        if item not in list1:
+            return False
+    return True
+
+def contains(sigstring1, sigstring2):
+    list1 = signature_string_to_signature_list(sigstring1)
+    list2 = signature_string_to_signature_list(sigstring2)
+    for item in list2:
+        if item not in list1:
+            return False
+    return True
+
 def AddAffixToSigString(affix, sigstring):
     sigset = set(sigstring.split("="))
     if affix == "":
@@ -13,7 +27,9 @@ def AddAffixToSigString(affix, sigstring):
     return sep.join(affixlist)
 
 
-def dict_to_sorted_string(affix_dict):
+
+
+def sig_dict_to_string(affix_dict):
     affix_list = affix_dict.keys()
     affix_list.sort()
     count_of_NULLs = 0
@@ -22,6 +38,12 @@ def dict_to_sorted_string(affix_dict):
             affix_list[i] = "NULL"
             count_of_NULLs += 1
     return "=".join(affix_list)
+
+def sig_dict_to_list(affix_dict):
+    affix_list = affix_dict.keys()
+    affix_list.sort()
+    return affix_list
+
 
 #deprecated:
 def make_signature_string_from_affix_dict(affix_dict):
@@ -34,15 +56,28 @@ def make_signature_string_from_affix_dict(affix_dict):
             count_of_NULLs += 1
     return "=".join(affix_list)
 
-
-def MakeSignatureStringFromSignatureList(siglist):
+def sig_list_to_sig_string(siglist):
+    if len(siglist) == 0:
+        print "signature functions 54 problem"
+        return ""
     for i in range(len(siglist)):
         if len(siglist[i]) == 0:
             siglist[i] = "NULL"
     return "=".join(siglist)
 
+#def MakeSignatureStringFromSignatureList(siglist):
 
-def MakeSignatureListFromSignatureString(sigstring):
+def make_signature_string_from_signature_list(siglist):
+    if len(siglist) == 0:
+        print "signature functions 54 problem"
+        return ""
+    for i in range(len(siglist)):
+        if len(siglist[i]) == 0:
+            siglist[i] = "NULL"
+    return "=".join(siglist)
+
+def signature_string_to_signature_list(sigstring):
+#def MakeSignatureListFromSignatureString(sigstring):
     temp_list = sigstring.split("=")
     siglist = list()
     for affix in temp_list:
@@ -66,6 +101,9 @@ def list_to_string(mylist):
         if mylist[i] == None:
             outstring += "@"
         else:
+            print
+            print 77, outstring,
+            print 78, mylist[i]
             outstring += mylist[i]
         if i < len(mylist) - 1:
             outstring += sep
@@ -116,8 +154,8 @@ def locallymorerobust(sig1, sig2):
         return -1
     if len(sig2) > len(sig1):
         return 1
-    sigstring1 = MakeSignatureStringFromSignatureList(sig1)
-    sigstring2 = MakeSignatureStringFromSignatureList(sig2)
+    sigstring1 = make_signature_string_from_signature_list(sig1)
+    sigstring2 = make_signature_string_from_signature_list(sig2)
     if len(sigstring1) > len(sigstring2):
         return -1
     if len(sigstring2) > len(sigstring1):
@@ -187,19 +225,6 @@ def EvaluateSignatures(Lexicon, outfile):
 # --------------------------------------------------------------------------------------------------------------------------
 #     Important functions, called from main file
 
-# ----------------------------------------------------------------------------------------------------------------------------#
-def FindGoodSignatureListFromInsideAnother(target_affixes_list, siglist):
-    good_affixes_set = set()
-
-    for sig in siglist:
-        #these_affixes = set(MakeSignatureListFromSignatureString(sig_string))
-    	these_affixes = set (sig)
-        if these_affixes.issubset(set(target_affixes_list)):
-                good_affixes_set.update(these_affixes)
-                sig_list = list(good_affixes_set)
-                sig_list.sort()
-                return sig_list
-    return None
 
 # ----------------------------------------------------------------------------------------------------------------------------#
 #  Call from the main function

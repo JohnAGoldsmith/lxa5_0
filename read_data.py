@@ -1,12 +1,14 @@
 import string
 
 def read_dx1(infile, Lexicon, BreakAtHyphensFlag, wordcountlimit):
-            punctuation = "$(),;.:-?%&\\1234567890[]\"\/'"
+            punctuation = "$(),;.:-?%&\\1234567890\"\/'[]"
             for line in infile:
             #for line in filelines:
 
                 pieces = line.split()
                 word = pieces[0]
+                #if word.endswith("NULL=ly"):
+                #    print 11, "NULL-ly"
                 if '#' in word:
                     #print "We cannot accept a word with # in it.", word
                     continue
