@@ -4,6 +4,7 @@ import enum
 import operator
 from printing_to_files import *
 from signaturefunctions import *
+from family import family
 
 # This is just part of documentation:
 # A signature is a tuple of strings (each an affix).
@@ -44,6 +45,35 @@ def splitsignature(signature, maxlength=80):
     outlist.append("=".join(line))
     return outlist
 
+class family_collection:
+    def __init__(self):
+        self.m_families = dict() # key is signature_string and value is a family
+    def nucleus_to_children(self, sigstring):
+        return self.m_families[sigstring]   #this is a *list* 
+    def add_family(self, nucleus_sig):
+        #nucleus_sig_list = nucleus_sig.get_affix_list()
+        nucleus_sig_string = nucleus_sig.get_affix_string()
+        new_family = family(nucleus_sig_string)
+        self.m_families[nucleus_sig_string] = new_family
+    def get_family(self, nucleus_string):
+        return self.m_families[nucleus_string]
+    def add_signature(self, signature):
+        sigstring = signature.get_affix_string()
+        for this_family in self.m_families:
+            #print "  >>62," "checking each nucleus family: ", this_family
+            if contains(sigstring, this_family):
+                #print "  >>65 adding ",  sigstring, "to this family."
+                self.m_families[this_family].add_signature(signature)
+            else:
+                pass
+                #print "  >>68 does not contain."
+        #print "  >>end of 'add_signature' "
+    def print_families(self, this_file):
+        for this_family in self.m_families:
+            #print 63, this_family
+            self.m_families[this_family].print_family(this_file)
+    
+    
 class Buckle:
     """
     A Buckle is a pair of stems in which the first is a prefix of the second.
@@ -170,7 +200,7 @@ class CLexicon:
         #static variable:
         reportnumber = 1
         self.Corpus = list()
-        self.Families = list()
+        self.Families = family_collection()
         self.MinimumStemLength = 3
         self.MaximumStemLength = 100
         self.MaximumAffixLength = 15

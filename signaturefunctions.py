@@ -77,8 +77,8 @@ def make_signature_string_from_signature_list(siglist):
     return "=".join(siglist)
 
 def signature_string_to_signature_list(sigstring):
-#def MakeSignatureListFromSignatureString(sigstring):
     temp_list = sigstring.split("=")
+#def MakeSignatureListFromSignatureString(sigstring):
     siglist = list()
     for affix in temp_list:
         #if affix == "NULL":
