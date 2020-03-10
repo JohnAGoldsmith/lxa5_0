@@ -48,28 +48,33 @@ def MakeSignatures_Crab_1(Lexicon, affix_type, verboseflag = False):
             print formatstring1.format("1. Finished finding proto-stems.", len(Lexicon.Protostems))
 
         # 2 --------------------------------------------------------------------
-        #Step += 1
         create_stem_affix_pairs(Lexicon, affix_type, verboseflag)
+
         # 3 --------------------------------------------------------------------
         assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag)
+        # 3 --------------------------------------------------------------------
         if verboseflag:
-            print  "     Finished finding affixes for protostems."
+            print formatstring2.format("   Finished finding affixes for protostems.")
 
         # 4 --------------------------------------------------------------------
         # Assign signatures to each stem.
+        # 4 --------------------------------------------------------------------
+
         MinimumStemCountInSignature = 2
-        assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, MinimumStemCountInSignature)
         assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature)
 
-        if verboseflag:
-            print  formatstring1.format("5. Finished first pass of finding stems, affixes, and signatures.",
-                len(Lexicon.Signatures) )
+        # 5 --------------------------------------------------------------------
+        # Widen scope of signatures
+        # 5 --------------------------------------------------------------------
+
+        replace_parse_pairs_from_current_signature_structure_crab(Lexicon,  affix_type )
+        widen_scope_of_signatures(Lexicon, affix_type, Lexicon.MinimumStemLength)
+        assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag)
+        MinimumStemCountInSignature = 1  # important! 
+        assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature)
+
+
         report = Lexicon.produce_lexicon_report()
-
-# Crab Part 2
-        #Report has not yet been printed -- print it now.
-        #widen_scope_of_signatures(Lexicon, affix_type)
-
 
 
 
@@ -111,51 +116,42 @@ def widen_scope_of_signatures(Lexicon, affix_type, minimum_stem_length):
     Lexicon.widen_scope_of_affixes(affix_type, minimum_stem_length)
     signatures = Lexicon.get_signatures_sorted_by_affix_count(affix_type)
     stems_assigned_to_signatures = dict()
-    if affix_type == "prefix":
-            return
-
     thisfile = open("tempfile.txt", "w ")
-
+    print 116, "crab.py"
+    if affix_type == "suffix":
+	affixes_to_stem = Lexicon.SuffixToStem
+    else:
+	affixes_to_stem = Lexicon.PrefixToStem
+    
     for sig in signatures:
         print >>thisfile, "\n", sig
         sig_list = sort_signature_string_by_length(sig)
         affix_1 = sig_list[0]
-        stem_collection = dict(Lexicon.SuffixToStem[affix_1])
-        for stem in stems_assigned_to_signatures:
-            if stem in stem_collection:
-                del stem_collection[stem]
+        stem_collection = [stem  for stem in affixes_to_stem[affix_1] if stem not in stems_assigned_to_signatures]
         for i in range(1,len(sig)):
             for affix  in sig_list:
-                new_stem_dict = dict()
                 if affix == "NULL":
-                    for stem in stem_collection:
-                        if stem in Lexicon.Word_counts_dict:
-                            new_stem_dict[stem] = 1
-                    stem_collection = new_stem_dict
+                    stem_collection = [stem for stem in stem_collection if stem in Lexicon.Word_counts_dict]
                 else:
-                    for stem in stem_collection:
-                        if stem in Lexicon.SuffixToStem[affix]:
-                            new_stem_dict[stem] = 1
-                    stem_collection = new_stem_dict
+                    stem_collection = [stem for stem in stem_collection if stem in affixes_to_stem[affix]]
+
         for stem in stem_collection:
                 if stem in Lexicon.StemToSignature:
-                    print >>thisfile,  "Old:", stem
+                    #print >>thisfile,  "Old:", stem
                     pass
                 else:
-                    print >>thisfile,  "New:", stem
+                    print >>thisfile, sig, "New stem:", stem
                     for affix in sig_list:
-                        Lexicon.Parses[(stem, affix)] = 1
-                        print >>thisfile,  stem, affix,
+                        if affix_type == "suffix":
+                            Lexicon.Parses[(stem, affix)] = 1
+                            print >>thisfile, stem, affix
+                        else:
+                            Lexicon.Parses[(affix, stem)] = 1
+                            print >>thisfile,  affix, stem
                     print >>thisfile
                     stems_assigned_to_signatures[stem] = 1
     print >>thisfile,  "Number of parses:", len(Lexicon.Parses)
-
     thisfile.close()
-
-
-
-
-
 #-----------------------------------------------------------------------------#
 def add_prefixal_stem_to_protostems1(Lexicon, contentlist,   verboseflag, previous_word, word, stem):
         formatstring1 = "{0:20s}{1:20s} {2:20s}{3:32s}"
@@ -402,52 +398,40 @@ def assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, Step=-1):
                 contentlist = list()
         if verboseflag:
             print "  4. Assign affix sets to each stem.\n     Find affixes for each protostem"
-
-  # ----------------------- Collect each affix a stem has.
         ParseList = list()
 
         if affix_type == "suffix":
             Affixes = Lexicon.Suffixes
         else:
             Affixes = Lexicon.Prefix
+        ParseList = list(Lexicon.Parses.keys())
+        ParseList.sort(key=lambda (x,y) : x +" "+y)
 
-        if affix_type == "suffix":
-            for stem, affix in Lexicon.Parses:
-                ParseList.append((stem,affix))
-            ParseList.sort(key=lambda (x,y) : x+" "+y)
-            for stem,affix in ParseList:
-                if not affix:
-                    affix = "NULL"
-                if stem not in Lexicon.StemToWord:
+        for x,y in ParseList:
+            if affix_type == "suffix":
+                stem = x
+                affix = y
+            else:
+                affix = x
+                stem = y
+            if stem not in Lexicon.StemToWord:
                     Lexicon.StemToWord[stem] = dict()
                     Lexicon.StemToAffix_dict[stem] = dict()
-                word = join(stem, affix, affix_type)
-                Lexicon.StemToWord[stem][word] = 1
-                Lexicon.StemToAffix_dict[stem][affix] = 1
-                if affix not in Affixes:
+                    Lexicon.StemCorpusCounts[stem] = 0
+            word = join(stem, affix, affix_type)
+            word2 = join_with_separator (stem, affix, affix_type)
+            Lexicon.StemToWord[stem][word] = 1
+            Lexicon.StemToAffix_dict[stem][affix] = 1
+            Lexicon.StemCorpusCounts[stem] += Lexicon.Word_counts_dict[word] 
+            if affix not in Affixes:
                     Affixes[affix] = 0
-                Affixes[affix] += 1
-                Lexicon.WordBiographies[word].append(" This split:" + stem + "=" + affix)
-            if verboseflag:
-                verbose_helper_assign_affixes(Lexicon,filename,headerlist,contentlist)
-        else:   #prefixes...
-            for affix, stem  in Lexicon.Parses:
-                ParseList.append((affix,stem))
-            ParseList.sort(key=lambda (x,y) : x +" "+y)
-            for affix, stem  in ParseList:
-                if stem not in Lexicon.StemToWord:
-                    Lexicon.StemToWord[stem] = dict()
-                    Lexicon.StemToAffix_dict[stem] = dict()
-                word = join(stem, affix, affix_type)
-                Lexicon.StemToWord[stem][word] = 1
-                Lexicon.StemToAffix_dict[stem][affix] = 1
-                if affix not in Affixes:
-                    Affixes[affix] = 0
-                Affixes[affix] += 1
-                Lexicon.WordBiographies[word].append( " This split:" + affix + "=" + stem )
+            Affixes[affix] += 1
+            Lexicon.WordBiographies[word].append(" This split:" + word2)
 
-            if verboseflag:
-                verbose_helper_assign_affixes(Lexicon,filename,headerlist,contentlist)
+        if verboseflag:
+            verbose_helper_assign_affixes(Lexicon,filename,headerlist,contentlist)
+
+
  # ----------------------------------------------------------------------------------------------------------------------------#
 def add_to_raw_signatures(Lexicon, affix_type, stem, signature_string, number_of_stems_this_sig, contentlist ):
     formatstring4 = "\n{0:15s} {1:15s} {2:10s} {3:20s}"
@@ -518,24 +502,18 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
                 if sig not in temp_sig_dict:
                         temp_sig_dict[sig] = 0
                 temp_sig_dict[sig] += 1
-        temp_sigs_with_too_few_stems = list()
-        for sig in temp_sig_dict:
-                if temp_sig_dict[sig] < MinimumStemCountInSignature:
-                        temp_sigs_with_too_few_stems.append(sig)
+        temp_sigs_with_too_few_stems = [sig for sig in temp_sig_dict.keys() if temp_sig_dict[sig] < MinimumStemCountInSignature]
 
         for stem in stemlist:
             signature_list = sig_dict_to_list(Lexicon.StemToAffix_dict[stem])
             signature_string = sig_list_to_sig_string(signature_list)
             number_of_stems_this_sig = temp_sig_dict[signature_string]
-            if number_of_stems_this_sig < MinimumStemCountInSignature:
+            if signature_string in temp_sigs_with_too_few_stems:
                 contentlist = add_to_raw_signatures(Lexicon, affix_type, stem, signature_string, number_of_stems_this_sig, contentlist )
                 continue
-
             reportline = formatstring4.format(stem, signature_string, "Enough stems in this signature", str(number_of_stems_this_sig) )
             contentlist.append(reportline)
-
             this_signature = Lexicon.accept_stem_and_signature(affix_type, stem, signature_string)
-
                 # 2e. Update  Signature biography.
             if signature_string not in Lexicon.SignatureBiographies:
                     Lexicon.SignatureBiographies[signature_string] = list()
@@ -561,7 +539,6 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
                 Lexicon.WordBiographies[word].append(prefix + " In signature " + signature_string)
 
             this_signature.add_stem(stem)
-            #this_signature.add_affix(deepcopy(Lexicon.StemToAffix[stem]))
             this_signature.add_affix(affix)
 
         temp_sig_dict.clear()
@@ -591,9 +568,6 @@ def	replace_parse_pairs_from_current_signature_structure_crab(Lexicon, affix_typ
             if affix_type == "suffix":
                 for affix in affixes:
                     for stem in stems:
-
-                        if stem == "direct":
-                            print 787, stem, affix
                         Lexicon.Parses[(stem,affix)]=1
             else:
                 for affix in affixes:
@@ -627,21 +601,13 @@ def	compare_stems (Lexicon,affix_type):
 
             if j == stemno + 1:
                 sequence_count += 1
-
             else:
                 sequence_count = 0
-
-
-
-            #print 717, buckle.m_stem1, buckle.m_stem2, diff
     difflist = sorted(temp.keys(), key = lambda x:len(temp[x]))
 
     for diff in difflist:
         subdifflist = sorted(temp[diff], key = lambda x:x.m_sigstring2)
         subdifflist = sorted(temp[diff], key = lambda x:x.m_sigstring1)
-        #print "\n", 646, diff
-        # for item in subdifflist:
-        # print 648,  item.m_sigstring1, item.m_sigstring2
 # ----------------------------------------------------------------------------------------------------------------------------#
 
 

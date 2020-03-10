@@ -25,7 +25,14 @@ def join(stem, affix, affix_type):
             return stem + affix
         else:
             return affix + stem
-
+def join_with_separator(stem, affix, affix_type):
+    if affix == "NULL" or not affix:
+        return stem
+    else:
+        if affix_type == "suffix":
+            return stem + "=" +  affix
+        else:
+            return affix + "=" + stem
 class Affix_type(enum.Enum):
     prefix = 1
     suffix = 2
@@ -49,7 +56,7 @@ class family_collection:
     def __init__(self):
         self.m_families = dict() # key is signature_string and value is a family
     def nucleus_to_children(self, sigstring):
-        return self.m_families[sigstring]   #this is a *list* 
+        return self.m_families[sigstring]   #this is a *list*
     def add_family(self, nucleus_sig):
         #nucleus_sig_list = nucleus_sig.get_affix_list()
         nucleus_sig_string = nucleus_sig.get_affix_string()
@@ -72,8 +79,8 @@ class family_collection:
         for this_family in self.m_families:
             #print 63, this_family
             self.m_families[this_family].print_family(this_file)
-    
-    
+
+
 class Buckle:
     """
     A Buckle is a pair of stems in which the first is a prefix of the second.
@@ -201,11 +208,11 @@ class CLexicon:
         reportnumber = 1
         self.Corpus = list()
         self.Families = family_collection()
+        self.LongestWordLength = 0
         self.MinimumStemLength = 3
         self.MaximumStemLength = 100
         self.MaximumAffixLength = 15
         self.Parses = dict()
-        #self.PossibleSuffixes={}
         self.Prefixes = {}
         self.Protostems= dict()
         self.PrefixToStem = dict()
@@ -213,9 +220,7 @@ class CLexicon:
         self.RawSuffixes = dict(); #key is a raw suffix (just a continuaton) and value is a list of its protostems
         self.ReverseWordList = list()
         self.RemovedSignatureList = list()
-            #self.SignatureStringsToStems = {}
         self.Signatures=dict() ; #key is string, value is a Signature object
-        #self.Signatures_suffixal_list = list()
         self.Signatures_containment = dict() # key is signature string, value is list of subsignature strings
         self.SignatureBiographies=dict()
         self.StemCorpusCounts = {}
@@ -232,7 +237,6 @@ class CLexicon:
         self.Word_list_reverse_sort=list()
         self.Words_sort_clean_flag=False
         self.Word_counts_dict = dict()
-        #self.WordList = CWordList()
         self.WordBiographies=dict()
         self.total_word_count = 0
         self.word_letter_count = 0
@@ -253,10 +257,9 @@ class CLexicon:
     ##              Central signature computation                   ------- #
     ## -------                                                      ------- #
 
-    # ----------------------------------------------------------------------------------------------------------------------------#  ------------------------------------------------------------------------------------------------------#
     def accept_stem_and_signature(self, affix_side, stem, signature_string):
             if signature_string not in self.Signatures:
-                
+
                 this_signature = Signature(affix_side, signature_string)
                 self.Signatures[signature_string] = this_signature
             else:
@@ -294,17 +297,17 @@ class CLexicon:
     def clear_parses(self):
         self.Parses.clear()
 
-
     def get_signatures_sorted_by_affix_count(self, affix_type):
-        #print "188\n ", sorted(self.Signatures.keys(), key = get_affix_count,reverse=True)
         return sorted(self.Signatures.keys(), key = get_affix_count,reverse=True)
+
     def get_signatures_sorted_by_robustness(self):
 	return sorted(self.Signatures.items(),key= lambda f: get_robustnessf[1], reverse=True)
-	
+
     def sort_words(self):
         self.Word_list_forward_sort.sort()
         self.Word_list_reverse_sort.sort(key = lambda x: x[::-1])
         self.Word_sort_clean_flag = True
+
     def get_words_end_with(self,suffix):
         if not self.Words_sort_clean_flag:
             self.sort_words()
@@ -314,12 +317,12 @@ class CLexicon:
             if not self.Word_list_reverse_sort[i].endswith(suffix):
                 continue
             start = i
-            #print 198, suffix, self.Word_list_reverse_sort[start]
             for j in range(i,len(self.Word_list_reverse_sort)):
                 if not self.Word_list_reverse_sort[j].endswith(suffix):
                     end = j-1
                     return ((start,end))
         return (0,0)
+
     def get_words_start_with(self,prefix):
         if not self.Words_sort_clean_flag:
             self.sort_words()
@@ -334,10 +337,10 @@ class CLexicon:
                     end = j-1
                     break
         return ((start,end))
+
     def find_signatures_containment(self, affix_type):
         for sig in self.get_signatures_sorted_by_affix_count(affix_type):
             siglist = MakeSignatureListFromSignatureString(sig)
-            #print 222, sig
             sig_length = get_affix_count(sig)
             for subsig in self.Signatures:
                 if get_affix_count(subsig) >= sig_length:
@@ -487,7 +490,6 @@ class CLexicon:
         outfile_signatures_svg_html     = open(self.outfolder + prefix + "Signatures_graphic_iter"+ suffix+".html", "w")
         outfile_signature_feeding       = open(self.outfolder + prefix + "Signature_feeding_iter"+ suffix+".html", "w")
         outfile_signatures_html         = open(self.outfolder + prefix + "Signatures_iter"+ suffix+".html", "w")
-        outfile_signatures_details      = open(self.outfolder + prefix + "Signature_Details_iter"+ suffix+".txt", "w")
         outfile_index                   = open(self.outfolder + prefix + "Index_iter"+ suffix+".html", "w")
         outfile_words = open(self.outfolder + prefix + "Words"+ suffix + ".txt", "w")
         outfile_wordstosigs             = open(self.outfolder + prefix + "WordToSig_iter"+ suffix+".txt", "w")
@@ -533,14 +535,11 @@ class CLexicon:
         # Print html index
         print_html_report(outfile_index, self, singleton_signatures,doubleton_signatures, DisplayList)
 
-        # Print signatures (not their stems) sorted by robustness
+        # Print signatures sorted by robustness
         print_signature_list_1(outfile_signatures_1,
                                self,
                                DisplayList,
-                               #stemcountcutoff,
                                totalrobustness,
-                               #self.SignatureStringsToStems,
-                               #self.StemCorpusCounts,
                                lxalogfile,
                                affix_type)
 
@@ -574,18 +573,13 @@ class CLexicon:
                 suffix_length = len(suffix)
                 self.SuffixToStem[suffix] = dict()
                 (first_word, last_word) = self.get_words_end_with (suffix)
-
                 for i in range(first_word,last_word):
                     word = self.Word_list_reverse_sort[i]
                     stem_length = len(word) - suffix_length
                     if stem_length < minimum_stem_length:
                         continue
                     new_stem = word[:stem_length]
-                    #print 466, suffix, word, new_stem
-                    #    print "old stem:", new_stem
                     self.SuffixToStem[suffix][new_stem] = 1
-                    #print 470, suffix, new_stem
-                    #print 408, suffix, Word, new_stem
 
         else:
             for prefix in self.Prefixes:

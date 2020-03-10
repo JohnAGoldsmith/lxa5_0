@@ -109,50 +109,34 @@ def print_signature_list_1(this_file,
 
     numberofstemsperline = 6
     stemlist = []
-    print >> this_file, "*** Stems in each signature"
     for sig, stemcount, robustness, stem in DisplayList:
         this_signature = Lexicon.Signatures[sig]
         print >> this_file, "\n" + "=" * 45, '{0:30s} \n'.format(sig)
         n = 0
         stemlist = this_signature.get_stems()
-        #print 110, "\n", sig, stemlist
-
         numberofstems = len(stemlist)
-        #print "\n", 111, sig, stemlist
+        max_word_length =  len(max(stemlist, key = len))
+        col_width = max_word_length + 2 
         for stem in stemlist:
             n += 1
-            print >> this_file, '{0:12s}'.format(stem),
+            print >> this_file,  stem, " "* (col_width - len(stem)),
             if n == numberofstemsperline:
                 n = 0
                 print >> this_file
         print >> this_file, "\n" + "-" * 25
 
-        longeststemlength = 0
-        for stem in stemlist:
-            if len(stem) > longeststemlength:
-                longeststemlength = len(stem)
-        columnwidth = longeststemlength
+
         numberofcolumns = 4
         colno = 0
+        stemlist.sort(key = lambda x : Lexicon.StemCorpusCounts[x], reverse = True)
         for stem in stemlist:
-            #stemcount = str(this_signature.stems[stem])
-            stemcount  = "Unk"
-            print >> this_file, stem, " " * (columnwidth - len(stem)), stemcount, " " * (5 - len(stemcount)),
+            print >> this_file, stem, " " * (col_width - len(stem)), '{:6d}'.format(Lexicon.StemCorpusCounts[stem] ),
             colno += 1
             if colno == numberofcolumns:
                 colno = 0
                 print >> this_file
         print >> this_file, "\n" + "-" * 25
 
-        # ------------------------------------------------------------------------------------------------------
-        #minimum_stem_count = 5
-        #print >> this_file, "Average count of top", howmany, " stems:", AverageCountOfTopStems(minimum_stem_count,
-        #                                                                                       sig,
-        #                                                                                       SignatureToStems,
-        #                                                                                       StemCorpusCounts,
-        #                                                                                       lxalogfile)
-
-        # ------------------------------------------------------------------------------------------------------
         bitsPerLetter = 5
         wordlist = makeWordListFromSignature(sig, stemlist)
         (a, b, c) = findWordListInformationContent(wordlist, bitsPerLetter)
@@ -486,13 +470,14 @@ def print_stems(outfile1, outfile_stems_and_unanalyzed_words, Lexicon, suffixlis
     WordCounts = Lexicon.Word_counts_dict
     stems = StemToWord.keys()
     stems.sort()
+    length_longest_stem = len ( max (stems, key = len)) 
     print >> outfile1, "--------------------------------------------------------------"
     print >> outfile1, "---  Stems and their words"
     print >> outfile1, "--------------------------------------------------------------"
     print "   Printing stems and their words."
     StemCounts = dict()
     for stem in stems:
-        print >> outfile1, '{:15}'.format(stem),
+        print >> outfile1, stem, " "*(length_longest_stem + 2 - len(stem)),
         wordlist = StemToWord[stem].keys()
         wordlist.sort()
         stemcount = 0
@@ -503,7 +488,7 @@ def print_stems(outfile1, outfile_stems_and_unanalyzed_words, Lexicon, suffixlis
         stemcount = float(stemcount)
         for word in wordlist:
             wordcount = WordCounts[word]
-            print >> outfile1, '{:10}{:4n} '.format(word, wordcount),
+            print >> outfile1, '{:20}{:6n} '.format(word, wordcount),
 
         print >> outfile1
 
@@ -521,7 +506,6 @@ def print_stems(outfile1, outfile_stems_and_unanalyzed_words, Lexicon, suffixlis
     print "   Printing stems and their words along with unanalyzed words."
     StemCounts = dict()
     for item in stems_and_unanalyzed_words:
-        # print >> outfile_stems_and_unanalyzed_words, '{:15}'.format(item),
 	if item in stems:
                 stem = item
 		print >> outfile_stems_and_unanalyzed_words, "{:15s}".format(stem),

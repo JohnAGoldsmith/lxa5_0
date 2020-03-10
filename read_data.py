@@ -2,32 +2,23 @@ import string
 
 def read_dx1(infile, Lexicon, BreakAtHyphensFlag, wordcountlimit):
             punctuation = "$(),;.:-?%&\\1234567890\"\/'[]"
+            longest_word_length = 0
             for line in infile:
-            #for line in filelines:
-
                 pieces = line.split()
                 word = pieces[0]
-                #if word.endswith("NULL=ly"):
-                #    print 11, "NULL-ly"
                 if '#' in word:
-                    #print "We cannot accept a word with # in it.", word
                     continue
                 if '=' in word:
-                    #print "We cannot accept a word with = in it.", word
                     continue
                 if len(word) == 1 and word in punctuation:
-                    #print ("We cannot accept a one-character word consisting of punctuation:", word)
                     continue
                 if len(pieces) > 1:
                     count = int(pieces[1])
                 else:
                     count = 1
-                #word.translate(None, string.punctuation)
                 if (BreakAtHyphensFlag and '-' in word):
                     words = word.split('-')
                     for word in words:
-                        #if word == "&":
-                        #    print 24
                         while word and word[-1] in punctuation:
                             word = word[:-1]
                         while word and word[0] in punctuation:
@@ -36,6 +27,8 @@ def read_dx1(infile, Lexicon, BreakAtHyphensFlag, wordcountlimit):
                             Lexicon.WordBiographies[word] = list()
                             Lexicon.Word_counts_dict[word] = 0
                         Lexicon.Word_counts_dict[word] += count
+                        if len(word) > longest_word_length:
+                            longest_word_length = len(word)
                         if len(Lexicon.Word_counts_dict) >= wordcountlimit:
                             break
                 else:
@@ -49,10 +42,12 @@ def read_dx1(infile, Lexicon, BreakAtHyphensFlag, wordcountlimit):
                         Lexicon.Word_list_forward_sort.append(word)
                         Lexicon.Word_list_reverse_sort.append(word)
                     Lexicon.Word_counts_dict[word] = count
+                    if len(word) > longest_word_length:
+                        longest_word_length = len(word)
                     if len(Lexicon.Word_counts_dict) >= wordcountlimit:
                         break
                 Lexicon.WordBiographies[word] = list()
-
+            Lexicon.LongestWordLength = longest_word_length
             Lexicon.sort_words()
 
 def read_corpus(infile, Lexicon, BreakAtHyphensFlag, wordcountlimit):

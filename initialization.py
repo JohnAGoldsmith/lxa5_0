@@ -30,29 +30,24 @@ def Initialization(argparse, config_lxa ):
             config_lxa["data_folder"] = results.data_folder
     if results.affix_type in ["prefix","False","prefixes"]:
         config_lxa["affix_type"] = "prefix"
-        #config_lxa["FindSuffixesFlag"] = False
     elif results.affix_type in ["suffix", "suffixes", "True"]:
         config_lxa["affix_type"] = "suffix"
-        #config_lxa["FindSuffixesFlag"] = True
     if results.FSA == "FSA" or results.FSA== "True":
         config_lxa["FSA"] = True
-        #FSA_flag = True
     elif results.FSA == "False":
         config_lxa["FSA"] = False
-        #FSA_flag = False
     else:
         FSA_flag = config_lxa["FSA"]
-    #print "FSA? ", FSA_flag
-
+ 
 
 
     # --------------------------------------------------------------------##
     #    Determine folders for input, output; initialize output files
     # --------------------------------------------------------------------##
 
-    config_lxa["datafolder"] = config_lxa["data_folder"] + config_lxa["language"] + "/"
+    config_lxa["datafolder"] = config_lxa["data_folder"]  +  config_lxa["infilename"] + "/"
     config_lxa["outfolder"] = config_lxa["data_folder"] + config_lxa["language"] + "/"+ "lxa/"
-    config_lxa["dx1_folder"] = config_lxa["data_folder"] + config_lxa["language"] + "/dx1/"
+    config_lxa["dx1_folder"] = config_lxa["data_folder"] +  "/"
     if  config_lxa["infilename"][-4:] == ".txt":
         config_lxa["datatype"] = "CORPUS"
         config_lxa["complete_infilename"] = config_lxa["datafolder"] + config_lxa["infilename"]
