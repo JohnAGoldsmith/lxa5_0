@@ -47,7 +47,7 @@ def print_parses(this_file, Lexicon):
 def initialize_files(this_lexicon, this_file, singleton_signatures, doubleton_signatures, DisplayList):
     formatstring_console = "   {:45s}{:10,d}"
     if this_file == "console":
-        print  "initialize files function"
+        print  "   Initialize files function."
         print  formatstring_console.format("Number of words (types): ", this_lexicon.total_word_count)
         print  formatstring_console.format("Total letter count in words ", this_lexicon.word_letter_count)
         print  formatstring_console.format("Number of signatures: ", len(this_lexicon.Signatures))
@@ -82,7 +82,7 @@ def initialize_files(this_lexicon, this_file, singleton_signatures, doubleton_si
 def print_signature_list_1(this_file,
                            Lexicon,
                            DisplayList,
-                           totalrobustness,
+                           total_robustness,
                            lxalogfile,
                            affix_type):
     if affix_type == "suffix":
@@ -90,26 +90,26 @@ def print_signature_list_1(this_file,
     else:
         FindSuffixesFlag = False
     print "   Printing signature file."
-    runningsum = 0.0
-    formatstring1 = '{0:25}{1:>10s} {2:>15s} {3:>25s} {4:>20s}{5:>20s} '
-    formatstring2 = '{0:<30}{1:5d} {2:15d} {3:25.3%} {4:20.3%}{5:>20s}'
+    running_sum = 0.0
+    formatstring1 = '{0:25}{1:>10s} {2:>15s} {3:>25s} {4:>20s}{5:>20s}{6:>20s} '
+    formatstring2 = '{0:<30}{1:5d} {2:15d} {3:25.3%} {4:20.3%}{5:20.2f}{6:>20s}'
     print >> this_file, "\n" + "-" * 150
     print >> this_file, formatstring1.format("Signature", "Stem count", "Robustness", "Proportion of robustness",
-                                             "Running sum", "Example")
+                                             "Running sum", "Stability" , "Example")
     print >> this_file, "-" * 150
 
     DisplayList = sorted(DisplayList, key = lambda x: x[2], reverse=True)
-    for sig, stemcount, robustness, stem in DisplayList:
-        runningsum += robustness
-        robustnessproportion = float(robustness) / totalrobustness
-        runningsumproportion = runningsum / totalrobustness
-        print >> this_file, formatstring2.format(sig, stemcount, robustness, robustnessproportion,
-                                                     runningsumproportion, stem)
+    for sig, stemcount, robustness, stability, stem in DisplayList:
+        running_sum += robustness
+        robustness_proportion = float(robustness) / total_robustness
+        running_sum_proportion = running_sum / total_robustness
+        print >> this_file, formatstring2.format(sig, stemcount, robustness, robustness_proportion,
+                                                     running_sum_proportion, stability,  stem)
     print >> this_file, "-" * 60
 
-    numberofstemsperline = 6
+    number_of_stems_per_line = 6
     stemlist = []
-    for sig, stemcount, robustness, stem in DisplayList:
+    for sig, stemcount, robustness,stability, stem in DisplayList:
         this_signature = Lexicon.Signatures[sig]
         print >> this_file, "\n" + "=" * 45, '{0:30s} \n'.format(sig)
         n = 0
@@ -120,11 +120,9 @@ def print_signature_list_1(this_file,
         for stem in stemlist:
             n += 1
             print >> this_file,  stem, " "* (col_width - len(stem)),
-            if n == numberofstemsperline:
-                n = 0
+            if n % number_of_stems_per_line == 0:
                 print >> this_file
         print >> this_file, "\n" + "-" * 25
-
 
         numberofcolumns = 4
         colno = 0
@@ -132,8 +130,7 @@ def print_signature_list_1(this_file,
         for stem in stemlist:
             print >> this_file, stem, " " * (col_width - len(stem)), '{:6d}'.format(Lexicon.StemCorpusCounts[stem] ),
             colno += 1
-            if colno == numberofcolumns:
-                colno = 0
+            if colno % numberofcolumns == 0:
                 print >> this_file
         print >> this_file, "\n" + "-" * 25
 
@@ -150,7 +147,7 @@ def print_signature_list_1(this_file,
         howmanytopstems = 5
 
         print >> this_file, "\n-------------------------"
-        print >> this_file, "Entropy-based stability: ", StableSignature(stemlist, FindSuffixesFlag)
+        print >> this_file, "Entropy-based stability: ", this_signature.get_stability_entropy() 
         print >> this_file, "\n", "High frequency possible affixes \nNumber of stems: ", len(stemlist)
         formatstring = '%10s    weight: %5d count: %5d %2s'
         peripheralchunklist = find_N_highest_weight_affix(stemlist, FindSuffixesFlag)
@@ -161,11 +158,6 @@ def print_signature_list_1(this_file,
             else:
                 flag = ""
             print >> this_file, formatstring % (item[0], item[1], item[2], flag)
-
-
-    this_file.close()
-
-
 
     this_file.close()
 
@@ -184,7 +176,7 @@ def print_signature_list_1_html(this_file, DisplayList, totalrobustness):
         add_an_html_table_entry(this_file, item)
     end_an_html_table_row(this_file)
 
-    for sig, stemcount, robustness, stem in DisplayList:
+    for sig, stemcount, robustness, stability, stem in DisplayList:
         runningsum += robustness
         start_an_html_table_row(this_file)
         robustnessproportion = float(robustness) / totalrobustness
@@ -208,7 +200,7 @@ def print_signatures_to_svg (outfile_html, DisplayList,Signatures,FindSuffixesFl
     this_page.start_an_html_file(outfile_html)
     column_counts = dict();
     for signo in range(len(DisplayList)):
-            (sig,stemcount,robustness,stem) = DisplayList[signo]
+            (sig,stemcount,robustness,stability,stem) = DisplayList[signo]
             stemlist = Signatures[sig].get_stems()
             row_no= sig.count("=")+1
             if row_no not in column_counts:
@@ -219,12 +211,6 @@ def print_signatures_to_svg (outfile_html, DisplayList,Signatures,FindSuffixesFl
             radius_guide = len(stemlist) * row_no
             stem_count = len(stemlist)
             this_page.print_signature (outfile_html, sig, radius_guide, row_no, col_no, stem_count)
-
-            #if FindSuffixesFlag:
-            #    signature_box = SignatureBox(stemlist, affixlist,FindSuffixesFlag)
-            #else:
-            #    signature_box=SignatureBox(affixlist,stemlist, FindSuffixesFlag)
-            #signature_box.print_signature_box(outfile_html, this_page, 300,300)
     this_page.end_an_html_file(outfile_html)
     outfile_html.close()
 
@@ -233,97 +219,13 @@ def print_complex_signature_to_svg (outfile_html, sig, lexicon):
 # a complex signature is one where the "stem" column is a stack, of several groups, including a stem list,
 # and also a list of analyzed stems with their signatures.
     this_page = Page()
-
     this_page.start_an_html_file(outfile_html)
-    stemlist = lexicon.SignatureToStems[sig].keys()
-    affixlist = sig.split("=")
-    complex_signature_box = ComplexSignatureBox(stemlist, affixlist)
+    stem_list = lexicon.Signatures[sig].getstems()
+    affix_list = sig.split("=")
+    complex_signature_box = ComplexSignatureBox(stem_list, affix_list)
     signature_box.print_signature_box(outfile_html, this_page, 300,300)
     this_page.end_an_html_file(outfile_html)
     outfile_html.close()
-
-
-
-# ----------------------------------------------------------------------------------------------------------------------------#
-def print_signature_list_3(this_file, signature_feeding_outfile, lxalogfile, Lexicon,  DisplayList, stemcountcutoff, totalrobustness, SignatureToStems, StemCorpusCounts, suffix_flag):
-
-# this function not used, should be DELETED.
-
-
-    numberofstemsperline = 6
-    stemlist = []
-    reversedstemlist = []
-    count = 0
-    print >> this_file, "*** Stems in each signature"
-    for sig, stemcount, robustness, stem in DisplayList:
-        print >> this_file, "\n" + "=" * 45, '{0:30s} \n'.format(sig)
-        n = 0
-
-        stemlist = SignatureToStems[sig].keys()
-        stemlist.sort()
-        numberofstems = len(stemlist)
-        for stem in stemlist:
-            n += 1
-            print >> this_file, '{0:12s}'.format(stem),
-            if n == numberofstemsperline:
-                n = 0
-                print >> this_file
-        print >> this_file, "\n" + "-" * 25
-
-        stemlist.sort(key=lambda stem: StemCorpusCounts[stem])
-        longeststemlength = 0
-        for stem in stemlist:
-            if len(stem) > longeststemlength:
-                longeststemlength = len(stem)
-        columnwidth = longeststemlength
-        numberofcolumns = 4
-        colno = 0
-        for stem in stemlist:
-            stemcount = str(StemCorpusCounts[stem])
-            print >> this_file, stem, " " * (columnwidth - len(stem)), stemcount, " " * (5 - len(stemcount)),
-            colno += 1
-            if colno == numberofcolumns:
-                colno = 0
-                print >> this_file
-
-        print >> this_file, "\n" + "-" * 25
-
-        # ------------------- New -----------------------------------------------------------------------------------
-        howmany = 5
-        print >> this_file, "Average count of top", howmany, " stems:", AverageCountOfTopStems(howmany, sig,
-                                                                                               SignatureToStems,
-                                                                                               StemCorpusCounts,
-                                                                                               lxalogfile)
-
-        # ------------------------------------------------------------------------------------------------------
-        bitsPerLetter = 5
-        wordlist = makeWordListFromSignature(sig, SignatureToStems[sig])
-        (a, b, c) = findWordListInformationContent(wordlist, bitsPerLetter)
-        (d, e, f) = findSignatureInformationContent( sig, stemlist, bitsPerLetter)
-        formatstring = '%35s %10d  '
-        formatstringheader = '%35s %10s    %10s  %10s'
-        print >> this_file, formatstringheader % ("", "Phono", "Ordering", "Total")
-        print >> this_file, formatstring % ("Letters in words if unanalyzed:", a)
-        print >> this_file, formatstring % ("Letters as analyzed:", d)
-        # ------------------------------------------------------------------------------------------------------
-        howmanytopstems = 5
-
-        print >> this_file, "\n-------------------------"
-        print >> this_file, "Entropy-based stability: ", StableSignature(stemlist, suffix_flag)
-        print >> this_file, "\n", "High frequency possible affixes \nNumber of stems: ", len(stemlist)
-        formatstring = '%10s    weight: %5d count: %5d %2s'
-        peripheralchunklist = find_N_highest_weight_affix(stemlist, suffix_flag)
-
-        for item in peripheralchunklist:
-            if item[2] >= numberofstems * 0.9:
-                flag = "**"
-            else:
-                flag = ""
-            print >> this_file, formatstring % (item[0], item[1], item[2], flag)
-
-
-    this_file.close()
-
 
 # ----------------------------------------------------------------------------------------------------------------------------#
 def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  DisplayList, totalrobustness, suffix_flag):
@@ -333,7 +235,7 @@ def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  Disp
     stemlist = []
 
 
-    for sig, stemcount, robustness, stem in DisplayList:
+    for sig, stemcount, robustness, stability, stem in DisplayList:
         this_signature = Lexicon.Signatures[sig]
         stemlist = this_signature.stem_counts.keys()
         # ------------------------------------------------------------------------------------------------------
@@ -482,12 +384,15 @@ def print_stems(outfile1, outfile_stems_and_unanalyzed_words, Lexicon, suffixlis
         wordlist.sort()
         stemcount = 0
         for word in wordlist:
-            stemcount += WordCounts[word]
+            if word in WordCounts:
+                stemcount += WordCounts[word]
         StemCounts[stem] = stemcount
         print    >> outfile1, '{:5d}'.format(stemcount), '; ',
         stemcount = float(stemcount)
         for word in wordlist:
-            wordcount = WordCounts[word]
+            wordcount = 0
+            if word in WordCounts:
+                wordcount = WordCounts[word]
             print >> outfile1, '{:20}{:6n} '.format(word, wordcount),
 
         print >> outfile1
@@ -513,13 +418,18 @@ def print_stems(outfile1, outfile_stems_and_unanalyzed_words, Lexicon, suffixlis
 		wordlist.sort()
 		stemcount = 0
 		for word in wordlist:
-		    stemcount += WordCounts[word]
+                    if word in WordCounts:
+		        stemcount += WordCounts[word]
 		StemCounts[stem] = stemcount
 		print    >> outfile_stems_and_unanalyzed_words, '{:5d}'.format(stemcount), '; ',
 		stemcount = float(stemcount)
 		for word in wordlist:
-		    wordcount = WordCounts[word]
-		    print >> outfile_stems_and_unanalyzed_words, '{:15}{:4n} {:7.1%} '.format(word, wordcount, wordcount / stemcount),
+                    wordcount = 0
+                    ratio = 0.0
+                    if word in WordCounts:
+          	        wordcount = WordCounts[word]
+                        ratio = wordcount/ float(stemcount)
+		    print >> outfile_stems_and_unanalyzed_words, '{:15}{:4n} {:7.1%} '.format(word, wordcount, ratio),
         	print >> outfile_stems_and_unanalyzed_words
 	else:
 		print >>outfile_stems_and_unanalyzed_words,  item
@@ -606,8 +516,8 @@ def findSignatureInformationContent(signature, stemset, bitsPerLetter):
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def StableSignature(stemlist, MakeSuffixesFlag):
-    # ----------------------------------------------------------------------------------------------------------------------------#
+def  StabilityAsEntropy(stemlist, MakeSuffixesFlag):
+# ----------------------------------------------------------------------------------------------------------------------------#
     """Determines if this signature is prima facie plausible, based on letter entropy.
        If this value is above 1.5, then it is a stable signature: the number of different letters
        that precede it is sufficiently great to have confidence in this morpheme break."""
@@ -754,25 +664,22 @@ def print_words(Lexicon, outfile_words, outfile, outfile_html, logfile,   Column
             print             "{:4d}{:10,d}".format(i, ambiguity_counts[i])
 
     for word in wordlist:
-        #print >>outfile, 737, word
         current_left_edge = 0
         broken_word = ""
         Lexicon.break_word_by_suffixes(word)
         for i in range(len(word)):
             if word[:i] in Lexicon.StemToWord:
-                #print  744, word, ":",   word[:i]
                 piece = word[current_left_edge:i]
                 broken_word =  broken_word + " " +  piece
                 current_left_edge = i
         broken_word += " " + word[current_left_edge:]
 
         print >>outfile, formatstring.format(word, broken_word)
-        if word not in Lexicon.WordToSig:
-            continue
-        for n in range(len(Lexicon.WordToSig[word])):
-            stem, sig = Lexicon.WordToSig[word][n]
-            print >> outfile, "\t",formatstring.format(stem, sig)
-        print >> outfile
+        if word in Lexicon.WordToSig:
+            for n in range(len(Lexicon.WordToSig[word])):
+		    stem, sig = Lexicon.WordToSig[word][n]
+		    print >> outfile, "\t",formatstring.format(stem, sig)
+            print >> outfile
 
     start_an_html_file(outfile_html)
     start_an_html_div(outfile_html, class_type="wordlist")
@@ -949,3 +856,88 @@ class CDataGroup:
         return returnstring
 
 # ----------------------------------------------------------------------------------------------------------------------------#
+
+
+ 
+# ----------------------------------------------------------------------------------------------------------------------------#
+def print_signature_list_latex(this_file,
+                           Lexicon,
+                           DisplayList,
+                           total_robustness,
+                           lxalogfile,
+                           affix_type):
+    header1 = "\\documentclass[10pt]{article}" 
+    header2 = "\\usepackage{booktabs}" 
+    header3 = "\\usepackage{geometry}" 
+    header4 = "\\usepackage{longtable}" 
+    header5 = "\\geometry{verbose,letterpaper,lmargin=0.5in,rmargin=0.5in,tmargin=1in,bmargin=1in}"
+    header6 = "\\begin{document} "
+    starttab = "\\begin{longtable}{lllllllllll}"
+    endtab = "\\end{longtable}"
+    if affix_type == "suffix":
+        FindSuffixesFlag = True
+    else:
+        FindSuffixesFlag = False
+    print "   Printing signature file in latex."
+    running_sum = 0.0
+    print >>this_file, header1
+    print >>this_file, header2
+    print >>this_file, header3
+    print >>this_file, header4
+    print >>this_file, header5
+    print >>this_file
+    print >>this_file, header6
+    print >>this_file
+    print >>this_file, starttab
+    print >> this_file,  " & Signature & Stem count & Robustness & Proportion of robustness\\\\ \\toprule"
+ 
+    colwidth = 20
+    DisplayList = sorted(DisplayList, key = lambda x: x[2], reverse=True)
+    count = 1
+    for sig, stemcount, robustness, stability, stem in DisplayList:
+        running_sum += robustness
+        robustness_proportion = float(robustness) / total_robustness
+        running_sum_proportion = running_sum / total_robustness
+        print >>this_file, count,  sig, " "*(colwidth-len(sig)), "&",  stemcount, "&",  robustness, "&", "{0:2.3f}".format(robustness_proportion), "\\\\"
+        count += 1
+    print >>this_file, endtab
+
+    number_of_stems_per_line = 6
+    stemlist = []
+    print >>this_file
+    print >>this_file
+    for sig, stemcount, robustness, stability, stem in DisplayList:
+        this_signature = Lexicon.Signatures[sig]
+        print >>this_file, starttab
+        print >>this_file, sig, "\\\\"
+        n = 0
+        stemlist = this_signature.get_stems()
+        numberofstems = len(stemlist)
+        for stem in stemlist:
+            n += 1
+            print >> this_file,  stem, " & ",
+            if n % number_of_stems_per_line == 0:
+                print >>this_file, "\\\\"
+        print >>this_file, endtab
+        print >>this_file
+
+        print >>this_file
+        print >>this_file
+        print >>this_file, starttab
+        numberofcolumns = 4
+        colno = 0
+        stemlist.sort(key = lambda x : Lexicon.StemCorpusCounts[x], reverse = True)
+        for stem in stemlist:
+            print >> this_file, stem, "&",  Lexicon.StemCorpusCounts[stem], "&",
+            colno += 1
+            if colno % numberofcolumns == 0:
+                print >> this_file, "\\\\"
+        print >> this_file, endtab	
+        print >> this_file
+        print >> this_file
+    
+    print >>this_file, "\\end{document}"	
+    this_file.close()
+
+
+

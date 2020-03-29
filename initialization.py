@@ -14,6 +14,7 @@ def Initialization(argparse, config_lxa ):
     parser.add_argument('-w', action="store", dest="wordcountlimit", help="number of words to read")
     parser.add_argument('-f', action="store", dest="infilename", help="name of file to read")
     parser.add_argument('-d', action="store", dest="data_folder", help="data directory")
+    parser.add_argument('-o', action="store", dest="outfolder", help="folder where results are posted")
     parser.add_argument('-s', action="store", dest="affix_type", help="prefix or suffix")
     parser.add_argument('-F', action="store", dest="FSA", help="generate and print FSA")
 
@@ -28,6 +29,8 @@ def Initialization(argparse, config_lxa ):
             config_lxa["infilename"] = results.infilename
     if results.data_folder != None:
             config_lxa["data_folder"] = results.data_folder
+    if results.outfolder !=None:
+            config_lxa["outfolder"] = results.outfolder
     if results.affix_type in ["prefix","False","prefixes"]:
         config_lxa["affix_type"] = "prefix"
     elif results.affix_type in ["suffix", "suffixes", "True"]:

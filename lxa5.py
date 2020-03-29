@@ -27,6 +27,38 @@ from config import *
 from initialization import *
 from family import *
 
+# --------------------------------------------------------------------##
+def create_and_change_path (newpath):
+# --------------------------------------------------------------------##
+    current_path = path = os.getcwd()
+    print ("   The current working directory is %s" % path)
+    new_folder = current_path + "/" + newpath + "/"
+    if not os.path.isdir(new_folder):
+	try:
+		os.mkdir(new_folder)
+	except OSError:
+		print ("Creation of the directory %s failed." % new_folder)
+	else:
+		print ("Successfully created the directory %s ." % new_folder)
+    try:
+        os.chdir(new_folder)
+        print("   Output folder was changed.")
+    except OSError:
+        print("   Can't change the output folder.")       
+    return current_path
+# --------------------------------------------------------------------##
+# --------------------------------------------------------------------##
+# --------------------------------------------------------------------##
+def change_path (newpath):
+# --------------------------------------------------------------------##
+    try:
+        os.chdir(newpath)
+        print("   Folder changed.")
+    except OSError:
+        print("   Can't change folder.")       
+# --------------------------------------------------------------------##
+
+
 Initialization(argparse, config_lxa)
 # ----------------------------------------------------------------------------#
 # ----------------------------------------------------------------------------#
@@ -67,7 +99,7 @@ read_data(config_lxa["datatype"],
           Lexicon,
           config_lxa["BreakAtHyphensFlag"],
           config_lxa["word_count_limit"])
-print "\n1. Finished reading word list.\n"
+print "\n1. Finished reading word list. Word count:", len(Lexicon.Word_counts_dict), "\n"
 
 # --------------------------------------------------------------------##
 #        Initialize some output files
@@ -75,6 +107,15 @@ print "\n1. Finished reading word list.\n"
 
 #print "we have not done anything yet, in main lxa5.py file"
 #initialize_files(Lexicon, "console", 0, 0, config_lxa["language"])
+
+if not os.path.isdir(config_lxa["outfolder"]):
+    try:
+        os.mkdir(config_lxa["outfolder"])
+    except OSError:
+        print ("Creation of the directory %s failed." % path)
+    else:
+        print ("Successfully created the directory %s ." % path)
+
 
 # --------------------------------------------------------------------##
 #        For finite state automaton
@@ -91,42 +132,60 @@ if False:
 
 
 if True:
-
+    
+    newpath = "1_crab2"
+    oldpath = create_and_change_path (newpath)
+ 
     print "2. Crab 1: Make signatures.", config_lxa["affix_type"]
     MakeSignatures_Crab_1(Lexicon, config_lxa["affix_type"], Lexicon.MinimumStemLength)
 
     print "3. Printing signatures."
-    suffix = "1"
-    prefix = "1"
-    Lexicon.printSignatures(config_lxa["encoding"], config_lxa["affix_type"], prefix, suffix)
-
-    #compare_stems(Lexicon,config_lxa["affix_type"])
-
+    Lexicon.printSignatures(config_lxa)
     find_families(Lexicon, config_lxa["affix_type"])
 
+    change_path(oldpath)
+    	
+# --------------------------------------------------------------------##
+
+if True:
+    newpath ="2_widen_signatures"
+    oldpath = create_and_change_path (newpath)
+
+    print "3. Crab 2: Widen scope of affixes."
+ 
+    MakeSignatures_Crab_2(Lexicon, config_lxa["affix_type"], verboseflag)
+    Lexicon.printSignatures(config_lxa)
+
+    change_path(oldpath)
+
+# --------------------------------------------------------------------##
+
+if True:
+    newpath = "3_cut_up_affixes"
+    oldpath = create_and_change_path (newpath)
+
+    print "4. Crab 3: Interactions of multiple signatures on single words."
+ 
+    MakeSignatures_Crab_3(Lexicon, config_lxa["affix_type"], verboseflag)
+    Lexicon.printSignatures(config_lxa)
+
+    change_path(oldpath)
+
+# --------------------------------------------------------------------##
 
 if False:
-    print "3. Crab 2: Widen scope of affixes."
-    prefix =  "2"
+    newpath = "4_close_stem_pairs"
+    oldpath = create_and_change_path (newpath)
 
-    MakeSignatures_Crab_2(Lexicon, config_lxa["affix_type"],   prefix, suffix, verboseflag)
+    print "5. Crab 4: Close stem pairs = complex signatures."
+ 
+    MakeSignatures_Crab_5(Lexicon, config_lxa["affix_type"], verboseflag)
+    Lexicon.printSignatures(config_lxa)
 
-    Lexicon.printSignatures(config_lxa["encoding"], config_lxa["affix_type"], prefix, suffix)
+    change_path(oldpath)
 
-    #replace_parse_pairs_from_current_signature_structure_crab(Lexicon, config_lxa["affix_type"] )
-    #widen_scope_of_signatures(Lexicon, config_lxa["affix_type"])
 
-    #print   "6. Number of parses", len(Lexicon.Parses)
-    #assign_affixes_to_each_stem_crab(Lexicon,
-    #                                config_lxa["affix_type"],
-    #                                 verboseflag)
-    #MinimumStemCountInSignature = 1
-    #assign_signatures_to_each_stem_crab (Lexicon,
-    #                                     config_lxa["affix_type"],
-    #                                     verboseflag,
-    #                                     MinimumStemCountInSignature,
-    #                                     prefix)
-         # 4 --------------------------------------------------------------------
+# 4 --------------------------------------------------------------------
 
 
 if config_lxa["dynamics"] and config_lxa["datatype"]  == "CORPUS":

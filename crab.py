@@ -62,46 +62,38 @@ def MakeSignatures_Crab_1(Lexicon, affix_type, verboseflag = False):
 
         MinimumStemCountInSignature = 2
         assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature)
-
-        # 5 --------------------------------------------------------------------
-        # Widen scope of signatures
-        # 5 --------------------------------------------------------------------
-
-        replace_parse_pairs_from_current_signature_structure_crab(Lexicon,  affix_type )
-        widen_scope_of_signatures(Lexicon, affix_type, Lexicon.MinimumStemLength)
-        assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag)
-        MinimumStemCountInSignature = 1  # important! 
-        assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature)
-
-
         report = Lexicon.produce_lexicon_report()
 
-
-
-        #Lexicon.find_signatures_containment(affix_type)
-
+ 
+    	 
+ 
 # ------------------------------------------------------------------------#
-def MakeSignatures_Crab_2(Lexicon, affix_type, prefix, suffix, verboseflag = False):
+def MakeSignatures_Crab_2(Lexicon, affix_type, verboseflag = False):
+# ------------------------------------------------------------------------#
+	replace_parse_pairs_from_current_signature_structure_crab(Lexicon,  affix_type )
+	widen_scope_of_signatures(Lexicon, affix_type, Lexicon.MinimumStemLength)
+	assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag)
+	MinimumStemCountInSignature = 1  # important! 
+	assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature)
+# ------------------------------------------------------------------------#
+def MakeSignatures_Crab_3(Lexicon, affix_type, verboseflag = False):
 # ------------------------------------------------------------------------#
 
-    replace_parse_pairs_from_current_signature_structure_crab(Lexicon,  affix_type )
 
-    widen_scope_of_signatures(Lexicon, affix_type, Lexicon.MinimumStemLength)
-
-    print   "6. Number of parses", len(Lexicon.Parses)
-
-    assign_affixes_to_each_stem_crab(Lexicon,
-                                    affix_type,
-                                     verboseflag)
-
-    MinimumStemCountInSignature = 1
-
-    assign_signatures_to_each_stem_crab (Lexicon,
-                                         affix_type,
-                                         verboseflag,
-                                         MinimumStemCountInSignature,
-                                         prefix)
-
+	Words_with_multiple_analyses (Lexicon, affix_type)
+	assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag)
+	MinimumStemCountInSignature = 2  #   
+	assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature)
+         
+# ------------------------------------------------------------------------#
+def MakeSignatures_Crab_4(Lexicon, affix_type, verboseflag = False):
+# ------------------------------------------------------------------------#
+    """
+    Complex signatures are composed of pairs of signatures whose
+    stems differ in length by only one letter. Typically because
+    two or more affixes begin with the same letter.
+    """
+    Find_complex_signatures(Lexicon, affix_type)
 #-----------------------------------------------------------------------------#
 #          Widen stems in sigantures: Crab2
 #-----------------------------------------------------------------------------#
@@ -117,13 +109,15 @@ def widen_scope_of_signatures(Lexicon, affix_type, minimum_stem_length):
     signatures = Lexicon.get_signatures_sorted_by_affix_count(affix_type)
     stems_assigned_to_signatures = dict()
     thisfile = open("tempfile.txt", "w ")
-    print 116, "crab.py"
     if affix_type == "suffix":
 	affixes_to_stem = Lexicon.SuffixToStem
     else:
 	affixes_to_stem = Lexicon.PrefixToStem
     
+    #ct = 1
     for sig in signatures:
+        #print ct, "  of" , len(signatures)
+        #ct += 1
         print >>thisfile, "\n", sig
         sig_list = sort_signature_string_by_length(sig)
         affix_1 = sig_list[0]
@@ -134,17 +128,29 @@ def widen_scope_of_signatures(Lexicon, affix_type, minimum_stem_length):
                     stem_collection = [stem for stem in stem_collection if stem in Lexicon.Word_counts_dict]
                 else:
                     stem_collection = [stem for stem in stem_collection if stem in affixes_to_stem[affix]]
-
+        stem_collection.sort()
         for stem in stem_collection:
                 if stem in Lexicon.StemToSignature:
-                    #print >>thisfile,  "Old:", stem
                     pass
+                    #continuations = Lexicon.get_continuations_of_stem( stem )
+                    #for sf in continuations:
+                    #    if sf not in Lexicon.Suffixes: 
+                    #        if sf not in Lexicon.UnexplainedContinuations:
+                    #             Lexicon.UnexplainedContinuations[sf] = 1
+                    #        else:
+                    #             Lexicon.UnexplainedContinuations[sf] += 1
+		    #	Lexicon.Parses[(stem,sf)] = 1
                 else:
                     print >>thisfile, sig, "New stem:", stem
                     for affix in sig_list:
                         if affix_type == "suffix":
                             Lexicon.Parses[(stem, affix)] = 1
                             print >>thisfile, stem, affix
+                            #if sf not in Lexicon.Suffixes: 
+                            #    if sf not in Lexicon.UnexplainedContinuations:
+                            #         Lexicon.UnexplainedContinuations[sf] = 1
+                            #    else:
+                            #         Lexicon.UnexplainedContinuations[sf] += 1
                         else:
                             Lexicon.Parses[(affix, stem)] = 1
                             print >>thisfile,  affix, stem
@@ -422,12 +428,17 @@ def assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, Step=-1):
             word2 = join_with_separator (stem, affix, affix_type)
             Lexicon.StemToWord[stem][word] = 1
             Lexicon.StemToAffix_dict[stem][affix] = 1
-            Lexicon.StemCorpusCounts[stem] += Lexicon.Word_counts_dict[word] 
+            if word in Lexicon.Word_counts_dict:  
+                Lexicon.StemCorpusCounts[stem] += Lexicon.Word_counts_dict[word] 
+            else: 
+                print "Non-word:" , word
             if affix not in Affixes:
                     Affixes[affix] = 0
             Affixes[affix] += 1
+            if word not in Lexicon.WordBiographies:
+                Lexicon.WordBiographies[word] = list()
             Lexicon.WordBiographies[word].append(" This split:" + word2)
-
+                
         if verboseflag:
             verbose_helper_assign_affixes(Lexicon,filename,headerlist,contentlist)
 
@@ -535,7 +546,8 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
                 if stem not in Lexicon.StemToWord:
                     Lexicon.StemToWord[stem] = dict()
                 Lexicon.StemToWord[stem][word] = 1
-                Lexicon.StemCorpusCounts[stem] += Lexicon.Word_counts_dict[word]
+                if word in Lexicon.Word_counts_dict:
+                    Lexicon.StemCorpusCounts[stem] += Lexicon.Word_counts_dict[word]
                 Lexicon.WordBiographies[word].append(prefix + " In signature " + signature_string)
 
             this_signature.add_stem(stem)
@@ -556,9 +568,9 @@ def	replace_parse_pairs_from_current_signature_structure_crab(Lexicon, affix_typ
 # redo the signature structure, we just make sure the parses are correct, then we clear the signature structure
 # and rebuild it, which is easy to do.
 
-    print "   774 Number of parses in lexicon:", len(Lexicon.Parses)
+    #print "   774 Number of parses in lexicon:", len(Lexicon.Parses)
     Lexicon.Parses.clear()
-    print "   775 Number of parses in lexicon:", len(Lexicon.Parses)
+    #print "   775 Number of parses in lexicon:", len(Lexicon.Parses)
     for sig_string in Lexicon.Signatures:
         stems = Lexicon.Signatures[sig_string].get_stems()
         affixes = sig_string.split("=")
@@ -573,41 +585,166 @@ def	replace_parse_pairs_from_current_signature_structure_crab(Lexicon, affix_typ
                 for affix in affixes:
                     for stem in stems:
                         Lexicon.Parses[(affix,stem)]=1
-    print "   790   Number of parses in lexicon now:", len(Lexicon.Parses)
-
-
+    #print "   790   Number of parses in lexicon now:", len(Lexicon.Parses)
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def	compare_stems (Lexicon,affix_type):
+def	Words_with_multiple_analyses (Lexicon, affix_type):
 # ----------------------------------------------------------------------------------------------------------------------------
-    stems = Lexicon.get_stems()
-    temp = dict()
+        outfile = open("6_Biparses.txt", "w") 
+        outfileTex = open ("6_Biparses.tex", "w")
 
-    for stemno in range(len(stems)):
-        stem1 = stems[stemno]
-        sequence_count = 1
-        j = stemno + 1
-        while j < len(stems) and stems[j].startswith(stem1):
-            stem2 = stems[j]
-            sig1 = Lexicon.StemToSignature[stem1]
-            sig2 = Lexicon.StemToSignature[stem2]
-            buckle = Buckle(stem1, stem2, sig1, sig2, affix_type)
-            j += 1
-            diff = buckle.m_difference
+        header1 = "\\documentclass[10pt]{article}" 
+        header2 = "\\usepackage{booktabs}" 
+        header3 = "\\usepackage{geometry}" 
+        header4 = "\\usepackage{longtable}" 
+        header5 = "\\geometry{verbose,letterpaper,lmargin=0.5in,rmargin=0.5in,tmargin=1in,bmargin=1in}"
+        header6 = "\\begin{document} "
+        starttab = "\\begin{longtable}{lllllllllll}"
+        endtab = "\\end{longtable}"
+        enddoc = "\\end{document}"
 
-            if diff not in temp:
-                temp[diff] = list()
-            temp[diff].append(buckle)
+        print >>outfileTex, header1
+        print >>outfileTex, header2
+        print >>outfileTex, header3
+        print >>outfileTex, header4
+        print >>outfileTex, header5
+        print >>outfileTex
+        print >>outfileTex, header6
+        print >>outfileTex
+        print >>outfileTex, starttab
+        print >>outfileTex,  " diff & stem 1  & sig 1 & stem 2 & sig 2 \\\\ \\toprule"
 
-            if j == stemno + 1:
-                sequence_count += 1
+        formatstring = "{0:10s} {1:18s}  {2:30s} {3:18s} {4:30s}"
+        formatstringTex = "{0:10s} & {1:18s}  &  {2:30s}  & {3:18s}  & {4:30s} \\\\"
+	words = Lexicon.Word_list_forward_sort
+	sigpaires = list()
+        Biparses = dict()
+	for word in Lexicon.WordToSig:
+            if (Lexicon.WordToSig[word]) > 1:
+                sigpairs = sorted(Lexicon.WordToSig[word], key = lambda x: len(x[0]) )   #sort by length of stem 
+	        for i in range(len(sigpairs)):
+                     stem1, sig1 = sigpairs[i]
+                     for j in range(i+1,len(sigpairs)):
+                         stem2, sig2 = sigpairs[j]
+                         biparse_string = stem1 + " "+ sig1 + " " + stem2 + " " + sig2
+                         if biparse_string not in Biparses:
+                             biparse = Biparse(stem1,  stem2, sig1, sig2, affix_type)
+			     Biparses[biparse_string] = biparse 
+        Biparses_list = Biparses.values()                        
+	Biparses_list.sort(key = lambda x: x.m_sigstring1)
+	Biparses_list.sort(key = lambda x: x.m_sigstring2)
+	Biparses_list.sort(key = lambda x: x.m_difference)
+
+        for x in Biparses_list:
+		print >>outfile, formatstring.format(x.m_difference, x.m_stem1,  x.m_sigstring1,x.m_stem2, x.m_sigstring2)
+                print >>outfileTex, formatstringTex.format(x.m_difference, x.m_stem1, x.m_sigstring1,x.m_stem2,  x.m_sigstring2)
+        print >>outfileTex, endtab
+        print >>outfileTex, enddoc
+ 
+        print >>outfile, "\n\n"
+        stems = list()
+        previous_biparse = Biparse("", "","", "", "")
+	for biparse in Biparses_list:
+            if not biparse.m_difference == previous_biparse.m_difference or not biparse.m_sigstring2 == previous_biparse.m_sigstring2:
+                if len(previous_biparse.m_difference) > 1:
+                       print >>outfile,  "{0:6s} {1:8s} {2:8s}".format(previous_biparse.m_difference, previous_biparse.m_sigstring1, previous_biparse.m_sigstring2)
+                       print >>outfile, "\t",
+                       for i in range(len(stems)):
+                           print >>outfile, "{0:10s} ".format(stems[i]),
+                       print>>outfile
+                       stems = list()
+            if len(biparse.m_difference) > 1:
+		stems.append (biparse.m_stem1 + "/" + biparse.m_stem2)
+            previous_biparse = biparse            
+        print >>outfile, "\n\n"
+
+	# Find biparses wehre the diff is longer than one letter, and sort by diff
+        previous_biparse = Biparse("", "","", "", "")
+        morph_to_sig = MorphemeToSignature("", "", "")
+        MorphToSignatures = list()
+        previous_biparse = Biparse("", "","", "", "")
+	for biparse in Biparses_list:
+            if len(biparse.m_difference) == 1:
+                    if morph_to_sig.m_diff: 
+                        MorphToSignatures.append(morph_to_sig)  
+                        morph_to_sig = MorphemeToSignature("", "", "")
+	    elif not biparse.is_same(previous_biparse):
+                    MorphToSignatures.append(morph_to_sig) 
+                    morph_to_sig = MorphemeToSignature(biparse.m_difference, biparse.m_sigstring1, biparse.m_sigstring2)
+                    morph_to_sig.add_stem(biparse.m_stem1)
             else:
-                sequence_count = 0
-    difflist = sorted(temp.keys(), key = lambda x:len(temp[x]))
+                    morph_to_sig.add_stem(biparse.m_stem1)
+            previous_biparse = biparse
+        for x in MorphToSignatures:
+            print >>outfile,x.make_rule(), " " , x.display()
+        print >>outfile, "\n"
 
-    for diff in difflist:
-        subdifflist = sorted(temp[diff], key = lambda x:x.m_sigstring2)
-        subdifflist = sorted(temp[diff], key = lambda x:x.m_sigstring1)
+	# Still with biparses where diff is longer than one letter, but sorted by number of stems
+
+        MorphToSignatures.sort(key  = lambda x: len(x.m_stemlist), reverse = True) 
+        for x in MorphToSignatures:
+            print >>outfile,x.make_rule(), " " , x.display()
+        print >>outfile, "\n"
+
+
+
+	top_morph_to_sig = MorphToSignatures[0]
+        diff = top_morph_to_sig.m_diff
+        old_sig1 = top_morph_to_sig.m_sig1
+        old_sig2 = top_morph_to_sig.m_sig2
+        new_sig1 = top_morph_to_sig.m_new_sig1
+        new_sig2 = top_morph_to_sig.m_new_sig2
+        print 680, top_morph_to_sig.display_rule()
+	new_stem = "[" + new_sig1 + "]_" + diff + "+" 
+        new_stem2 = new_stem + "=>" + new_sig2
+        print 683,  new_stem2, " put it in Lexicon.Parses with " , new_sig2
+        #for affix in new_sig2.split("="):
+        #    Lexicon.Parses[(new_stem,affix)] = 1
+        #    print 702, " adding new parses" , new_stem, affix
+
+        for stem in top_morph_to_sig.m_stemlist:
+            #print stem
+            for affix in old_sig1.split("="):
+                #print affix 
+                if affix.startswith(diff) and len(affix) > len(diff):
+                    print "Remove (", stem, "," , affix, ")"           
+		    del Lexicon.Parses[(stem,affix)]
+
+	
+
+
+	# Find biparses where the diff is one letter long, and sort by number of stems
+
+        print >>outfile, "\n"
+        previous_biparse = Biparse("", "","", "", "")
+        morph_to_sig = MorphemeToSignature("", "", "")
+        MorphToSignatures = list()
+        previous_biparse = Biparse("", "","", "", "")
+	for biparse in Biparses_list:
+            if len(biparse.m_difference) > 1:
+                    if morph_to_sig.m_diff: 
+                        MorphToSignatures.append(morph_to_sig)  
+                        morph_to_sig = MorphemeToSignature("", "", "")
+	    elif not biparse.is_same(previous_biparse):
+                    MorphToSignatures.append(morph_to_sig) 
+                    morph_to_sig = MorphemeToSignature(biparse.m_difference, biparse.m_sigstring1, biparse.m_sigstring2)
+                    morph_to_sig.add_stem(biparse.m_stem1)
+            else:
+                    morph_to_sig.add_stem(biparse.m_stem1)
+            previous_biparse = biparse
+        MorphToSignatures.sort(key  = lambda x: len(x.m_stemlist)) 
+        for x in MorphToSignatures:
+            print >>outfile,x.make_rule(), " " , x.display()
+
+
+
+        outfile.close()
+        outfileTex.close()
+
+
+ # ----------------------------------------------------------------------------------------------------------------------------#
 # ----------------------------------------------------------------------------------------------------------------------------#
-
+def	Find_complex_signatures (Lexicon, affix_type):
+# ----------------------------------------------------------------------------------------------------------------------------
+	pass
 

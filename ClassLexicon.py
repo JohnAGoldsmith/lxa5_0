@@ -81,16 +81,10 @@ class family_collection:
             self.m_families[this_family].print_family(this_file)
 
 
-class Buckle:
+class Biparse:
     """
-    A Buckle is a pair of stems in which the first is a prefix of the second.
+    A Biparse is a pair of pair of analyses of the same word, in which  the first sten is a prefix of the second.
     """
-    m_stem1 = ""
-    m_stem2 = ""
-    m_sigstring1 = ""
-    m_sigstring2 = ""
-    m_difference = ""
-    m_affix_type = ""
     def __init__(self, stem1, stem2,sigstring1, sigstring2, affix_type):
        self.m_stem1 = stem1
        self.m_stem2 = stem2
@@ -98,7 +92,60 @@ class Buckle:
        self.m_sigstring2 = sigstring2
        self.m_difference = stem2[len(stem1):]
        self.m_affix_type = affix_type
+    def is_same(self,other):
+        if not self.m_difference == other.m_difference:
+            return False
+        elif not self.m_sigstring1 == other.m_sigstring1:
+            return False
+        elif not self.m_sigstring2 == other.m_sigstring2:
+            return False
+        return True
 
+class MorphemeToSignature:
+    """
+    An object consisting of a morpheme that point to
+    a signature, with its corresponding stems,
+    which can be followed by the morpheme.
+    """
+    def __init__(self, diff, sig1, sig2):
+        self.m_diff = diff
+        self.m_sig1 = sig1
+        self.m_sig2 = sig2
+        self.m_stemlist = list()
+        self.m_new_sig1 = list()
+        self.m_new_sig2 = list()
+    def add_stem(self, stem):
+        self.m_stemlist.append(stem)
+    def display(self):
+        this_string = "{0:28s} {1:28s}".format(self.m_sig2,self.m_sig1) 
+        return this_string  + "  "+ " ".join(self.m_stemlist)
+    def display_rule(self):
+        formatstring = "{0:8s} -> {1:28s};  {2:28s}"
+        return formatstring.format( self.m_diff, self.m_new_sig2, self.m_new_sig1 )
+    def make_rule(self):
+        diff = self.m_diff
+        new_sig1 = set()                  # with shorter stem
+        new_sig2 = set()                  # shorter stem + diff, now just for diff
+        new_sig1.add (diff)
+        for morph in self.m_sig1.split("="):
+               if morph == diff:
+                   new_sig2.add ( "NULL" )  
+               elif morph.startswith( diff ):
+                   new_sig2.add( morph[len(diff):] )
+               else:
+                   new_sig1.add( morph )     
+        for morph in self.m_sig2.split("="):
+            #if len(morph) > 0:
+            new_sig2.add(morph)
+        new_sig1 = list(new_sig1)
+        new_sig1.sort()
+	new_sig2 = list(new_sig2)
+        new_sig2.sort()
+
+        self.m_new_sig1 = "=".join(new_sig1)
+        self.m_new_sig2 = "=".join(new_sig2)
+
+        return self.display_rule()
 
 class CWordList:
     def __init__(self):
@@ -157,6 +204,7 @@ class Signature:
         self.name = ""
         if self.affix_side != affix_side:
             return None
+        self.stability_entropy = -1.0
 
     def add_stem(self,stem, count = 1):
         if not self.stem_counts:
@@ -198,6 +246,32 @@ class Signature:
             self.robustness_clean = True
 	    #print 162, self.robustness
             return robustness
+    def get_stability_entropy (self):
+	"""Determines if this signature is prima facie plausible, based on letter entropy.
+	       If this value is above 1.5, then it is a stable signature: the number of different letters
+	       that precede it is sufficiently great to have confidence in this morpheme break."""
+
+        if self.stability_entropy > -1:
+            return self.stability_entropy
+        entropy = 0.0
+        stem_list = self.get_stems()
+        frequency = dict()
+        templist = list()
+        if self.affix_side == "prefix":
+            for chunk in stem_list:
+                templist.append(chunk[::-1])
+            stemlist = templist
+        for stem in stem_list:
+            lastletter = stem[-1]
+            if lastletter not in frequency:
+                frequency[lastletter] = 1.0
+            else:
+                frequency[lastletter] += 1.0
+        for letter in frequency:
+            frequency[letter] = frequency[letter] / len(stem_list)
+            entropy += -1.0 * frequency[letter] * math.log(frequency[letter], 2)
+        self.stability_entropy = entropy
+        return entropy   
 ## -------                                                      ------- #
 ##              Class Lexicon                                   ------- #
 ## -------                                                      ------- #
@@ -337,6 +411,21 @@ class CLexicon:
                     end = j-1
                     break
         return ((start,end))
+    def get_continuations_of_stem(self,stem):
+        if not self.Words_sort_clean_flag:
+            self.sort_words()
+        Words = self.Word_list_forward_sort
+        stemlength = len( stem ) 
+        continuations = list()
+        for i in range(len(Words)):
+            if Words[i].startswith( stem ):
+                break                
+	if not Words[i].startswith ( stem ):
+            return continuations;
+        for j in range( i,len(Words) ):
+            if Words[j].startswith( stem ):
+                continuations.append( Words[j][ stemlength: ] ) 
+        return continuations
 
     def find_signatures_containment(self, affix_type):
         for sig in self.get_signatures_sorted_by_affix_count(affix_type):
@@ -354,14 +443,12 @@ class CLexicon:
         broken_word = ""
         for i in range(len(word)):
             if word[:i] in self.StemToWord:
-                #print  ":",   word[:i],
                 piece = word[current_left_edge:i]
                 broken_word =  broken_word + " "+ piece
                 current_left_edge = i
-                #print >> outfile, piece,
         broken_word += " " + word[current_left_edge:]
-        #print "\n", 249, word, broken_word
         return broken_word
+
     def find_nuclear_signatures(self):
         """
         A nuclear signature is one whose robustness is greater than that of
@@ -472,32 +559,33 @@ class CLexicon:
         return count
 
     # --------------------------------------------------------------------------------------------------------------------------#
-    def printSignatures(self,  encoding, affix_type, prefix = "", suffix = ""):
+    def printSignatures(self,  config_lxa):
+        affix_type = config_lxa["affix_type"]
         if affix_type == "prefix":
             FindSuffixesFlag = True
         else:
             FindSuffixesFlag = False
         # NOTE! this needs to be updated to include Lexicon.Signatures
         # ----------------------------------------------------------------------------------------------------------------------------#
-        suffix = "_" + suffix
         filename_txt = ["Log", "Signatures", "Signatures_2", "Signatures_svg_html", "Signatures_feeding",
                   "SignatureDetails", "WordToSig", "StemToWords","SigExtensions", "Suffixes",   "StemsAndUnanalyzedWords"]
         filenames_html = [  "Signatures_html", "Index", "WordToSig_html"]
         lxalogfile = open(self.outfolder + "Log", "w")
 
 
-        outfile_signatures_1            = open(self.outfolder + prefix + "Signatures_iter"+ suffix+".txt", "w")
-        outfile_signatures_svg_html     = open(self.outfolder + prefix + "Signatures_graphic_iter"+ suffix+".html", "w")
-        outfile_signature_feeding       = open(self.outfolder + prefix + "Signature_feeding_iter"+ suffix+".html", "w")
-        outfile_signatures_html         = open(self.outfolder + prefix + "Signatures_iter"+ suffix+".html", "w")
-        outfile_index                   = open(self.outfolder + prefix + "Index_iter"+ suffix+".html", "w")
-        outfile_words = open(self.outfolder + prefix + "Words"+ suffix + ".txt", "w")
-        outfile_wordstosigs             = open(self.outfolder + prefix + "WordToSig_iter"+ suffix+".txt", "w")
-        outfile_wordstosigs_html        = open(self.outfolder + prefix + "WordToSig_iter"+ suffix+".html", "w")
-        outfile_stemtowords             = open(self.outfolder + prefix + "StemToWords_iter"+ suffix+".txt", "w")
-        outfile_suffixes                = open(self.outfolder + prefix + "Suffixes_iter"+ suffix+".txt", "w")
-        outfile_stems_and_unanalyzed_words = open(self.outfolder + prefix + "StemsAndUnanalyzedWords_iter"+ suffix+".txt", "w")
-        outfile_parses = open (self.outfolder + prefix + "_parses" + suffix+ ".txt", "w")
+        outfile_signatures_1            = open("Signatures.txt", "w")
+        outfile_signatures_svg_html     = open("Signatures_graphic.html", "w")
+        outfile_signature_feeding       = open("Signature_feeding.html", "w")
+        outfile_signatures_html         = open("Signatures.html", "w")
+        outfile_signatures_latex         = open("Signatures.tex", "w")
+        outfile_index                   = open("Index_iter.html", "w")
+        outfile_words                   = open("Words.txt", "w")
+        outfile_wordstosigs             = open("WordToSig.txt", "w")
+        outfile_wordstosigs_html        = open("WordToSig.html", "w")
+        outfile_stemtowords             = open("StemToWords.txt", "w")
+        outfile_suffixes                = open("Suffixes.txt", "w")
+        outfile_stems_and_unanalyzed_words = open("StemsAndUnanalyzedWords.txt", "w")
+        outfile_parses = open ("_parses.txt", "w")
 
         # 1  Create a list of signatures, sorted by number of stems in each. DisplayList is that list. Its 4-tuples   have the signature, the number of stems, and the signature's robustness, and a sample stem
 
@@ -519,7 +607,7 @@ class CLexicon:
             exemplar_stem = stems[0]
             stem_count = len(stems)
             robustness = get_robustness (sig,stems)
-            DisplayList.append((sig, len(stems), robustness, exemplar_stem))
+            DisplayList.append((sig, len(stems), robustness, signature.get_stability_entropy(), exemplar_stem))
             if stem_count == 1:
                 singleton_signatures += 1
             elif stem_count == 2:
@@ -541,10 +629,18 @@ class CLexicon:
                                DisplayList,
                                totalrobustness,
                                lxalogfile,
-                               affix_type)
+                               affix_type )
 
         # Print signatures to html file with svg
         print_signatures_to_svg (outfile_signatures_svg_html, DisplayList,self.Signatures,FindSuffixesFlag)
+
+        # Print signatures to html file with latex
+        print_signature_list_latex (outfile_signatures_latex,
+                               self,
+                               DisplayList,
+                               totalrobustness,
+                               lxalogfile,	
+                               affix_type)
 
         # Print suffixes
         suffix_list = print_suffixes(outfile_suffixes, self.Suffixes, self.RawSuffixes)
