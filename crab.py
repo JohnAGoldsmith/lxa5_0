@@ -269,13 +269,13 @@ def verbose_report_on_stem_affix_pairs(Lexicon,affix_type):
                     stem = item[0]
                     affix = item[1]
                     templist.append (stem +' ' + affix )
-                    word = join(stem, affix, affix_type)
+                    word = clean_join(stem, affix, affix_type)
                     Lexicon.WordBiographies[word].append(" "+ stem + "=" + affix)
                 else: # affix_type = "prefix"
                     affix = item[0]
                     stem= item[1]
                     templist.append (affix + ' ' + stem)
-                    word = join(stem, affix, affix_type)
+                    word = clean_join(stem, affix, affix_type)
                     Lexicon.WordBiographies[word].append(" "+ affix +   "=" + stem)
             templist.sort()
             for item in templist:
@@ -424,14 +424,14 @@ def assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, Step=-1):
                     Lexicon.StemToWord[stem] = dict()
                     Lexicon.StemToAffix_dict[stem] = dict()
                     Lexicon.StemCorpusCounts[stem] = 0
-            word = join(stem, affix, affix_type)
+            word = clean_join(stem, affix, affix_type)
             word2 = join_with_separator (stem, affix, affix_type)
             Lexicon.StemToWord[stem][word] = 1
             Lexicon.StemToAffix_dict[stem][affix] = 1
             if word in Lexicon.Word_counts_dict:  
                 Lexicon.StemCorpusCounts[stem] += Lexicon.Word_counts_dict[word] 
-            else: 
-                print "Non-word:" , word
+            #else: 
+            #    print "Non-word:" , word
             if affix not in Affixes:
                     Affixes[affix] = 0
             Affixes[affix] += 1
@@ -452,7 +452,7 @@ def add_to_raw_signatures(Lexicon, affix_type, stem, signature_string, number_of
     reportline = formatstring4.format(stem, signature_string,"Too few stems",   str(number_of_stems_this_sig)  )
     contentlist.append(reportline)
     for affix in Lexicon.StemToAffix_dict[stem]:
-        thisword = join(stem, affix, affix_type)
+        thisword = clean_join(stem, affix, affix_type)
     Lexicon.WordBiographies[thisword].append("5. Too few stems in sig: " + signature_string)
     if signature_string not in Lexicon.SignatureBiographies:
         Lexicon.SignatureBiographies[signature_string] = list()
@@ -532,6 +532,7 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
 
                 # 2f. Establish the link between this stem and its words:
 
+            Lexicon.StemCorpusCounts[stem] = 0
             for affix in signature_list:
                 if affix not in Affixes:
                    Affixes[affix] = 0
@@ -539,7 +540,7 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
                 if affix not in AffixToStem:
                     AffixToStem[affix] = dict()
                 AffixToStem[affix][stem] = 1
-                word = join(stem, affix, affix_type)
+                word = clean_join(stem, affix, affix_type)
                 if word not in Lexicon.WordToSig:
                     Lexicon.WordToSig[word] = list()
                 Lexicon.WordToSig[word].append((stem,signature_string))
@@ -628,114 +629,62 @@ def	Words_with_multiple_analyses (Lexicon, affix_type):
                          stem2, sig2 = sigpairs[j]
                          biparse_string = stem1 + " "+ sig1 + " " + stem2 + " " + sig2
                          if biparse_string not in Biparses:
-                             biparse = Biparse(stem1,  stem2, sig1, sig2, affix_type)
+                             biparse = Biparse(affix_type, stem1,  stem2, sig1, sig2)
 			     Biparses[biparse_string] = biparse 
         Biparses_list = Biparses.values()                        
 	Biparses_list.sort(key = lambda x: x.m_sigstring1)
 	Biparses_list.sort(key = lambda x: x.m_sigstring2)
 	Biparses_list.sort(key = lambda x: x.m_difference)
 
-        for x in Biparses_list:
-		print >>outfile, formatstring.format(x.m_difference, x.m_stem1,  x.m_sigstring1,x.m_stem2, x.m_sigstring2)
-                print >>outfileTex, formatstringTex.format(x.m_difference, x.m_stem1, x.m_sigstring1,x.m_stem2,  x.m_sigstring2)
-        print >>outfileTex, endtab
-        print >>outfileTex, enddoc
- 
-        print >>outfile, "\n\n"
-        stems = list()
-        previous_biparse = Biparse("", "","", "", "")
-	for biparse in Biparses_list:
-            if not biparse.m_difference == previous_biparse.m_difference or not biparse.m_sigstring2 == previous_biparse.m_sigstring2:
-                if len(previous_biparse.m_difference) > 1:
-                       print >>outfile,  "{0:6s} {1:8s} {2:8s}".format(previous_biparse.m_difference, previous_biparse.m_sigstring1, previous_biparse.m_sigstring2)
-                       print >>outfile, "\t",
-                       for i in range(len(stems)):
-                           print >>outfile, "{0:10s} ".format(stems[i]),
-                       print>>outfile
-                       stems = list()
-            if len(biparse.m_difference) > 1:
-		stems.append (biparse.m_stem1 + "/" + biparse.m_stem2)
-            previous_biparse = biparse            
-        print >>outfile, "\n\n"
 
-	# Find biparses wehre the diff is longer than one letter, and sort by diff
-        previous_biparse = Biparse("", "","", "", "")
-        morph_to_sig = MorphemeToSignature("", "", "")
-        MorphToSignatures = list()
-        previous_biparse = Biparse("", "","", "", "")
+        if False:  
+		for x in Biparses_list:
+			print >>outfile, formatstring.format(x.m_difference, x.m_stem1,  x.m_sigstring1,x.m_stem2, x.m_sigstring2)
+		        print >>outfileTex, formatstringTex.format(x.m_difference, x.m_stem1, x.m_sigstring1,x.m_stem2,  x.m_sigstring2)
+		print >>outfileTex, endtab
+		print >>outfileTex, enddoc
+
+        Biparses2 = dict()
 	for biparse in Biparses_list:
-            if len(biparse.m_difference) == 1:
-                    if morph_to_sig.m_diff: 
-                        MorphToSignatures.append(morph_to_sig)  
-                        morph_to_sig = MorphemeToSignature("", "", "")
-	    elif not biparse.is_same(previous_biparse):
-                    MorphToSignatures.append(morph_to_sig) 
-                    morph_to_sig = MorphemeToSignature(biparse.m_difference, biparse.m_sigstring1, biparse.m_sigstring2)
-                    morph_to_sig.add_stem(biparse.m_stem1)
+            key = (biparse.m_difference, biparse.m_sigstring1, biparse.m_sigstring2)
+            if key not in Biparses2:
+                Biparses2[key] = list()
+            Biparses2[key].append((biparse.m_stem1, biparse.m_stem2))
+        for k,v in Biparses2.items():
+               v.sort()     
+	Biparses2_list = sorted(Biparses2.keys())
+
+        One_letter_MorphemeToSignature = list()
+        Multi_letter_MorphemeToSignature = list()  
+	for k,v in Biparses2.items():
+            morph_to_sig = MorphemeToSignature(k[0], k[1], k[2])
+            for pair in v:
+                morph_to_sig.add_stem(pair[0])
+            if len(k[0]) == 1:
+                One_letter_MorphemeToSignature.append(morph_to_sig)
             else:
-                    morph_to_sig.add_stem(biparse.m_stem1)
-            previous_biparse = biparse
-        for x in MorphToSignatures:
-            print >>outfile,x.make_rule(), " " , x.display()
+                Multi_letter_MorphemeToSignature.append(morph_to_sig) 
+ 	
+        Multi_letter_MorphemeToSignature.sort(key  = lambda x: x.m_diff ) 
+        Multi_letter_MorphemeToSignature.sort(key  = lambda x: len(x.m_stemlist), reverse = True) 
+        for x in Multi_letter_MorphemeToSignature :
+            print >>outfile, 668, x.make_rule(), " " , x.display()
         print >>outfile, "\n"
-
-	# Still with biparses where diff is longer than one letter, but sorted by number of stems
-
-        MorphToSignatures.sort(key  = lambda x: len(x.m_stemlist), reverse = True) 
-        for x in MorphToSignatures:
-            print >>outfile,x.make_rule(), " " , x.display()
-        print >>outfile, "\n"
-
-
-
-	top_morph_to_sig = MorphToSignatures[0]
-        diff = top_morph_to_sig.m_diff
-        old_sig1 = top_morph_to_sig.m_sig1
-        old_sig2 = top_morph_to_sig.m_sig2
-        new_sig1 = top_morph_to_sig.m_new_sig1
-        new_sig2 = top_morph_to_sig.m_new_sig2
-        print 680, top_morph_to_sig.display_rule()
-	new_stem = "[" + new_sig1 + "]_" + diff + "+" 
-        new_stem2 = new_stem + "=>" + new_sig2
-        print 683,  new_stem2, " put it in Lexicon.Parses with " , new_sig2
-        #for affix in new_sig2.split("="):
-        #    Lexicon.Parses[(new_stem,affix)] = 1
-        #    print 702, " adding new parses" , new_stem, affix
-
-        for stem in top_morph_to_sig.m_stemlist:
-            #print stem
-            for affix in old_sig1.split("="):
-                #print affix 
-                if affix.startswith(diff) and len(affix) > len(diff):
-                    print "Remove (", stem, "," , affix, ")"           
-		    del Lexicon.Parses[(stem,affix)]
-
 	
-
-
-	# Find biparses where the diff is one letter long, and sort by number of stems
-
+	# the real work!
+        for i in range(len(Multi_letter_MorphemeToSignature)):
+            if i == len(Multi_letter_MorphemeToSignature): 
+                break
+    	    top_morph_to_sig = Multi_letter_MorphemeToSignature[i]
+            top_morph_to_sig.simplify1(outfile, Lexicon)
+ 
+        One_letter_MorphemeToSignature.sort(key  = lambda x: x.m_diff ) 
+        One_letter_MorphemeToSignature.sort(key  = lambda x: len(x.m_stemlist), reverse = True) 
+        for x in One_letter_MorphemeToSignature :
+            print >>outfile, 668, x.make_rule(), " " , x.display()
         print >>outfile, "\n"
-        previous_biparse = Biparse("", "","", "", "")
-        morph_to_sig = MorphemeToSignature("", "", "")
-        MorphToSignatures = list()
-        previous_biparse = Biparse("", "","", "", "")
-	for biparse in Biparses_list:
-            if len(biparse.m_difference) > 1:
-                    if morph_to_sig.m_diff: 
-                        MorphToSignatures.append(morph_to_sig)  
-                        morph_to_sig = MorphemeToSignature("", "", "")
-	    elif not biparse.is_same(previous_biparse):
-                    MorphToSignatures.append(morph_to_sig) 
-                    morph_to_sig = MorphemeToSignature(biparse.m_difference, biparse.m_sigstring1, biparse.m_sigstring2)
-                    morph_to_sig.add_stem(biparse.m_stem1)
-            else:
-                    morph_to_sig.add_stem(biparse.m_stem1)
-            previous_biparse = biparse
-        MorphToSignatures.sort(key  = lambda x: len(x.m_stemlist)) 
-        for x in MorphToSignatures:
-            print >>outfile,x.make_rule(), " " , x.display()
-
+	
+ 
 
 
         outfile.close()

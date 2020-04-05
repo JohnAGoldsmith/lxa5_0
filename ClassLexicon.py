@@ -4,6 +4,8 @@ import enum
 import operator
 from printing_to_files import *
 from signaturefunctions import *
+from stringfunctions import convert_label
+from stringfunctions import remove_label
 from family import family
 
 # This is just part of documentation:
@@ -18,6 +20,7 @@ from family import family
 def get_affix_count(x): return x.count("=")
 
 def join(stem, affix, affix_type):
+    stem = convert_label(stem)
     if affix == "NULL" or not affix:
         return stem
     else:
@@ -33,6 +36,17 @@ def join_with_separator(stem, affix, affix_type):
             return stem + "=" +  affix
         else:
             return affix + "=" + stem
+def clean_join (stem, affix, affix_type):
+    stem = remove_label(stem)
+    if affix == "NULL" or not affix:
+        return stem
+    else:
+        if affix_type == "suffix":
+            return stem + affix
+        else:
+            return affix + stem
+
+
 class Affix_type(enum.Enum):
     prefix = 1
     suffix = 2
@@ -85,7 +99,7 @@ class Biparse:
     """
     A Biparse is a pair of pair of analyses of the same word, in which  the first sten is a prefix of the second.
     """
-    def __init__(self, stem1, stem2,sigstring1, sigstring2, affix_type):
+    def __init__(self, affix_type, stem1="", stem2="",sigstring1="", sigstring2="" ):
        self.m_stem1 = stem1
        self.m_stem2 = stem2
        self.m_sigstring1 = sigstring1
@@ -107,7 +121,7 @@ class MorphemeToSignature:
     a signature, with its corresponding stems,
     which can be followed by the morpheme.
     """
-    def __init__(self, diff, sig1, sig2):
+    def __init__(self, diff="", sig1="", sig2=""):
         self.m_diff = diff
         self.m_sig1 = sig1
         self.m_sig2 = sig2
@@ -146,6 +160,46 @@ class MorphemeToSignature:
         self.m_new_sig2 = "=".join(new_sig2)
 
         return self.display_rule()
+
+    def simplify1(self, outfile, lexicon):
+        raw_diff = self.m_diff
+        diff = lexicon.get_new_name(raw_diff)  #adds to affix a unique integer
+        old_sig1 = self.m_sig1
+        old_sig2 = self.m_sig2
+        new_sig1 = self.m_new_sig1
+        new_sig2 = self.m_new_sig2
+	new_stem = "[" + new_sig1 + "]_" + diff + "+" 
+        rule = new_stem + "=>" + new_sig2
+        print >>outfile, 683,  rule, " put it in Lexicon.Parses as " , diff, ",", new_sig2
+
+	# fix long-stem signature, new_sig2:
+        for affix in new_sig2.split("="):
+            lexicon.Parses[(diff,affix)] = 1
+            print >>outfile, " adding new parses" , diff, affix
+
+	for stem in self.m_stemlist:
+            stem += raw_diff
+            for affix in old_sig2.split("="):
+                if (stem,affix) in lexicon.Parses:
+                    print >>outfile, 185, "removing", stem, affix
+                    del lexicon.Parses[(stem,affix)]
+                else:
+                    print >>outfile, 185, "can't remove ", stem, affix 
+
+	# fix short-stem signature, new_sig1
+        for stem in self.m_stemlist:
+            print >>outfile, stem
+            for affix in old_sig1.split("="):
+                print >>outfile, 194, affix 
+                if affix.startswith(raw_diff):
+                    if affix == raw_diff:
+                        continue
+                    if (stem,affix)  in lexicon.Parses:
+		            print >>outfile, "Remove (", stem, "," , affix, "), save letters: ", len(stem)      
+			    del lexicon.Parses[(stem,affix)]
+		    else:
+                            print >>outfile, "Couldn't find  ", stem, affix, "must have already been deleted."
+	# fix short-stem signature
 
 class CWordList:
     def __init__(self):
@@ -286,6 +340,7 @@ class CLexicon:
         self.MinimumStemLength = 3
         self.MaximumStemLength = 100
         self.MaximumAffixLength = 15
+        self.NameCollisions = dict()
         self.Parses = dict()
         self.Prefixes = {}
         self.Protostems= dict()
@@ -316,7 +371,7 @@ class CLexicon:
         self.word_letter_count = 0
         self.total_letters_in_stems = 0
         self.total_letters_in_analyzed_words = 0
-        self.total_affix_length_in_signatures = 0
+	self.total_affix_length_in_signatures = 0
         self.number_of_analyzed_words =  0
 
 
@@ -411,6 +466,16 @@ class CLexicon:
                     end = j-1
                     break
         return ((start,end))
+
+    def get_new_name(self, morpheme):
+        if morpheme in self.NameCollisions:
+            name = morpheme + str(self.NameCollisions[morpheme])
+            self.NameCollisions[morpheme] += int(1)
+        else:
+	    name = morpheme + "0" # that's zero
+            self.NameCollisions[morpheme] = int(1)
+        return name
+
     def get_continuations_of_stem(self,stem):
         if not self.Words_sort_clean_flag:
             self.sort_words()

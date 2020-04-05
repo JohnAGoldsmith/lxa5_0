@@ -10,15 +10,14 @@ from IPython.display import display
 
 
 def print_html_report(outfile, this_lexicon, singleton_signatures, doubleton_signatures, DisplayList):
-    leader=["Number of distinct words (types):" , "Total letter count in words " , "Number of signatures: ",
+    leader=["Number of distinct words (types):" , "Total letter count in words " , "Number of stems: ", "Number of signatures: ",
         "Number of singleton signatures (one stem): ", "Number of doubleton signatures (two stems): ",
         "Total number of letters in stems: ",  "Total number of affix letters: "]
-    values=[ str(this_lexicon.total_word_count),  str(this_lexicon.word_letter_count), str(len(this_lexicon.Signatures)),
-         str(singleton_signatures),   str(doubleton_signatures), str(this_lexicon.total_letters_in_stems), str(this_lexicon.total_affix_length_in_signatures) ]
+    values=[ str(this_lexicon.total_word_count),  str(this_lexicon.word_letter_count), str(len(this_lexicon.StemToSignature)), str(len(this_lexicon.Signatures)), str(singleton_signatures),   str(doubleton_signatures), str(this_lexicon.total_letters_in_stems), str(this_lexicon.total_affix_length_in_signatures) ]
 
     start_an_html_file( outfile)
     start_an_html_table(outfile)
-    for lineno in range(7):
+    for lineno in range(8):
                 start_an_html_table_row(outfile)
                 add_an_html_table_entry(outfile, leader[lineno])
                 add_an_html_table_entry(outfile, values[lineno])
@@ -45,15 +44,15 @@ def print_parses(this_file, Lexicon):
     this_file.close()
 # ----------------------------------------------------------------------------------------------------------------------------#
 def initialize_files(this_lexicon, this_file, singleton_signatures, doubleton_signatures, DisplayList):
-    formatstring_console = "   {:45s}{:10,d}"
+    formatstring_console = "{:45s}{:10,d}"
     if this_file == "console":
         print  "   Initialize files function."
         print  formatstring_console.format("Number of words (types): ", this_lexicon.total_word_count)
         print  formatstring_console.format("Total letter count in words ", this_lexicon.word_letter_count)
+        print  formatstring_console.format("Number of stems: ",  len(this_lexicon.StemToSignature))
         print  formatstring_console.format("Number of signatures: ", len(this_lexicon.Signatures))
         print  formatstring_console.format("Number of singleton signatures (one stem): ", singleton_signatures)
         print  formatstring_console.format("Number of doubleton signatures (two stems): ", doubleton_signatures)
-        print  formatstring_console.format("Number of stems: ",  len(this_lexicon.StemToSignature))
         print  formatstring_console.format("Total number of letters in stems: ", this_lexicon.total_letters_in_stems)
         print  formatstring_console.format("Total number of affix letters in signatures: ", this_lexicon.total_affix_length_in_signatures)
         print  formatstring_console.format("Total letters in signatures: ", this_lexicon.total_letters_in_stems + this_lexicon.total_affix_length_in_signatures)
@@ -64,10 +63,10 @@ def initialize_files(this_lexicon, this_file, singleton_signatures, doubleton_si
         print >> this_file, "\nInitialization"
         print >> this_file, "{:45s}{:10,d}".format("Number of words (corpus count): ", len(this_lexicon.Word_counts_dict))
         print >> this_file, "{:45s}{:10,d}".format("Total letter count in words ", this_lexicon.word_letter_count)
+        print >> this_file, "{:45s}{:10,d}".format("Number of stems: ",  len(this_lexicon.StemToSignature))
         print >> this_file, "{:45s}{:10,d}".format("Number of signatures: ", len(DisplayList))
         print >> this_file, "{:45s}{:10,d}".format("Number of singleton signatures (one stem): ", singleton_signatures)
         print >> this_file, "{:45s}{:10,d}".format("Number of doubleton signatures (two stems): ", doubleton_signatures)
-        print  formatstring_console.format("Number of stems: ",  len(this_lexicon.StemToSignature))
         print >> this_file, "{:45s}{:10,d}".format("Total number of letters in stems: ", this_lexicon.total_letters_in_stems)
         print >> this_file, "{:45s}{:10,d}".format("Total number of affix letters: ",
                                                      this_lexicon.total_affix_length_in_signatures)
