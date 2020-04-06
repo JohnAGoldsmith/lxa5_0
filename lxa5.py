@@ -16,7 +16,7 @@ import time
 
 
 from collections import defaultdict
-from ClassLexicon import *
+from class_lexicon import *
 from dynamics import *
 from fsa import *
 from lxa_module import *

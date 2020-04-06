@@ -2,7 +2,7 @@ import math
 import os
 import sys
 
-import ClassLexicon
+import class_lexicon
 
 # from fsm import State, Transducer, get_graph
 

@@ -3,7 +3,7 @@ import sys
 
 from printing_to_files import *
 from signaturefunctions import *
-from ClassLexicon import *
+from class_lexicon import *
 #from ClassLexicon import Signature
 from SigLattice import *
 

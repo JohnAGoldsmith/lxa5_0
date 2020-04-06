@@ -1,8 +1,8 @@
 import pygraphviz as pgv
 from html_lxa import *
 
-from ClassLexicon import ParseChain
-from ClassLexicon import parseChunk
+from class_lexicon import ParseChain
+from class_lexicon import parseChunk
 
 
 # ------------------------------------------------------------------------------------------#
