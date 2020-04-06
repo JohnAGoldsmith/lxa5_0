@@ -6,7 +6,7 @@ from signaturefunctions import *
 from class_lexicon import *
 #from ClassLexicon import Signature
 from SigLattice import *
-
+import stringfunctions as Strfn
 
     ## -------                                                      ------- #
     ##              Central signature computation                   ------- #
@@ -95,7 +95,7 @@ def MakeSignatures_Crab_4(Lexicon, affix_type, verboseflag = False):
     """
     Find_complex_signatures(Lexicon, affix_type)
 #-----------------------------------------------------------------------------#
-#          Widen stems in sigantures: Crab2
+#          Widen stems in signatures: Crab2
 #-----------------------------------------------------------------------------#
 def widen_scope_of_signatures(Lexicon, affix_type, minimum_stem_length):
     """
@@ -269,7 +269,7 @@ def verbose_report_on_stem_affix_pairs(Lexicon,affix_type):
                     stem = item[0]
                     affix = item[1]
                     templist.append (stem +' ' + affix )
-                    word = clean_join(stem, affix, affix_type)
+                    word = Strfn.clean_join(stem, affix, affix_type)
                     Lexicon.WordBiographies[word].append(" "+ stem + "=" + affix)
                 else: # affix_type = "prefix"
                     affix = item[0]
@@ -424,8 +424,8 @@ def assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, Step=-1):
                     Lexicon.StemToWord[stem] = dict()
                     Lexicon.StemToAffix_dict[stem] = dict()
                     Lexicon.StemCorpusCounts[stem] = 0
-            word = clean_join(stem, affix, affix_type)
-            word2 = join_with_separator (stem, affix, affix_type)
+            word = Strfn.clean_join(stem, affix, affix_type)
+            word2 = Strfn.join_with_separator (stem, affix, affix_type)
             Lexicon.StemToWord[stem][word] = 1
             Lexicon.StemToAffix_dict[stem][affix] = 1
             if word in Lexicon.Word_counts_dict:  
@@ -452,7 +452,7 @@ def add_to_raw_signatures(Lexicon, affix_type, stem, signature_string, number_of
     reportline = formatstring4.format(stem, signature_string,"Too few stems",   str(number_of_stems_this_sig)  )
     contentlist.append(reportline)
     for affix in Lexicon.StemToAffix_dict[stem]:
-        thisword = clean_join(stem, affix, affix_type)
+        thisword = Strfn.clean_join(stem, affix, affix_type)
     Lexicon.WordBiographies[thisword].append("5. Too few stems in sig: " + signature_string)
     if signature_string not in Lexicon.SignatureBiographies:
         Lexicon.SignatureBiographies[signature_string] = list()
@@ -540,7 +540,7 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
                 if affix not in AffixToStem:
                     AffixToStem[affix] = dict()
                 AffixToStem[affix][stem] = 1
-                word = clean_join(stem, affix, affix_type)
+                word = Strfn.clean_join(stem, affix, affix_type)
                 if word not in Lexicon.WordToSig:
                     Lexicon.WordToSig[word] = list()
                 Lexicon.WordToSig[word].append((stem,signature_string))

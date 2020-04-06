@@ -1,5 +1,36 @@
 import string 
 
+
+
+def join(stem, affix, affix_type):
+    stem = convert_label(stem)
+    if affix == "NULL" or not affix:
+        return stem
+    else:
+        if affix_type == "suffix":
+            return stem + affix
+        else:
+            return affix + stem
+def join_with_separator(stem, affix, affix_type):
+    if affix == "NULL" or not affix:
+        return stem
+    else:
+        if affix_type == "suffix":
+            return stem + "=" +  affix
+        else:
+            return affix + "=" + stem
+def clean_join (stem, affix, affix_type):
+    stem = remove_label(stem)
+    if affix == "NULL" or not affix:
+        return stem
+    else:
+        if affix_type == "suffix":
+            return stem + affix
+        else:
+            return affix + stem
+
+
+
 def find_first_and_last_string_in_list(target, wordlist, margin=0):
     # This assumes that wordlist is sorted alphabetically. If margin = 0, then the first word found is the first word that equals or contains target. If margin > 0, then
     # the target chosen for finding the first_word is the target minus its last m characters, where m is the margin.

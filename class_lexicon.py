@@ -2,10 +2,8 @@ import sys
 import enum
 import operator
 import class_signature as Sig
+import stringfunctions as Strfn
 from printing_to_files import *
-#from signaturefunctions import *
-from stringfunctions import convert_label
-from stringfunctions import remove_label
 from family import family
 
 
@@ -19,34 +17,6 @@ from family import family
 # SignatureStringsToStems is a dict: its keys are tuples of strings, and its values are dicts of stems.
 
 def get_affix_count(x): return x.count("=")
-
-def join(stem, affix, affix_type):
-    stem = convert_label(stem)
-    if affix == "NULL" or not affix:
-        return stem
-    else:
-        if affix_type == "suffix":
-            return stem + affix
-        else:
-            return affix + stem
-def join_with_separator(stem, affix, affix_type):
-    if affix == "NULL" or not affix:
-        return stem
-    else:
-        if affix_type == "suffix":
-            return stem + "=" +  affix
-        else:
-            return affix + "=" + stem
-def clean_join (stem, affix, affix_type):
-    stem = remove_label(stem)
-    if affix == "NULL" or not affix:
-        return stem
-    else:
-        if affix_type == "suffix":
-            return stem + affix
-        else:
-            return affix + stem
-
 
 class Affix_type(enum.Enum):
     prefix = 1
@@ -453,88 +423,7 @@ class CLexicon:
             self.RawSuffixes[suffix] = dict()
         self.RawSuffixes[suffix][stem] = 1
     # ----------------------------------------------------------------------------------------------------------------------------#
-    def RebalanceSignatureBreaks(self, threshold, outfile, FindSuffixesFlag,verboseflag = True):
-        # this version is much faster, and does not recheck each signature; it only changes stems.
-        # NOTE! This needs to be updated to utilize CLexicon.Signatures
-        # ----------------------------------------------------------------------------------------------------------------------------#
-        if verboseflag:
-            print "Rebalance signature breaks."
-            filename = "6_Rebalance_signature_breaks.txt"
-            headerlist = [ " "]
-            contentlist = list()
-            linelist = list()
-            formatstring = "{0:20s}   {1:20s} {2:10s} {3:20s}"
-        count = 0
-        MinimumNumberOfStemsInSignaturesCheckedForRebalancing = 5
-        SortedListOfSignatures = sorted(self.SignatureStringsToStems.items(), lambda x, y: cmp(len(x[1]), len(y[1])),
-                                        reverse=True)
-        maximumlengthofsignature = 0
-        for (sig_string, wordlist) in SortedListOfSignatures:
-            if len(sig_string) > maximumlengthofsignature:
-                maximumlengthofsignature = len(sig_string)
-        for (sig_string, wordlist) in SortedListOfSignatures:
-            sig_list = MakeSignatureListFromSignatureString(sig_string)
-            numberofstems = len(self.SignatureStringsToStems[sig_string])
-
-            if numberofstems < MinimumNumberOfStemsInSignaturesChAssignSignaturesToEachStem_crabeckedForRebalancing:
-                print >> outfile, "       Too few stems to shift material from suffixes", sig_string, numberofstems
-                continue
-            # print >>outfile, "{:20s} count: {:4d} ".format(sig_string,   numberofstems),
-            shiftingchunk, shiftingchunkcount = TestForCommonEdge(self.SignatureStringsToStems[sig_string], outfile,
-                                                                  threshold, FindSuffixesFlag)
-
-            if shiftingchunkcount > 0:
-                print >> outfile, sig_string, " " * (maximumlengthofsignature - len(sig_string)),
-                print >> outfile, "Stem count: {:4d} {:5s} count: {:5d}".format(numberofstems, shiftingchunk,
-                                                                                shiftingchunkcount)
-            else:
-                print >> outfile, sig_string, " " * (maximumlengthofsignature - len(sig_string)),
-                print >> outfile, "Stem count: {:4d}.".format(numberofstems)
-            if len(shiftingchunk) > 0:
-                count += 1
-                chunklength = len(shiftingchunk)
-                newsignature = list()
-                for affix in sig_list:
-                    if FindSuffixesFlag:
-                        newaffix = shiftingchunk + affix
-                    else:
-                        newaffix = affix + shiftingchunk
-                    newsignature.append(newaffix)
-
-                if shiftingchunkcount >= numberofstems * threshold:
-                    ChangeFlag = True
-                    stems_to_change = list(self.SignatureStringsToStems[sig_string])
-                    for stem in stems_to_change:
-                        if FindSuffixesFlag:
-                            if stem[-1 * chunklength:] != shiftingchunk:
-                                continue
-                        else:
-                            if stem[:chunklength] != shiftingchunk:
-                                continue
-
-                        if FindSuffixesFlag:
-                            newstem = stem[:len(stem) - chunklength]
-                            for affix in sig_list:
-
-                                if affix == "":
-                                    affix_t = "NULL"
-                                else:
-                                    affix_t = affix
-                                del self.Parses[(stem, affix_t)]
-                                newaffix = shiftingchunk + affix_t
-                            self.Parses[(newstem, newaffix)] = 1
-                        else:
-                            newstem = stem[chunklength:]
-                            for affix in sig_list:
-                                del self.Parses[(affix, stem)]
-                                newaffix = affix + shiftingchunk
-                                self.Parses[(newaffix, newstem)] = 1
-
-            outfile.flush()
-        print_report(filename, headerlist, contentlist)
-
-        return count
-
+ 
     # --------------------------------------------------------------------------------------------------------------------------#
     def printSignatures(self,  config_lxa):
         affix_type = config_lxa["affix_type"]

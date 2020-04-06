@@ -192,41 +192,7 @@ if config_lxa["dynamics"] and config_lxa["datatype"]  == "CORPUS":
     dynamics_file = open(config_lxa["outfolder"] + "dynamics.txt", "w")
     Dynamics(Lexicon, dynamics_file)
 
-if False:
-    # --------------------------------------------------------------------
-    # 4 Rebalancing now, which means:                  -------
-    # We look for a stem-final sequence that appears
-    # on all or almost all the stems, and shift it to affixes.
-    # Make changes in Lexicon.SignatureStringsToStems, and .StemToSig,
-    # and .WordToSig, and .StemToWord, and .StemToAffix  and signature_tuples....
-
-    if verboseflag:
-        print formatstring2.format("5. Find shift stem/affix boundary when appropriate.")
-    threshold = 0.80
-
-    if False:
-
-        count = Lexicon.RebalanceSignatureBreaks(threshold,
-                outfile_Rebalancing_Signatures,
-                Lexicon.FindSuffixesFlag)
-
-        print formatstring2.format("5. Completed.")
-        print formatstring2.format("6. Recompute signature structure.")
-        Lexicon.AssignSignaturesToEachStem_crab(FindSuffixesFlag)
-
-        # --------------------------------------------------------------------
-        # 5  ------- compute robustness
-        Lexicon.Compute_Lexicon_Size()
-        print  formatstring2.format("6. Computed robustness")
-
-        # 6  ------- Print
-        print >> lxalogfile, formatstring3.format("Number of analyzed words", Lexicon.NumberOfAnalyzedWords)
-        print >> lxalogfile, formatstring3.format("Number of unanalyzed words", Lexicon.NumberOfUnanalyzedWords)
-        print >> lxalogfile, formatstring3.format("Letters in stems", Lexicon.total_letters_in_stems)
-        print >> lxalogfile, formatstring3.format("Letters in affixes", Lexicon.total_affix_length_in_signatures)
-        print >> lxalogfile, formatstring3.format("Total robustness in signatures", Lexicon.TotalRobustnessInSignatures)
-
-
+ 
 
 
 
