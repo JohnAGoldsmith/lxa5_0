@@ -654,35 +654,58 @@ def	Words_with_multiple_analyses (Lexicon, affix_type):
                v.sort()     
 	Biparses2_list = sorted(Biparses2.keys())
 
+        MorphemesToSignatures = list() 
         One_letter_MorphemeToSignature = list()
         Multi_letter_MorphemeToSignature = list()  
 	for k,v in Biparses2.items():
             morph_to_sig = MorphemeToSignature(k[0], k[1], k[2])
             for pair in v:
                 morph_to_sig.add_stem(pair[0])
+            MorphemesToSignatures.append(morph_to_sig)
             if len(k[0]) == 1:
                 One_letter_MorphemeToSignature.append(morph_to_sig)
             else:
                 Multi_letter_MorphemeToSignature.append(morph_to_sig) 
  	
-        Multi_letter_MorphemeToSignature.sort(key  = lambda x: x.m_diff ) 
-        Multi_letter_MorphemeToSignature.sort(key  = lambda x: len(x.m_stemlist), reverse = True) 
-        for x in Multi_letter_MorphemeToSignature :
+        MorphemesToSignatures.sort(key  = lambda x: x.m_diff ) 
+        MorphemesToSignatures.sort(key  = lambda x: len(x.m_stemlist), reverse = True) 
+        for x in MorphemesToSignatures :
             print >>outfile, 668, x.make_rule(), " " , x.display()
         print >>outfile, "\n"
 	
 	# the real work!
-        for i in range(len(Multi_letter_MorphemeToSignature)):
-            if i == len(Multi_letter_MorphemeToSignature): 
+        ENTROPY_THRESHOLD = 1.0
+        for i in range(len(MorphemesToSignatures)):
+            if i == len(MorphemesToSignatures): 
                 break
-    	    top_morph_to_sig = Multi_letter_MorphemeToSignature[i]
-            top_morph_to_sig.simplify1(outfile, Lexicon)
- 
-        One_letter_MorphemeToSignature.sort(key  = lambda x: x.m_diff ) 
-        One_letter_MorphemeToSignature.sort(key  = lambda x: len(x.m_stemlist), reverse = True) 
-        for x in One_letter_MorphemeToSignature :
-            print >>outfile, 668, x.make_rule(), " " , x.display()
-        print >>outfile, "\n"
+    	    top_morph_to_sig = MorphemesToSignatures[i]
+            cutting_signature_string = top_morph_to_sig.m_sig2
+            cutting_signature = Lexicon.Signatures[cutting_signature_string]
+            if cutting_signature.get_stability_entropy() > ENTROPY_THRESHOLD:
+                print >>outfile, 681, top_morph_to_sig.m_sig1, top_morph_to_sig.m_sig2
+                top_morph_to_sig.simplify1(outfile, Lexicon)
+
+	print >>outfile, "\n\n" + "=="*50 + "\n\n"
+
+        for i in range(len(MorphemesToSignatures)):
+            if i == len(MorphemesToSignatures): 
+                break
+    	    top_morph_to_sig = MorphemesToSignatures[i]
+            cutting_signature_string = top_morph_to_sig.m_sig2
+            cutting_signature = Lexicon.Signatures[cutting_signature_string]
+            if cutting_signature.get_stability_entropy() <= ENTROPY_THRESHOLD:
+                print >>outfile, 681, top_morph_to_sig.m_sig1, top_morph_to_sig.m_sig2
+                #top_morph_to_sig.simplify1(outfile, Lexicon)
+	
+
+
+
+        if False:    
+		One_letter_MorphemeToSignature.sort(key  = lambda x: x.m_diff ) 
+		One_letter_MorphemeToSignature.sort(key  = lambda x: len(x.m_stemlist), reverse = True) 
+		for x in One_letter_MorphemeToSignature :
+		    print >>outfile, 668, x.make_rule(), " " , x.display()
+		print >>outfile, "\n"
 	
  
 

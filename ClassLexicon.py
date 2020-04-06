@@ -188,9 +188,7 @@ class MorphemeToSignature:
 
 	# fix short-stem signature, new_sig1
         for stem in self.m_stemlist:
-            print >>outfile, stem
             for affix in old_sig1.split("="):
-                print >>outfile, 194, affix 
                 if affix.startswith(raw_diff):
                     if affix == raw_diff:
                         continue
@@ -316,6 +314,7 @@ class Signature:
                 templist.append(chunk[::-1])
             stemlist = templist
         for stem in stem_list:
+            stem = remove_label(stem)
             lastletter = stem[-1]
             if lastletter not in frequency:
                 frequency[lastletter] = 1.0
