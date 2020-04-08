@@ -104,10 +104,7 @@ print "\n1. Finished reading word list. Word count:", len(Lexicon.Word_counts_di
 # --------------------------------------------------------------------##
 #        Initialize some output files
 # --------------------------------------------------------------------##
-
-#print "we have not done anything yet, in main lxa5.py file"
-#initialize_files(Lexicon, "console", 0, 0, config_lxa["language"])
-
+ 
 if not os.path.isdir(config_lxa["outfolder"]):
     try:
         os.mkdir(config_lxa["outfolder"])
@@ -194,32 +191,7 @@ if config_lxa["dynamics"] and config_lxa["datatype"]  == "CORPUS":
 
  
 
-
-
-if False:
-    print
-    "3. Finding sets of extending signatures."
-    extending_signatures(Lexicon, FileObject["SigExtensions"])
-
-if False:
-    print "Finding pairs of signatures that share words."
-    FindSignatureChains(Lexicon)
-
-if config_lxa["radviz"]:
-    print     "3.1 Creating data structure for radviz."
-    (SignatureStemList, SigDataDict) = signature_by_stem_data(Lexicon)
-    for sig in SignatureStemList:
-        print
-        "\n", sig, "\n", SignatureStemList[sig], "\n", SigDataDict[sig]
-
-if False:
-    print "\n4. Printing signatures."
-    suffix = "2"
-    #Lexicon.printSignatures(FileObject, g_encoding, FindSuffixesFlag,suffix)
-    Lexicon.printSignatures(config_lxa["encoding"],
-                                config_lxa["affix_type"],
-                            suffix)
-
+ 
 if False:
     print     "5. Printing signature transforms for each word."
     printWordsToSigTransforms(Lexicon.SignatureToStems,
@@ -227,12 +199,7 @@ if False:
                               Lexicon.StemCorpusCounts,
                               g_encoding,
                               FindSuffixesFlag)
-
-if False:
-    print
-    "6. Slicing signatures."
-    SliceSignatures(Lexicon, g_encoding, FindSuffixesFlag, FileObject["Log"])
-
+ 
 if config_lxa["FSA"]:
     print
     "7. Adding signatures to the FSA."

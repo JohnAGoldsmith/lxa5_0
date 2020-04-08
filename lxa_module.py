@@ -803,49 +803,7 @@ def RemoveRareSignatures(Lexicon, encoding, FindSuffixesFlag, outfile):
         if Robustness(sig) < RobustnessCutoff:
             continue
 
-
-# ----------------------------------------------------------------------------------------------------------------------------#
-def SliceSignatures(Lexicon, encoding, FindSuffixesFlag, outfile):
-    # ----------------------------------------------------------------------------------------------------------------------------#
-    # we look to see if highly robust signatures like NULL.ly can be used to simplify
-    # other longer signatures, like NULL.al.ally, making it NULL.al(ly), feeding NULL.ly
-    # This is easiest to detect with the signatures, but easiest to implement the changes in the FSA.
-
-
-    RobustnessCutoff = 1000  # signatures with this robustness are considered secure, and factorable.
-    NumberOfStemsThreshold = 30
-    for sig in Lexicon.SignatureToStems:
-        if len(Lexicon.SignatureToStems[sig]) < NumberOfStemsThreshold:
-            continue
-        print >> outfile, "sig: ", sig
-        for stem in Lexicon.SignatureToStems[sig]:
-            # construct its words from its stems
-            # those words should all share the same signatures
-            # other than sig, how many are there?
-            wordlist = list()
-            # print "stem: ", stem,
-            for affix in sig:
-                if affix == "NULL":
-                    affix = ""
-                word = stem + affix
-                wordlist.append(word)
-            # print wordlist,
-            firstword = wordlist.pop()
-            signatureset = Lexicon.WordToSig[firstword]
-            # print firstword, signatureset
-            for word in wordlist:
-                this_signatureset = Lexicon.WordToSig[word]
-                # if this_signatureset != signatureset:
-                print >> outfile, '{:20}{:70}{:20}{:35}'.format(firstword, signatureset, word, this_signatureset)
-
-
-
-
-
-            # ----------------------------------------------------------------------------------------------------------------------------#
-    return
-
-
+ 
 # ----------------------------------------------------------------------------------------------------------------------------#
 def printWordsToSigTransforms(SignatureToStems, WordToSig, StemCounts, outfile_SigTransforms, g_encoding,
                               FindSuffixesFlag):
