@@ -52,12 +52,13 @@ class MorphemeToSignature:
         old_sig2 = self.m_sig2
         new_sig1 = self.m_new_sig1
         new_sig2 = self.m_new_sig2
-        print >>outfile, "\n", 683, self.display_rule() +  " put it in Lexicon.Parses as " , diff, "=>", new_sig2
+        print >>outfile, "\n", 683, self.display_rule(), "From:", self.display_old()
 	# fix long-stem signature, new_sig2:
         for affix in new_sig2.split("="):
             lexicon.Parses[(diff,affix)] = 1
             print >>outfile, " adding new parses" , diff, affix
 
+        # remove long stems parses from the old_sig2
 	for stem in self.m_stemlist:
             stem += raw_diff
             for affix in old_sig2.split("="):
@@ -65,7 +66,8 @@ class MorphemeToSignature:
                     print >>outfile, 65, "Removing (", stem, affix, ")"
                     del lexicon.Parses[(stem,affix)]
                 else:
-                    print >>outfile, 68, "can't remove ", stem, affix 
+                    print >>outfile, 68, "Can't remove ", stem, affix 
+             
 
 	# fix short-stem signature, new_sig1
         for stem in self.m_stemlist:
