@@ -26,6 +26,7 @@ def read_dx1(infile, Lexicon, BreakAtHyphensFlag, wordcountlimit):
                         if word not in Lexicon.Word_counts_dict:
                             Lexicon.WordBiographies[word] = list()
                             Lexicon.Word_counts_dict[word] = 0
+                            Lexicon.WordBiographies[word].append("original")
                         Lexicon.Word_counts_dict[word] += count
                         if len(word) > longest_word_length:
                             longest_word_length = len(word)
@@ -38,6 +39,7 @@ def read_dx1(infile, Lexicon, BreakAtHyphensFlag, wordcountlimit):
                             word = word[1:]
                     if word not in Lexicon.Word_counts_dict:
                         Lexicon.WordBiographies[word] = list()
+                        Lexicon.WordBiographies[word].append("original")
                         Lexicon.Word_counts_dict[word] = 0
                         Lexicon.Word_list_forward_sort.append(word)
                         Lexicon.Word_list_reverse_sort.append(word)
@@ -46,7 +48,9 @@ def read_dx1(infile, Lexicon, BreakAtHyphensFlag, wordcountlimit):
                         longest_word_length = len(word)
                     if len(Lexicon.Word_counts_dict) >= wordcountlimit:
                         break
-                Lexicon.WordBiographies[word] = list()
+                if word not in Lexicon.WordBiographies:
+                    Lexicon.WordBiographies[word] = list()
+                    print 53
             Lexicon.LongestWordLength = longest_word_length
             Lexicon.sort_words()
 

@@ -1,7 +1,5 @@
 import math
-#from class_alternation import *
 from signaturefunctions import *
-#from svg import *
 from html_lxa import *
 from IPython.display import display
 
@@ -230,10 +228,7 @@ def print_complex_signature_to_svg (outfile_html, sig, lexicon):
 def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  DisplayList, totalrobustness, suffix_flag):
 
     start_an_html_file (signature_feeding_outfile)
-
     stemlist = []
-
-
     for sig, stemcount, robustness, stability, stem in DisplayList:
         this_signature = Lexicon.Signatures[sig]
         stemlist = this_signature.stem_counts.keys()
@@ -275,11 +270,6 @@ def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  Disp
                         #end_an_html_table_row(signature_feeding_outfile)
         #end_an_html_table(signature_feeding_outfile)
 
-
-
-
-
-
         number_of_columns = 7
         colno=0
         start_an_html_table(signature_feeding_outfile)
@@ -301,8 +291,6 @@ def print_signature_list_2(signature_feeding_outfile, lxalogfile, Lexicon,  Disp
                     colno = 0
         end_an_html_table(signature_feeding_outfile)
         end_an_html_div(signature_feeding_outfile)
-
-
     signature_feeding_outfile.close()
 
 # ----------------------------------------------------------------------------------------------------------------------------#
@@ -310,7 +298,6 @@ def print_unlikelysignatures(this_file, signatures, ColumnWidth):
     print "   Printing unlikely signatures file."
     runningsum = 0.0
     formatstring1 = '{0:<70}{1:>10s}'
-    # formatstring2 = '{:<70}{:10d}  '
     formatstring2 = '{:<70} '
     print >> this_file, "\n" + "-" * 150
     print >> this_file, formatstring2.format("Unlikely Signatures")
@@ -334,12 +321,13 @@ def print_suffixes(outfile, Suffixes, RawSuffixes):
     print >> outfile, "        Suffixes "
     print >> outfile, "--------------------------------------------------------------"
     print "   Printing suffixes."
+    formatstring = "{:12s}{:9,d}"
     suffixlist = list(Suffixes.keys())
     suffixlist.sort(key=lambda suffix: Suffixes[suffix], reverse=True)
     for suffix in suffixlist:
         if suffix == "":
                 suffix = "NULL"
-        print >> outfile, "{:12s}{:9,d}".format(suffix, Suffixes[suffix])
+        print >> outfile, formatstring.format(suffix, Suffixes[suffix])
         if suffix in RawSuffixes:
             count = 0
             how_many = 5
@@ -358,12 +346,10 @@ def print_suffixes(outfile, Suffixes, RawSuffixes):
     for suffix in suffixlist:
         if suffix == "":
                 suffix = "NULL"
-        print >> outfile, "{:12s}{:9,d}".format(suffix, Suffixes[suffix])
+        print >> outfile, formatstring.format(suffix, Suffixes[suffix])
 
     outfile.close()
     return suffixlist
-
-
 # ----------------------------------------------------------------------------------------------------------------------------#
 def print_stems(outfile1, outfile_stems_and_unanalyzed_words, Lexicon, suffixlist):
     StemToWord = Lexicon.StemToWord
@@ -393,7 +379,6 @@ def print_stems(outfile1, outfile_stems_and_unanalyzed_words, Lexicon, suffixlis
             if word in WordCounts:
                 wordcount = WordCounts[word]
             print >> outfile1, '{:20}{:6n} '.format(word, wordcount),
-
         print >> outfile1
 
     # Add to wordlist all the words that have no analysis
@@ -402,7 +387,6 @@ def print_stems(outfile1, outfile_stems_and_unanalyzed_words, Lexicon, suffixlis
     for word in WordCounts:
 	if word not in Lexicon.WordToSig:
 	    stems_and_unanalyzed_words.append(word + "*")
-            #print "printing to files 387", word
     stems_and_unanalyzed_words.sort()
     print >> outfile_stems_and_unanalyzed_words, "--------------------------------------------------------------"
     print >> outfile_stems_and_unanalyzed_words, "---  Stems and unanalyzed words"
@@ -420,7 +404,7 @@ def print_stems(outfile1, outfile_stems_and_unanalyzed_words, Lexicon, suffixlis
                     if word in WordCounts:
 		        stemcount += WordCounts[word]
 		StemCounts[stem] = stemcount
-		print    >> outfile_stems_and_unanalyzed_words, '{:5d}'.format(stemcount), '; ',
+		print >> outfile_stems_and_unanalyzed_words, '{:5d}'.format(stemcount), '; ',
 		stemcount = float(stemcount)
 		for word in wordlist:
                     wordcount = 0
@@ -455,8 +439,6 @@ def AverageCountOfTopStems(howmany, sig, Signatures, StemCounts, logfile):
         average += countlist[n]
     average = average / howmany
     return average
-
-
 # ---------------------------------------------------------#
 def makeWordListFromSignature(signature, stemset):
     wordlist = list()
@@ -468,13 +450,10 @@ def makeWordListFromSignature(signature, stemset):
             else:
                 word = stem + affix
         wordlist.append(word)
-
     return wordlist
-
-
 # ---------------------------------------------------------#
 def findWordListInformationContent(wordlist, bitsPerLetter):
-    # ----------------------------------------------------------------------------------------------------------------------------#
+# ----------------------------------------------------------------------------------------------------------------------------#
     phonoInformation = 0
     orderingInformation = 0
     letters = 0
@@ -484,17 +463,14 @@ def findWordListInformationContent(wordlist, bitsPerLetter):
         phonoInformation += bitsPerLetter * wordlength
         orderingInformation += wordlength * (wordlength - 1) / 2
     return (letters, phonoInformation, orderingInformation)
-
-
 # ---------------------------------------------------------#
 def findSignatureInformationContent(signature, stemset, bitsPerLetter):
-    # ----------------------------------------------------------------------------------------------------------------------------#
+# ----------------------------------------------------------------------------------------------------------------------------#
     stemSetPhonoInformation = 0
     stemSetOrderingInformation = 0
     affixPhonoInformation = 0
     affixOrderingInformation = 0
     letters = 0
-    #stemset = signatures[signature]
     for stem in stemset:
         stemlength = len(stem)
         letters += stemlength
@@ -512,8 +488,6 @@ def findSignatureInformationContent(signature, stemset, bitsPerLetter):
     phonoInformation = int(stemSetPhonoInformation + affixPhonoInformation)
     orderingInformation = int(stemSetOrderingInformation + affixOrderingInformation)
     return (letters, phonoInformation, orderingInformation)
-
-
 # ----------------------------------------------------------------------------------------------------------------------------#
 def  StabilityAsEntropy(stemlist, MakeSuffixesFlag):
 # ----------------------------------------------------------------------------------------------------------------------------#
@@ -538,11 +512,9 @@ def  StabilityAsEntropy(stemlist, MakeSuffixesFlag):
         frequency[letter] = frequency[letter] / len(stemlist)
         entropy += -1.0 * frequency[letter] * math.log(frequency[letter], 2)
     return entropy
-
-
 # ----------------------------------------------------------------------------------------------------------------------------#
 def find_N_highest_weight_affix(wordlist, suffix_flag):
-    # ----------------------------------------------------------------------------------------------------------------------------#
+# ----------------------------------------------------------------------------------------------------------------------------#
 
     maximalchunksize = 6  # should be 3 or 4 ***********************************
     totalweight = 0
@@ -593,7 +565,7 @@ def find_N_highest_weight_affix(wordlist, suffix_flag):
 
 
 # ----------------------------------------------------------------------------------------------------------------------------#
-def print_all_words(outfile, WordCounts, WordToSig):
+def print_all_words(outfile, lexicon, WordCounts, WordToSig):
     # ----------------------------------------------------------------------------------------------------------------------------#
     words = WordCounts.keys()
     words.sort()
@@ -610,7 +582,8 @@ def print_all_words(outfile, WordCounts, WordToSig):
             print >> outfile, '{0:<30}'.format(word), ":", WordCounts[word]
         else:
             print >> outfile, '  {0:<28}'.format(word), ":", WordCounts[word]
-
+        for line in lexicon.WordBiographies[word]:
+            print >>outfile, line
 # ----------------------------------------------------------------------------------------------------------------------------#
 def print_words(Lexicon, outfile_words, outfile, outfile_html, logfile,   ColumnWidth):
 # ----------------------------------------------------------------------------------------------------------------------------#
@@ -623,22 +596,20 @@ def print_words(Lexicon, outfile_words, outfile, outfile_html, logfile,   Column
     print >> outfile_words, "-" * 70
     MINLENGTH = 1
     for word in wordlist:
-        j = 0
-        for i in range(MINLENGTH,len(word)):
-            if word[:i] in Lexicon.StemToSignature:
-                print >>outfile_words,  word[j:i] + " ",
-                j = i
-        print >>outfile_words, word[j:]
+        print >>outfile_words, word
+        #j = 0
+        #for i in range(MINLENGTH,len(word)):
+        #    if word[:i] in Lexicon.StemToSignature:
+        #        print >>outfile_words,  word[j:i] + " ",
+        #        j = i
+        #print >>outfile_words, word[j:]
         if word in Lexicon.WordToSig:
             for n in range(len(Lexicon.WordToSig[word])):
                 stem, sig = Lexicon.WordToSig[word][n]
                 print >> outfile_words, "\t",formatstring.format(stem, sig)
-
+        for line in Lexicon.WordBiographies[word]:
+            print >>outfile_words, "  bio:",  line
     outfile_words.close()
-
-
-
-
 
     Lexicon.sort_words()
     print >> outfile, "***"
@@ -663,17 +634,17 @@ def print_words(Lexicon, outfile_words, outfile, outfile_html, logfile,   Column
             print             "{:4d}{:10,d}".format(i, ambiguity_counts[i])
 
     for word in wordlist:
-        current_left_edge = 0
-        broken_word = ""
-        Lexicon.break_word_by_suffixes(word)
-        for i in range(len(word)):
-            if word[:i] in Lexicon.StemToWord:
-                piece = word[current_left_edge:i]
-                broken_word =  broken_word + " " +  piece
-                current_left_edge = i
-        broken_word += " " + word[current_left_edge:]
-
-        print >>outfile, formatstring.format(word, broken_word)
+        #current_left_edge = 0
+        #broken_word = ""
+        #Lexicon.break_word_by_suffixes(word)
+        #for i in range(len(word)):
+        #    if word[:i] in Lexicon.StemToWord:
+        #        piece = word[current_left_edge:i]
+        #        broken_word =  broken_word + " " +  piece
+        #        current_left_edge = i
+        #broken_word += " " + word[current_left_edge:]
+        #print >>outfile, formatstring.format(word, broken_word)
+        print >>outfile, word
         if word in Lexicon.WordToSig:
             for n in range(len(Lexicon.WordToSig[word])):
 		    stem, sig = Lexicon.WordToSig[word][n]

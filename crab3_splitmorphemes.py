@@ -83,8 +83,6 @@ def	Words_with_multiple_analyses_high_entropy (Lexicon, affix_type):
 	# the real work! For cutting affixes into two parts
         ENTROPY_THRESHOLD = 1.0
         for i in range(len(MorphemesToSignatures)):
-            #if i == len(MorphemesToSignatures): 
-            #    break
     	    morph_to_sig = MorphemesToSignatures[i]
             cutting_signature_string = morph_to_sig.m_sig2
             cutting_signature = Lexicon.Signatures[cutting_signature_string]
@@ -93,13 +91,8 @@ def	Words_with_multiple_analyses_high_entropy (Lexicon, affix_type):
 
 	print >>outfile, "\n\n" + "=="*50 + "\n\n"
  
-
-
         outfile.close()
         outfileTex.close()
-
-
-
 # ----------------------------------------------------------------------------------------------------------------------------#
 def	Words_with_multiple_analyses_low_entropy (Lexicon, affix_type):
 # ----------------------------------------------------------------------------------------------------------------------------
@@ -130,13 +123,15 @@ def	Words_with_multiple_analyses_low_entropy (Lexicon, affix_type):
         formatstring = "{0:10s} {1:18s}  {2:30s} {3:18s} {4:30s}"
         formatstringTex = "{0:10s} & {1:18s}  &  {2:30s}  & {3:18s}  & {4:30s} \\\\"
 	words = Lexicon.Word_list_forward_sort
-	sigpaires = list()
+	sigpairs = list()
         Biparses = dict()
 	for word in Lexicon.WordToSig:
+            if word[0] == ":":
+                continue
             if (Lexicon.WordToSig[word]) > 1:
                 sigpairs = sorted(Lexicon.WordToSig[word], key = lambda x: len(x[0]) )   #sort by length of stem 
 	        for i in range(len(sigpairs)):
-                     stem1, sig1 = sigpairs[i]
+                     stem1, sig1 = sigpairs[i]                     
                      for j in range(i+1,len(sigpairs)):
                          stem2, sig2 = sigpairs[j]
                          biparse_string = stem1 + " "+ sig1 + " " + stem2 + " " + sig2
@@ -148,10 +143,11 @@ def	Words_with_multiple_analyses_low_entropy (Lexicon, affix_type):
 	Biparses_list.sort(key = lambda x: x.m_sigstring2)
 	Biparses_list.sort(key = lambda x: x.m_difference)
 
+        print >>outfile, "\n", 155
 
-        if False:  
+        if True:  
 		for x in Biparses_list:
-			print >>outfile, formatstring.format(x.m_difference, x.m_stem1,  x.m_sigstring1,x.m_stem2, x.m_sigstring2)
+			print >>outfile, 158, formatstring.format(x.m_difference, x.m_stem1,  x.m_sigstring1,x.m_stem2, x.m_sigstring2)
 		        print >>outfileTex, formatstringTex.format(x.m_difference, x.m_stem1, x.m_sigstring1,x.m_stem2,  x.m_sigstring2)
 		print >>outfileTex, endtab
 		print >>outfileTex, enddoc
@@ -172,18 +168,24 @@ def	Words_with_multiple_analyses_low_entropy (Lexicon, affix_type):
             for pair in v:
                 morph_to_sig.add_stem(pair[0])
             MorphemesToSignatures.append(morph_to_sig)
- 	
-        MorphemesToSignatures.sort(key  = lambda x: x.m_diff ) 
-        MorphemesToSignatures.sort(key  = lambda x: len(x.m_stemlist), reverse = True) 
-        for x in MorphemesToSignatures :
-            print >>outfile, x.make_rule(), " " , x.display_old()
+
         print >>outfile, "\n"
+
+        MorphemesToSignatures.sort(key  = lambda x: x.m_sig2 )  	
+        MorphemesToSignatures.sort(key  = lambda x: x.m_diff ) 
+        for x in MorphemesToSignatures :
+            print >>outfile, 186, x.display()
+
+
+        print >>outfile, "\n"
+
+
+
+
   
-
-
-        print >>outfile, "========\n"
+        print >>outfile, "========\n, 189"
         ENTROPY_THRESHOLD = 1.0
-       # for pairs of closely related signatures
+        # for pairs of closely related signatures
         for i in range(len(MorphemesToSignatures)):
             if i == len(MorphemesToSignatures): 
                 break
@@ -192,13 +194,8 @@ def	Words_with_multiple_analyses_low_entropy (Lexicon, affix_type):
             cutting_signature = Lexicon.Signatures[cutting_signature_string]
             if cutting_signature.get_stability_entropy() <= ENTROPY_THRESHOLD:
                 if len(morph_to_sig.m_diff) > 1:
-                    print >>outfile, morph_to_sig.m_diff, morph_to_sig.display_old()
+                    print >>outfile, 200, morph_to_sig.m_diff, morph_to_sig.display_old()
  
- 
-
-
         outfile.close()
         outfileTex.close()
-
-
 

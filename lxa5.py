@@ -277,7 +277,7 @@ if False:
 while True:
     word = raw_input('Inquire about a word: ')
 
-    if word in Lexicon.WordBiographies:
+    if False and word in Lexicon.WordBiographies:
         for line in Lexicon.WordBiographies[word]:
             print line
         print "------------------------"
@@ -345,6 +345,8 @@ while True:
 
 #   ---------------  New section: Parsing in the FSA ------------------------ #
 
+
+if False:    
 
     del CompletedParses[:]
     del IncompleteParses[:]

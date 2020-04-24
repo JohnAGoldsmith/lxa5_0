@@ -85,7 +85,9 @@ class Biparse:
         elif not self.m_sigstring2 == other.m_sigstring2:
             return False
         return True
-
+    def display(self):
+        fstring = "{0:15s} {1:15s} {2:4s} {3:25s} {4:25s}"
+        return fstring.format(self.m_stem1, self.m_stem2, self.m_difference, self.m_sigstring1, self.m_sigstring2)
  
 class CWordList:
     def __init__(self):
@@ -135,8 +137,8 @@ class CLexicon:
         reportnumber = 1
         self.Corpus = list()
         self.Families = family_collection()
+        self.MinimumStemLength = 4
         self.LongestWordLength = 0
-        self.MinimumStemLength = 3
         self.MaximumStemLength = 100
         self.MaximumAffixLength = 15
         self.NameCollisions = dict()
@@ -184,6 +186,15 @@ class CLexicon:
     ## -------                                                      ------- #
     ##              Central signature computation                   ------- #
     ## -------                                                      ------- #
+
+    def EraseWordBiographies(self):
+        for word in self.WordBiographies:
+            original = False
+            if "original" in self.WordBiographies[word]:
+                original = True
+	    self.WordBiographies[word] = list()
+            if original:
+                self.WordBiographies[word].append("original")
 
     def accept_stem_and_signature(self, affix_side, stem, signature_string):
             if signature_string not in self.Signatures:
@@ -268,10 +279,10 @@ class CLexicon:
 
     def get_new_name(self, morpheme):
         if morpheme in self.NameCollisions:
-            name = morpheme + str(self.NameCollisions[morpheme])
+            name = ":" + morpheme + str(self.NameCollisions[morpheme])
             self.NameCollisions[morpheme] += int(1)
         else:
-	    name = morpheme + "0" # that's zero
+	    name = ":" +  morpheme + "0" # that's zero
             self.NameCollisions[morpheme] = int(1)
         return name
 
@@ -303,6 +314,7 @@ class CLexicon:
                 #if all(affix in siglist for affix in subsiglist):
                 #    print 225, "\t" , sig, subsig
     def break_word_by_suffixes(self, word):
+        # not used I think.
         current_left_edge = 0
         broken_word = ""
         for i in range(len(word)):
@@ -387,7 +399,11 @@ class CLexicon:
 
         for sig, signature in SortedListOfSignatures:
             stems = sorted(signature.get_stems())
-            exemplar_stem = stems[0]
+            exemplar_stem = ""
+            for s in stems:
+                if not s[0] == ":":
+                    exemplar_stem = s
+                    break     
             stem_count = len(stems)
             robustness = get_robustness (sig,stems)
             DisplayList.append((sig, len(stems), robustness, signature.get_stability_entropy(), exemplar_stem))
