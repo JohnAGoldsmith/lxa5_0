@@ -146,14 +146,8 @@ def widen_scope_of_signatures(Lexicon, affix_type, minimum_stem_length):
                 else:
                     stem_collection = [stem for stem in stem_collection if stem in affixes_to_stem[affix]]
         stem_collection.sort()
-        if "appointee" in stem_collection:
-            print 150, "appointee in stems"
         for stem in stem_collection:
-                if stem == "appointee":
-                    print 151, "appointee", sig
                 if stem in Lexicon.StemToSignature:
-                    if stem == "appointee":
-                        print 154, "stem appointee already there"
                     pass
                 else:
                     print >>thisfile, sig, "New stem:", stem
@@ -480,16 +474,15 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
                 filename = "5_assigning_signatures.txt"
                 headerlist = [ "5. Assign a single signature to each stem."]
                 contentlist = list()
-
-	#Lexicon.EraseWordBiographies()
-
+ 
         stemlist = Lexicon.StemToAffix_dict.keys()
         stemlist.sort()
         temp_sig_dict = dict()
         if verboseflag:
                 print "     Assign a signature to each stem (occasionally two)."
         for stem in stemlist:
-                sig = sig_dict_to_string(Lexicon.StemToAffix_dict[stem])  #MakeSignatureStringFromAffixDict(Lexicon.StemToAffix[stem])
+                sig = sig_dict_to_string(Lexicon.StemToAffix_dict[stem]) 
+                #print 491, sig
                 if sig not in temp_sig_dict:
                         temp_sig_dict[sig] = 0
                 temp_sig_dict[sig] += 1
@@ -529,7 +522,7 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
                 Lexicon.StemToWord[stem][word] = 1
                 if word in Lexicon.Word_counts_dict:
                     Lexicon.StemCorpusCounts[stem] += Lexicon.Word_counts_dict[word]
-                Lexicon.WordBiographies[word].append(prefix + " In signature " + signature_string)
+                Lexicon.WordBiographies[word].append(prefix + ": " + signature_string)
 
             this_signature.add_stem(stem)
             this_signature.add_affix(affix)

@@ -69,17 +69,15 @@ class MorphemeToSignature:
                     word = stem1
                 else:
                     word = stem1 + affix
-                if word == "abductee":
-                    print >>outfile, 73, word, "stem1", stem1, "affix", affix
                 if (stem1,affix) in lexicon.Parses:
                     print >>outfile, 65, "Removing (", stem1, affix, ")"
                     lexicon.WordBiographies[word].append ("crab3 remove: " + stem1 + "/" + affix) 
                     del lexicon.Parses[(stem1,affix)]
                 else:
                     print >>outfile, 68, "Can't remove ", stem1, affix 
-                    lexicon.WordBiographies[word].append ("crab 3 couldn't remove (" + stem1 + " " + affix +  ")")
+                    lexicon.WordBiographies[word].append ("crab 3 could not remove (" + stem1 + " " + affix +  ")")
                 if word in lexicon.WordBiographies:
-                    lexicon.WordBiographies[word].append("crab3, now:   " +  stem + " " + diff + " " + affix + " -> " + stem + " "+ raw_diff + " " + affix)
+                    lexicon.WordBiographies[word].append("crab3:   " +  stem + " " + diff + " " + affix + " -> " + stem + " "+ raw_diff + " " + affix)
 	# signature with shorter stems             
         for stem in self.m_stemlist:
             lexicon.Parses[(stem,diff)] = 1
@@ -93,7 +91,7 @@ class MorphemeToSignature:
                     if (stem,affix) in lexicon.Parses:
 		            print >>outfile, 77, "Removing (", stem, "," , affix, ")"     
 			    del lexicon.Parses[(stem,affix)]
-                            lexicon.WordBiographies[word].append("crab3: remove: " + stem + "/" + affix)                            
+                            lexicon.WordBiographies[word].append("crab3 remove: " + stem + "/" + affix)                            
 		    else:
-                            print >>outfile, "Couldn't find  ", stem, affix, "must have already been deleted."
+                            print >>outfile, "crab3 could not find  ", stem, affix, "must have already been deleted."
                     #lexicon.Parses[()] = 1

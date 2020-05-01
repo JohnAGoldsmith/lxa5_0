@@ -198,4 +198,3 @@ def	Words_with_multiple_analyses_low_entropy (Lexicon, affix_type):
  
         outfile.close()
         outfileTex.close()
-

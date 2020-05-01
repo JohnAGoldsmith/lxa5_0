@@ -1,4 +1,5 @@
 from copy import deepcopy
+from stringfunctions import remove_label 
 
 # -------------      Some short utility functions ---------------------------------------
 
@@ -26,24 +27,20 @@ def AddAffixToSigString(affix, sigstring):
     sep = '='
     return sep.join(affixlist)
 
-
-
-
 def sig_dict_to_string(affix_dict):
-    affix_list = affix_dict.keys()
+    affix_list = list()
+    for affix in affix_dict.keys():
+        affix_list.append(remove_label(affix))
     affix_list.sort()
-    count_of_NULLs = 0
     for i in range(len(affix_list)):
         if len(affix_list[i]) == 0:
             affix_list[i] = "NULL"
-            count_of_NULLs += 1
     return "=".join(affix_list)
 
 def sig_dict_to_list(affix_dict):
     affix_list = affix_dict.keys()
     affix_list.sort()
     return affix_list
-
 
 #deprecated:
 def make_signature_string_from_affix_dict(affix_dict):
@@ -60,12 +57,12 @@ def sig_list_to_sig_string(siglist):
     if len(siglist) == 0:
         print "signature functions 54 problem"
         return ""
-    for i in range(len(siglist)):
-        if len(siglist[i]) == 0:
-            siglist[i] = "NULL"
-    return "=".join(siglist)
-
-#def MakeSignatureStringFromSignatureList(siglist):
+    affix_list = [remove_label(affix) for affix in siglist]
+    for i in range(len(affix_list)):
+        if len(affix_list[i]) == 0:
+            affix_list[i] = "NULL"
+    affix_list.sort()
+    return "=".join(affix_list)
 
 def make_signature_string_from_signature_list(siglist):
     if len(siglist) == 0:
@@ -78,19 +75,13 @@ def make_signature_string_from_signature_list(siglist):
 
 def signature_string_to_signature_list(sigstring):
     temp_list = sigstring.split("=")
-#def MakeSignatureListFromSignatureString(sigstring):
     siglist = list()
     for affix in temp_list:
-        #if affix == "NULL":
-        #    siglist.append("")
-        #else:
         siglist.append(affix)
     return siglist
 
-
 def NumberOfAffixesInSigString(sig):
     return sig.count("=") + 1
-
 
 def list_to_string(mylist):
     outstring = ""
