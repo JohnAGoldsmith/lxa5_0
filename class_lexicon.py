@@ -4,7 +4,7 @@ import operator
 import class_signature as Sig
 import stringfunctions as Strfn
 from printing_to_files import *
-from family import family
+from class_family import family
 
 
 # This is just part of documentation:
@@ -42,27 +42,51 @@ class family_collection:
         self.m_families = dict() # key is signature_string and value is a family
     def nucleus_to_children(self, sigstring):
         return self.m_families[sigstring]   #this is a *list*
+    def create_families(self, lexicon, number_of_families = 30):
+        tempfile = open ("tempfile.txt", "w" )
+        signature_list = lexicon.Signatures.values()
+        signature_list.sort(key = lambda  sig: sig.get_stem_count(), reverse=True)
+        if number_of_families > len(lexicon.Signatures):
+            number_of_families = len(lexicon.Signatures)
+        nucleus_list = list()
+        for signo in range(number_of_families):
+            self.add_family(signature_list[signo])
+            nucleus_list.append(signature_list[signo])
+        signature_list = signature_list[number_of_families: ]
+        nucleus_list.sort(key = lambda sig: sig.get_affix_length(), reverse=True )
+        # check if one of these seeds contains the other  
+  
+        # now add signatures to these families
+        # sort for longest signature first, so that when we look at the rest of the signatures, it's the longest signature 
+	# of the nucelus signatures that captures each of the signatures
+	
+        for signo in range(len(signature_list)):
+            this_sig = signature_list[signo]
+            for nucleus_sig in nucleus_list:
+                if this_sig.contains(nucleus_sig):
+                    self.m_families[nucleus_sig.display()].add_signature(this_sig)
+                    #print >>tempfile, 78, self.m_families[nucleus_sig.display()].print_family(tempfile)
+                    break 
+        self.print_families(tempfile)
+        tempfile.close()
+
     def add_family(self, nucleus_sig):
-        #nucleus_sig_list = nucleus_sig.get_affix_list()
-        nucleus_sig_string = nucleus_sig.get_affix_string()
+        nucleus_sig_string = nucleus_sig.display()
         new_family = family(nucleus_sig_string)
         self.m_families[nucleus_sig_string] = new_family
+
     def get_family(self, nucleus_string):
         return self.m_families[nucleus_string]
+
     def add_signature(self, signature):
         sigstring = signature.get_affix_string()
         for this_family in self.m_families:
-            #print "  >>62," "checking each nucleus family: ", this_family
             if contains(sigstring, this_family):
-                #print "  >>65 adding ",  sigstring, "to this family."
                 self.m_families[this_family].add_signature(signature)
             else:
                 pass
-                #print "  >>68 does not contain."
-        #print "  >>end of 'add_signature' "
     def print_families(self, this_file):
         for this_family in self.m_families:
-            #print 63, this_family
             self.m_families[this_family].print_family(this_file)
 
 
@@ -150,7 +174,7 @@ class CLexicon:
         self.RawSuffixes = dict(); #key is a raw suffix (just a continuaton) and value is a list of its protostems
         self.ReverseWordList = list()
         self.RemovedSignatureList = list()
-        self.Signatures=dict() ; #key is string, value is a Signature object
+        self.Signatures=dict() ; #key is (signature-)string, value is a Signature object
         self.Signatures_containment = dict() # key is signature string, value is list of subsignature strings
         self.SignatureBiographies=dict()
         self.StemCorpusCounts = {}

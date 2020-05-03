@@ -40,7 +40,15 @@ class Signature:
         #print 142, make_signature_string_from_signature_list(self.affixes_list)
         return Sigfn.make_signature_string_from_signature_list(self.affixes_list)
     def get_affix_count(self, affix):
-        return len(self.affixes_dict[affix])
+        return len(self.affixes_list[affix])
+    def get_stem_count(self):
+        return len(self.stem_counts)
+    def contains(self, other_sig):
+        for item in other_sig.affixes_list:
+            if item not in self.affixes_list:
+                return False
+        return True
+
     def get_internal_robustness(self):
         if self.robustness_clean:
 	    #print 145, self.robustness
@@ -89,3 +97,5 @@ class Signature:
             entropy += -1.0 * frequency[letter] * math.log(frequency[letter], 2)
         self.stability_entropy = entropy
         return entropy   
+    def display(self):
+        return "=".join(self.get_affix_list())

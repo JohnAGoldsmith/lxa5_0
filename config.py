@@ -1,5 +1,5 @@
 config_lxa = {"language": "english",
-'word_count_limit': 50000,
+'word_count_limit': 100000,
 'data_folder': "/home/john/Dropbox/data/english/dx1/",
 'infilename': "morphochallenge_gt10.dx1",
 'affix_type': "suffix",

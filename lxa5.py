@@ -25,7 +25,7 @@ from read_data import *
 from crab import *
 from config import *
 from initialization import *
-from family import *
+from class_family import *
 
 # --------------------------------------------------------------------##
 def create_and_change_path (newpath):

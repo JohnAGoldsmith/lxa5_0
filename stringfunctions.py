@@ -69,7 +69,9 @@ def filter_by_suffix(suffix, wordlist):
         # print "31", newwordlist
     return newwordlist
 
-def remove_label (affix): # remove trailing digits
+def remove_label (affix): # remove colon and trailing digits
+    if affix[0]==":":
+        affix = affix[1:] 
     return affix.rstrip(string.digits)
 def convert_label(affix): # change trailing digits to "="
         return affix.rstrip(string.digits) + "="

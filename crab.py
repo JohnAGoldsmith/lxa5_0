@@ -76,8 +76,10 @@ def MakeSignatures_Crab_1(Lexicon, affix_type, verboseflag = False):
 
         MinimumStemCountInSignature = 2
         assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature, "crab1")
-        report = Lexicon.produce_lexicon_report()
+        Lexicon.Families.create_families(Lexicon)
 
+        report = Lexicon.produce_lexicon_report()
+        
  
     	 
  
@@ -342,7 +344,6 @@ def create_stem_affix_pairs(Lexicon,  affix_type, verboseflag):
                          #-----------------------------------------------------------------------------------------
         if verboseflag:
                 print_report(filename, headerlist, contentlist)
-        #Step += 1
         if verboseflag:
             verbose_report_on_stem_affix_pairs(Lexicon, affix_type)
  # ----------------------------------------------------------------------------------------------------------------------------#
@@ -527,7 +528,7 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
             this_signature.add_stem(stem)
             this_signature.add_affix(affix)
 
-        temp_sig_dict.clear()
+        temp_sig_dict.clear()  # why?
         if verboseflag:
             print "     End of assigning a signature to each stem."
             print_report(filename, headerlist, contentlist)
