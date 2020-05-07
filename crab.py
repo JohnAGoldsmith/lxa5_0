@@ -78,6 +78,8 @@ def MakeSignatures_Crab_1(Lexicon, affix_type, verboseflag = False):
         assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature, "crab1")
         Lexicon.Families.create_families(Lexicon)
 
+	generate_shadow_signatures(Lexicon)
+
         report = Lexicon.produce_lexicon_report()
         
  
@@ -100,11 +102,13 @@ def MakeSignatures_Crab_3(Lexicon, affix_type, verboseflag = False):
 	assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag)
 	MinimumStemCountInSignature = 2  #   
 	assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature, "crab3a")
-         
-	replace_parse_pairs_from_current_signature_structure_crab(Lexicon,  affix_type )
-	Words_with_multiple_analyses_low_entropy (Lexicon, affix_type)
-	MinimumStemCountInSignature = 2  #   
-	assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature, "crab3b")
+        
+	if False: 
+
+		replace_parse_pairs_from_current_signature_structure_crab(Lexicon,  affix_type )
+		Words_with_multiple_analyses_low_entropy (Lexicon, affix_type)
+		MinimumStemCountInSignature = 2  #   
+		assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature, "crab3b")
 
 
 # ------------------------------------------------------------------------#
@@ -483,7 +487,6 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
                 print "     Assign a signature to each stem (occasionally two)."
         for stem in stemlist:
                 sig = sig_dict_to_string(Lexicon.StemToAffix_dict[stem]) 
-                #print 491, sig
                 if sig not in temp_sig_dict:
                         temp_sig_dict[sig] = 0
                 temp_sig_dict[sig] += 1
@@ -523,7 +526,7 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
                 Lexicon.StemToWord[stem][word] = 1
                 if word in Lexicon.Word_counts_dict:
                     Lexicon.StemCorpusCounts[stem] += Lexicon.Word_counts_dict[word]
-                Lexicon.WordBiographies[word].append(prefix + ": " + signature_string)
+                Lexicon.WordBiographies[word].append(prefix + " core signature-formation: " + signature_string)
 
             this_signature.add_stem(stem)
             this_signature.add_affix(affix)
@@ -564,4 +567,63 @@ def	replace_parse_pairs_from_current_signature_structure_crab(Lexicon, affix_typ
 def	Find_complex_signatures (Lexicon, affix_type):
 # ----------------------------------------------------------------------------------------------------------------------------
 	pass
+
+
+
+
+def agree_on_first_letter_only(str1, str2):
+    if len(str1) == 0 or len(str2) == 0:
+        return False
+    if str1[0] != str2[0]:
+        return False
+    if len(str1) == 1 or len(str2) == 1:
+        return True
+    if str1[1] == str2[1]:
+        return False
+    return True
+# ----------------------------------------------------------------------------------------------------------------------------#
+def	generate_shadow_signatures(lexicon):
+# ----------------------------------------------------------------------------------------------------------------------------
+    """ Each high-entropy signature generates a hypothesis about shadow signatures it probably generates"""
+	
+    for signature in lexicon.Signatures.values():
+        if signature.get_stability_entropy() > 1.5:
+            affixes = [affix for affix in signature.get_affix_list() if affix != "NULL"]
+            affixes.sort()
+            initials = [affix[0] for affix in affixes] 
+            flag = False
+            from_place = 0
+            #print affixes, 586
+            while from_place  < len(affixes) - 1 :
+                #print "from:", affixes[from_place]
+                for to_place in range(from_place+1, len(affixes)):
+                    #print "to:", affixes[to_place]
+                    if  agree_on_first_letter_only(affixes[from_place], affixes[to_place]):
+                        if to_place == len(affixes)-1 or affixes[to_place + 1][0] != affixes[from_place][0]:
+                            package = (initials[from_place], affixes[from_place:to_place+1])
+                            new_sig = list()
+                            for affix in affixes[from_place:to_place+1]:
+                                if len(affix) == 1:
+                                    new_sig.append("NULL")
+                                else: 
+                                    new_sig.append(affix[1:])
+                            new_sig_string = "=".join(new_sig)
+		            print affixes, new_sig_string
+		            from_place = to_place + 1
+                            #print 597, from_place, to_place
+                            break
+                    else:  
+                        #print 600, affixes[from_place], affixes[to_place]
+                        from_place = to_place
+                        break     
+
+
+
+
+
+
+
+
+
+
 

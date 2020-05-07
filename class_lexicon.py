@@ -65,7 +65,6 @@ class family_collection:
             for nucleus_sig in nucleus_list:
                 if this_sig.contains(nucleus_sig):
                     self.m_families[nucleus_sig.display()].add_signature(this_sig)
-                    #print >>tempfile, 78, self.m_families[nucleus_sig.display()].print_family(tempfile)
                     break 
         self.print_families(tempfile)
         tempfile.close()
@@ -222,12 +221,10 @@ class CLexicon:
 
     def accept_stem_and_signature(self, affix_side, stem, signature_string):
             if signature_string not in self.Signatures:
-
                 this_signature = Sig.Signature(affix_side, signature_string)
                 self.Signatures[signature_string] = this_signature
             else:
                 this_signature = self.Signatures[signature_string]
-
             if stem not in self.StemToSignature:
                 self.StemToSignature[stem] = list()
             self.StemToSignature[stem].append(signature_string)

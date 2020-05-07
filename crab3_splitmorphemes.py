@@ -57,7 +57,7 @@ def	Words_with_multiple_analyses_high_entropy (Lexicon, affix_type):
 		print >>outfileTex, endtab
 		print >>outfileTex, enddoc
 
-        Biparses2 = dict()
+        Biparses2 = dict()	
 	for biparse in Biparses_list:
             key = (biparse.m_difference, biparse.m_sigstring1, biparse.m_sigstring2)
             if key not in Biparses2:
