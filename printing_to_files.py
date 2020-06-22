@@ -97,10 +97,16 @@ def print_signature_list_1(this_file,
 
     DisplayList = sorted(DisplayList, key = lambda x: x[2], reverse=True)
     for sig, stemcount, robustness, stability, stem in DisplayList:
+        if sig in Lexicon.ShadowSignatures:
+            print "112 printing, shadow", annotatedsig
+            annotatedsig = "[" + sig  + "]"
+        else:
+            annotatedsig = sig
+
         running_sum += robustness
         robustness_proportion = float(robustness) / total_robustness
         running_sum_proportion = running_sum / total_robustness
-        print >> this_file, formatstring2.format(sig, stemcount, robustness, robustness_proportion,
+        print >> this_file, formatstring2.format(annotatedsig, stemcount, robustness, robustness_proportion,
                                                      running_sum_proportion, stability,  stem)
     print >> this_file, "-" * 60
 
@@ -108,7 +114,11 @@ def print_signature_list_1(this_file,
     stemlist = []
     for sig, stemcount, robustness,stability, stem in DisplayList:
         this_signature = Lexicon.Signatures[sig]
-        print >> this_file, "\n" + "=" * 45, '{0:30s} \n'.format(sig)
+        if sig in Lexicon.ShadowSignatures:
+             annotatedsig = "spurious: " + sig
+        else:
+            annotatedsig = sig
+        print >> this_file, "\n" + "=" * 45, '{0:30s} \n'.format(annotatedsig)
         n = 0
         stemlist = this_signature.get_stems()
         numberofstems = len(stemlist)

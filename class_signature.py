@@ -99,3 +99,5 @@ class Signature:
         return entropy   
     def display(self):
         return "=".join(self.get_affix_list())
+    def latex(self):
+        return self.display() + " & " + str(self.get_stem_count()) + "\\\\"  

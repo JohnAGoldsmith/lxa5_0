@@ -40,6 +40,9 @@ def	Words_with_multiple_analyses_high_entropy (Lexicon, affix_type):
                      stem1, sig1 = sigpairs[i]
                      for j in range(i+1,len(sigpairs)):
                          stem2, sig2 = sigpairs[j]
+                         stability = Lexicon.Signatures[sig2].get_stability_entropy()
+                         if stability < 1.5:
+                             continue
                          biparse_string = stem1 + " "+ sig1 + " " + stem2 + " " + sig2
                          if biparse_string not in Biparses:
                              biparse = Biparse(affix_type, stem1,  stem2, sig1, sig2)

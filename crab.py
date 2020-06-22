@@ -93,6 +93,8 @@ def MakeSignatures_Crab_2(Lexicon, affix_type, verboseflag = False):
 	assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag)
 	MinimumStemCountInSignature = 1  # important! 
 	assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature, "crab2")
+        Lexicon.Families.create_families(Lexicon)
+
 # ------------------------------------------------------------------------#
 def MakeSignatures_Crab_3(Lexicon, affix_type, verboseflag = False):
 # ------------------------------------------------------------------------#
@@ -102,6 +104,7 @@ def MakeSignatures_Crab_3(Lexicon, affix_type, verboseflag = False):
 	assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag)
 	MinimumStemCountInSignature = 2  #   
 	assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature, "crab3a")
+        Lexicon.Families.create_families(Lexicon)
         
 	if False: 
 
@@ -134,7 +137,7 @@ def widen_scope_of_signatures(Lexicon, affix_type, minimum_stem_length):
     Lexicon.widen_scope_of_affixes(affix_type, minimum_stem_length)
     signatures = Lexicon.get_signatures_sorted_by_affix_count(affix_type)
     stems_assigned_to_signatures = dict()
-    thisfile = open("tempfile.txt", "w ")
+    thisfile = open("widensigs.txt", "w ")
     if affix_type == "suffix":
 	affixes_to_stem = Lexicon.SuffixToStem
     else:
@@ -171,7 +174,6 @@ def widen_scope_of_signatures(Lexicon, affix_type, minimum_stem_length):
     thisfile.close()
 #-----------------------------------------------------------------------------#
 def add_prefixal_stem_to_protostems1(Lexicon, contentlist,   verboseflag, previous_word, word, stem):
-
         Lexicon.WordBiographies[word].append(" Found stem " + stem)
         if stem not in Lexicon.Protostems:
             Lexicon.Protostems[stem] = 1
@@ -185,15 +187,13 @@ def add_prefixal_stem_to_protostems1(Lexicon, contentlist,   verboseflag, previo
         Lexicon.Protostems[stem] += 1
 #---------------------------------------------------------------------------------------------------------------------#
 def add_suffixal_stem_to_protostems2(Lexicon,contentlist,  verboseflag, stem):
-
         if verboseflag:
-            reportline = formatstring4.format(word,     "New stem.")
+            reportline = formatstring4.format(word, "New stem.")
             contentlist.append(reportline)
         Lexicon.Protostems[stem] = 1
 #---------------------------------------------------------------------------------------------------------------------#
 def add_suffixal_stem_to_protostems1(Lexicon, contentlist, verboseflag,  word, stem):
-
-    Lexicon.WordBiographies[word].append(" Found stem " + stem)
+    Lexicon.WordBiographies[word].append("Found stem " + stem)
     if stem not in Lexicon.Protostems:
              Lexicon.Protostems[stem] = 1
              if verboseflag:
@@ -259,12 +259,8 @@ def find_protostems_crab(Lexicon, affix_type,verboseflag, maximum_stem_length=-1
                         break
                 previous_word = word
                 continue
-
-
         if verboseflag:
             print_report(filename, headerlist, contentlist)
-
-
 # ---------------------------------------------------------------------------#
 def verbose_report_on_stem_affix_pairs(Lexicon,affix_type):
             filename = "3_parse_pairs.txt"
@@ -285,7 +281,7 @@ def verbose_report_on_stem_affix_pairs(Lexicon,affix_type):
                     affix = item[0]
                     stem= item[1]
                     templist.append (affix + ' ' + stem)
-                    word = clean_join(stem, affix, affix_type)
+                    word = Strfn.clean_join(stem, affix, affix_type)
                     Lexicon.WordBiographies[word].append(" "+ affix +   "=" + stem)
             templist.sort()
             for item in templist:
@@ -324,7 +320,6 @@ def create_stem_affix_pairs(Lexicon,  affix_type, verboseflag):
                                 Lexicon.Parses[(stem, "NULL")] = 1
                             result = stem + "=" + affix 
                             Lexicon.add_stem_to_raw_suffix(affix,stem)
-
                         else:
                             ii = len(word) - i
                             affix = word[:ii]
@@ -414,22 +409,16 @@ def assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, label="")
             Lexicon.StemToAffix_dict[stem][affix] = 1
             if word in Lexicon.Word_counts_dict:  
                 Lexicon.StemCorpusCounts[stem] += Lexicon.Word_counts_dict[word] 
-            #else: 
-            #    print "Non-word:" , word
             if affix not in Affixes:
                     Affixes[affix] = 0
             Affixes[affix] += 1
             if word not in Lexicon.WordBiographies:
                 Lexicon.WordBiographies[word] = list()
-            Lexicon.WordBiographies[word].append(label + "   affix to stem:" + word2 + " (tentative)")
-                
+            Lexicon.WordBiographies[word].append(label + "   affix to stem:" + word2 + " (tentative)")                
         if verboseflag:
             verbose_helper_assign_affixes(Lexicon,filename,headerlist,contentlist)
-
-
  # ----------------------------------------------------------------------------------------------------------------------------#
 def add_to_raw_signatures(Lexicon, affix_type, stem, signature_string, number_of_stems_this_sig, contentlist ):
-
     if signature_string not in Lexicon.RawSignatures:
         Lexicon.RawSignatures[signature_string]= list()
     Lexicon.RawSignatures[signature_string].append(stem)
@@ -442,8 +431,6 @@ def add_to_raw_signatures(Lexicon, affix_type, stem, signature_string, number_of
         Lexicon.SignatureBiographies[signature_string] = list()
     Lexicon.SignatureBiographies[signature_string].append("5. This signature marked as raw: too few stems.")
     return contentlist
-                        #print 523, stem
-
  # ----------------------------------------------------------------------------------------------------------------------------#
 
 def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, MinimumStemCountInSignature, prefix=""):
@@ -585,19 +572,19 @@ def agree_on_first_letter_only(str1, str2):
 def	generate_shadow_signatures(lexicon):
 # ----------------------------------------------------------------------------------------------------------------------------
     """ Each high-entropy signature generates a hypothesis about shadow signatures it probably generates"""
-	
+    shadowsigfile = open("shadow_signatures.txt", "w")
+    shadow_signatures = dict()	
+    ENTROPY_THRESHOLD = 1.6
+    print "5. Finding spurious shadow signatures."
     for signature in lexicon.Signatures.values():
-        if signature.get_stability_entropy() > 1.5:
+        if signature.get_stability_entropy() > ENTROPY_THRESHOLD:
             affixes = [affix for affix in signature.get_affix_list() if affix != "NULL"]
             affixes.sort()
             initials = [affix[0] for affix in affixes] 
             flag = False
             from_place = 0
-            #print affixes, 586
             while from_place  < len(affixes) - 1 :
-                #print "from:", affixes[from_place]
                 for to_place in range(from_place+1, len(affixes)):
-                    #print "to:", affixes[to_place]
                     if  agree_on_first_letter_only(affixes[from_place], affixes[to_place]):
                         if to_place == len(affixes)-1 or affixes[to_place + 1][0] != affixes[from_place][0]:
                             package = (initials[from_place], affixes[from_place:to_place+1])
@@ -607,16 +594,27 @@ def	generate_shadow_signatures(lexicon):
                                     new_sig.append("NULL")
                                 else: 
                                     new_sig.append(affix[1:])
+                            new_sig.sort()
                             new_sig_string = "=".join(new_sig)
-		            print affixes, new_sig_string
+                            print >>shadowsigfile,  "\n{0:25s} shadow signature: {1:20s}".format(signature.display(), new_sig_string),
+                            if new_sig_string in lexicon.Signatures:
+                                entropy = lexicon.Signatures[new_sig_string].get_stability_entropy()
+                                print >>shadowsigfile, "which was present. Entropy is: {0:1.5f} ".format( entropy),
+                                if entropy < ENTROPY_THRESHOLD:
+                                    print >>shadowsigfile, "We will eliminate ", new_sig_string, "."
+                                    lexicon.ShadowSignatures[new_sig_string] = lexicon.Signatures[new_sig_string]
+                            else:
+                                print >>shadowsigfile, " but this shadow signature was not found as a signature" , new_sig_string
 		            from_place = to_place + 1
-                            #print 597, from_place, to_place
                             break
                     else:  
-                        #print 600, affixes[from_place], affixes[to_place]
                         from_place = to_place
                         break     
-
+    print >>shadowsigfile, "\nComplete list of spurious shadow signatures:"
+    siglist = lexicon.ShadowSignatures.keys()
+    siglist.sort()
+    for sig in siglist: 
+        print >>shadowsigfile, sig  
 
 
 

@@ -4,7 +4,7 @@ import operator
 import class_signature as Sig
 import stringfunctions as Strfn
 from printing_to_files import *
-from class_family import family
+from class_family import *
 
 
 # This is just part of documentation:
@@ -36,58 +36,6 @@ def splitsignature(signature, maxlength=80):
             length = 0
     outlist.append("=".join(line))
     return outlist
-
-class family_collection:
-    def __init__(self):
-        self.m_families = dict() # key is signature_string and value is a family
-    def nucleus_to_children(self, sigstring):
-        return self.m_families[sigstring]   #this is a *list*
-    def create_families(self, lexicon, number_of_families = 30):
-        tempfile = open ("tempfile.txt", "w" )
-        signature_list = lexicon.Signatures.values()
-        signature_list.sort(key = lambda  sig: sig.get_stem_count(), reverse=True)
-        if number_of_families > len(lexicon.Signatures):
-            number_of_families = len(lexicon.Signatures)
-        nucleus_list = list()
-        for signo in range(number_of_families):
-            self.add_family(signature_list[signo])
-            nucleus_list.append(signature_list[signo])
-        signature_list = signature_list[number_of_families: ]
-        nucleus_list.sort(key = lambda sig: sig.get_affix_length(), reverse=True )
-        # check if one of these seeds contains the other  
-  
-        # now add signatures to these families
-        # sort for longest signature first, so that when we look at the rest of the signatures, it's the longest signature 
-	# of the nucelus signatures that captures each of the signatures
-	
-        for signo in range(len(signature_list)):
-            this_sig = signature_list[signo]
-            for nucleus_sig in nucleus_list:
-                if this_sig.contains(nucleus_sig):
-                    self.m_families[nucleus_sig.display()].add_signature(this_sig)
-                    break 
-        self.print_families(tempfile)
-        tempfile.close()
-
-    def add_family(self, nucleus_sig):
-        nucleus_sig_string = nucleus_sig.display()
-        new_family = family(nucleus_sig_string)
-        self.m_families[nucleus_sig_string] = new_family
-
-    def get_family(self, nucleus_string):
-        return self.m_families[nucleus_string]
-
-    def add_signature(self, signature):
-        sigstring = signature.get_affix_string()
-        for this_family in self.m_families:
-            if contains(sigstring, this_family):
-                self.m_families[this_family].add_signature(signature)
-            else:
-                pass
-    def print_families(self, this_file):
-        for this_family in self.m_families:
-            self.m_families[this_family].print_family(this_file)
-
 
 class Biparse:
     """
@@ -169,10 +117,11 @@ class CLexicon:
         self.Prefixes = {}
         self.Protostems= dict()
         self.PrefixToStem = dict()
-        self.RawSignatures=dict(); # key is signature-string, and value is a string of stems. These signatures occur only once.
-        self.RawSuffixes = dict(); #key is a raw suffix (just a continuaton) and value is a list of its protostems
+        self.RawSignatures=dict() # key is signature-string, and value is a string of stems. These signatures occur only once.
+        self.RawSuffixes = dict() #key is a raw suffix (just a continuaton) and value is a list of its protostems
         self.ReverseWordList = list()
         self.RemovedSignatureList = list()
+        self.ShadowSignatures = dict() #key is (signature-)string, value is a Signature object 
         self.Signatures=dict() ; #key is (signature-)string, value is a Signature object
         self.Signatures_containment = dict() # key is signature string, value is list of subsignature strings
         self.SignatureBiographies=dict()
@@ -393,7 +342,7 @@ class CLexicon:
         outfile_signatures_svg_html     = open("Signatures_graphic.html", "w")
         outfile_signature_feeding       = open("Signature_feeding.html", "w")
         outfile_signatures_html         = open("Signatures.html", "w")
-        outfile_signatures_latex         = open("Signatures.tex", "w")
+        outfile_signatures_latex        = open("Signatures.tex", "w")
         outfile_index                   = open("Index_iter.html", "w")
         outfile_words                   = open("Words.txt", "w")
         outfile_wordstosigs             = open("WordToSig.txt", "w")
@@ -572,7 +521,6 @@ class CLexicon:
             StemListLetterLength = 0
             for stem in signature.get_stems():
                 self.total_letters_in_stems += len(stem)
-            tempstemlength = 0
 
         word_letter_count = 0
         for word in self.Word_counts_dict:
@@ -590,8 +538,7 @@ class CLexicon:
             StemListLetterLength = 0
             for stem in signature.get_stems():
                 total_stem_length_in_signatures += len(stem)
-            tempstemlength = 0
-
+ 
         reportlist.append("Total word count:" + str(len(self.Word_counts_dict)))
         reportlist.append("Total word letter count:" + str(word_letter_count))
         reportlist.append("Number of analyzed words:" +  str(len(self.WordToSig)))
