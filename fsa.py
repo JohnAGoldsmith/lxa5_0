@@ -1,4 +1,4 @@
-import pygraphviz as pgv
+#import pygraphviz as pgv
 from html_lxa import *
 
 from class_lexicon import ParseChain

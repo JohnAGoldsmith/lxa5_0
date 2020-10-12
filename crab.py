@@ -126,6 +126,17 @@ def MakeSignatures_Crab_4(Lexicon, affix_type, verboseflag = False):
 #-----------------------------------------------------------------------------#
 #          Widen stems in signatures: Crab2
 #-----------------------------------------------------------------------------#
+
+#sig1
+#stem continues all suffixes in sig1
+#family sig1 and satellite affixes a1 a2
+#family contains sig1 + a1  AND sig + a2 BUT not sig1 + a1 + as2
+#sig1 + a1  OR sig + a2 but not BOTH
+
+#sig1  + a1 + a2
+
+
+
 def widen_scope_of_signatures(Lexicon, affix_type, minimum_stem_length):
     """
     Find all stems that go with each affix.

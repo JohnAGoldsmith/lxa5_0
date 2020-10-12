@@ -31,7 +31,6 @@ def	Words_with_multiple_analyses_high_entropy (Lexicon, affix_type):
         formatstring = "{0:10s} {1:18s}  {2:30s} {3:18s} {4:30s}"
         formatstringTex = "{0:10s} & {1:18s}  &  {2:30s}  & {3:18s}  & {4:30s} \\\\"
 	words = Lexicon.Word_list_forward_sort
-	sigpaires = list()
         Biparses = dict()
 	for word in Lexicon.WordToSig:
             if (Lexicon.WordToSig[word]) > 1:
@@ -53,7 +52,7 @@ def	Words_with_multiple_analyses_high_entropy (Lexicon, affix_type):
 	Biparses_list.sort(key = lambda x: x.m_difference)
 
 
-        if False:  
+        if True:  
 		for x in Biparses_list:
 			print >>outfile, formatstring.format(x.m_difference, x.m_stem1,  x.m_sigstring1,x.m_stem2, x.m_sigstring2)
 		        print >>outfileTex, formatstringTex.format(x.m_difference, x.m_stem1, x.m_sigstring1,x.m_stem2,  x.m_sigstring2)

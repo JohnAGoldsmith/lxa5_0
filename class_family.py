@@ -83,14 +83,12 @@ def find_families(Lexicon, affix_type):
     families = Lexicon.Families
     search_list = list(signatures)
     temp_sig_list = list()
-    
     family_file = open ("families_old_method.txt", "w")
     
     for signo in range(len(signatures)):
         comparing_sig = signatures[signo]   
         if comparing_sig.get_internal_robustness() < MINIMUM_ROBUSTNESS:
             break;
-        #comparing_sig_string = comparing_sig.get_affix_string()
         comparing_sig_length = comparing_sig.get_affix_length()
         comparing_sig_list = comparing_sig.get_affix_list()
         comparing_sig_robustness = comparing_sig.get_internal_robustness()
@@ -125,7 +123,6 @@ def find_families(Lexicon, affix_type):
         search_list = temp_sig_list
         temp_sig_list = list()
     for sig in signatures:
-        #print 100, "adding signature", sig.get_affix_string()
         families.add_signature(sig)
     families.print_families(family_file)
     family_file.close()

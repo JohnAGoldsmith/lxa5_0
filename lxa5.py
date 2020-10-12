@@ -7,7 +7,7 @@ import datetime
 import operator
 import os
 import os.path
-import pygraphviz as pgv
+#import pygraphviz as pgv
 import string
 import sys
 import time
@@ -34,12 +34,12 @@ def create_and_change_path (newpath):
     print ("   The current working directory is %s" % path)
     new_folder = current_path + "/" + newpath + "/"
     if not os.path.isdir(new_folder):
-	try:
-		os.mkdir(new_folder)
-	except OSError:
-		print ("Creation of the directory %s failed." % new_folder)
-	else:
-		print ("Successfully created the directory %s ." % new_folder)
+        try:
+            os.mkdir(new_folder)
+        except OSError:
+            print ("Creation of the directory %s failed." % new_folder)
+        else:
+            print ("Successfully created the directory %s ." % new_folder)
     try:
         os.chdir(new_folder)
         print("   Output folder was changed.")
@@ -141,7 +141,7 @@ if True:
     find_families(Lexicon, config_lxa["affix_type"])
 
     change_path(oldpath)
-    	
+
 # --------------------------------------------------------------------##
 
 if True:
