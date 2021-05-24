@@ -108,10 +108,11 @@ class CLexicon:
         reportnumber = 1
         self.Corpus = list()
         self.Families = family_collection()
-        self.MinimumStemLength = 4
+        self.MinimumStemLength = 3
         self.LongestWordLength = 0
         self.MaximumStemLength = 100
-        self.MaximumAffixLength = 15
+        self.MaximumAffixLength = 9
+        self.MinimumRobustness = 50
         self.NameCollisions = dict()
         self.Parses = dict()
         self.Prefixes = {}
@@ -131,6 +132,7 @@ class CLexicon:
         self.StemToAffix_dict = {}  # value is a Dict whose keys are affixes.
         self.Suffixes = {}
         self.SuffixToStem= dict()
+        self.Summary = dict()
         self.TotalRobustInSignatures = 0
         self.UnexplainedContinuations = {}
         self.UnlikelyStems = dict()
@@ -140,20 +142,147 @@ class CLexicon:
         self.Words_sort_clean_flag=False
         self.Word_counts_dict = dict()
         self.WordBiographies=dict()
-        self.total_word_count = 0
-        self.word_letter_count = 0
-        self.total_letters_in_stems = 0
-        self.total_letters_in_analyzed_words = 0
-	self.total_affix_length_in_signatures = 0
-        self.number_of_analyzed_words =  0
+         
+ 
 
+    # ----------------------------------------------------------------------------------------------------------------------------#
+    def produce_lexicon_report(self):
+
+        reportlist = list()
+        formatstring = "{:55s}{:10,d}"
+        formatstring2 = "{:55s}{:10,d} {:5.2f}%"
+        self.summarize()
+        Summary = self.Summary 
+ 
+        reportlist.append(formatstring.format("Total word count:", Summary["word_count"]))
+        reportlist.append(formatstring.format("Total word letter count:", Summary["word_letter_count"]))
+        reportlist.append(formatstring.format("Number of analyzed words:", Summary["analyzed_word_count"]))
+        reportlist.append(formatstring.format("Total analyzed word letter count:", Summary["analyzed_word_letter_count"]))
+        reportlist.append(formatstring.format("Total unanalyzed word letter count:", Summary["unanalyzed_word_letter_count"]))
+        
+        reportlist.append(formatstring.format("Total stem count:", Summary["stem_count"]))
+        reportlist.append(formatstring.format("Total stem letter count:", Summary["stem_letter_count"]))
+   
+        reportlist.append(formatstring.format("Total suffix signature count:", Summary["suffix_signature_count"]))
+
+        reportlist.append(formatstring.format("Total affix letter count:", Summary["affix_letter_count"])) 
+        reportlist.append(formatstring.format("Singleton signature count:", Summary["singleton_signature_count"])) 
+        reportlist.append(formatstring.format("Doubleton signature count:", Summary["doubleton_signature_count"])) 
+
+        sum = Summary["stem_letter_count"]+ Summary["affix_letter_count"]        
+        reportlist.append(formatstring.format("Sum of letter count in stems + affixes:", sum )) 
+        sum2  = sum + Summary["unanalyzed_word_letter_count"]
+        reportlist.append(formatstring.format("Sum of letter count in stems + affixes + unanalyzed:", sum2 )) 
+        total = Summary["word_letter_count"]
+        difference = total - sum2
+        percent = 100.0 * float(difference) / float(total)  
+        reportlist.append(formatstring2.format("Compression by letter count:",  difference, percent  ) )
+        return reportlist
+    # ----------------------------------------------------------------------------------------------------------------------------#
+    def summarize(self):
+        self.Summary["word_count"] = len(self.Word_counts_dict);
+        self.Summary["word_letter_count"] = self.get_total_word_letter_count();
+        
+        self.Summary["analyzed_word_count"] = len(self.WordToSig)
+        self.Summary["analyzed_word_letter_count"] = self.get_total_letters_in_analyzed_words()
+        self.Summary["unanalyzed_word_letter_count"] = self.get_total_letters_in_unanalyzed_words()
+                
+        self.Summary["stem_count"] = self.get_number_of_stems()
+        self.Summary["stem_letter_count"] = self.get_total_letters_in_stems()
+        
+        self.Summary["affix_count"] = len(self.Suffixes) + len(self.Prefixes)
+        self.Summary["affix_letter_count"] = self.get_total_affix_letter_count()
+        
+        self.Summary["suffix_signature_count"] = len(self.Signatures)        
+        
+        self.Summary["suffix_signatures"] = list()
+        for sig in self.Signatures:
+            self.Summary["suffix_signatures"].append (self.Signatures[sig].get_summary()) 
+        
+        totalrobustness = 0
+        singleton_signature_count = 0
+        doubleton_signature_count = 0
+
+        for sig, signature in self.Signatures.items():
+            stems = sorted(signature.get_stems())
+            exemplar_stem = ""
+            for s in stems:
+                if not s[0] == ":":
+                    exemplar_stem = s
+                    break     
+            stem_count = len(stems)
+            robustness = get_robustness (sig,stems)
+            if stem_count == 1:
+                singleton_signature_count += 1
+            elif stem_count == 2:
+                doubleton_signature_count += 1
+            totalrobustness += robustness
+        
+	self.Summary["singleton_signature_count"] = singleton_signature_count        
+        self.Summary["doubleton_signature_count"] = doubleton_signature_count
+                
+        return self.Summary
+        
+        
+    def compare_summaries(self, Summary2):
+        reportlist = list()
+        formatstring = "{:55s}{ :10,d} {:10,d}"
+        formatstring2 = "{:55s}{:10,d} {:5.2f}%"
+
+        Summary = self.Summary()    
+        reportlist.append(formatstring.format("Total word count:", Summary["word_count"]), Summary2["word_count"])
+        reportlist.append(formatstring.format("Total word letter count:", Summary["word_letter_count"]), Summary2["word_letter_count"])    
+        reportlist.append(formatstring.format("Number of analyzed words:", Summary["analyzed_word_count"]), Summary2["analyzed_word_count"])    
+        reportlist.append(formatstring.format("Total analyzed word letter counts:", Summary["analyzed_word_letter_count"]), Summary2["analyzed_word_letter_count"])            
+        reportlist.append(formatstring.format("Total unanalyzed word letter counts:", Summary["unanalyzed_word_letter_count"]), Summary2["unanalyzed_word_letter_count"])            
+        reportlist.append(formatstring.format("Total stem count:", Summary["stem_count"]), Summary2["stem_count"])  
+        reportlist.append(formatstring.format("Suffix signature count:", Summary["suffix_signature_count"]), Summary2["suffix_signature_count"])      
+        return reportlist
+        
+        
+    def get_total_word_count(self):
+            return len(self.Word_counts_dict)
+    def get_total_word_letter_count(self):
+        total = 0
+        for word in self.Word_counts_dict:
+            total += len(word)
+	return total
+
+    def get_total_analyzed_word_count(self):
+        return len(self.WordToSig)
+    def get_total_letters_in_analyzed_words(self):
+        total = 0
+        for word in self.WordToSig:
+            total += len(word)
+        return total	
+        
+    def get_total_letters_in_unanalyzed_words(self):
+        total = 0
+        for word in self.Word_counts_dict:
+            if word not in self.WordToSig:
+                total += len(word)
+        return total	
+        
 
     def get_stems(self):
         return sorted(self.StemToSignature.keys())
-    def get_number_of_stems():
-        return len(self.StemToSignatures)
+    def get_number_of_stems(self):
+        return len(self.StemToSignature)	
+    def get_total_letters_in_stems(self):
+        total = 0
+        for stem in self.StemToSignature:
+            total += len(stem)
+        return total
+        
+    def get_total_affix_letter_count(self):
+        total =0
+        for affix in self.Prefixes:
+            total += len(affix)
+        for affix in self.Suffixes:
+            total += len(affix)
+        return total
 
-
+ 
 
     ## -------                                                      ------- #
     ##              Central signature computation                   ------- #
@@ -198,7 +327,7 @@ class CLexicon:
         self.Word_list_reverse_sort = list()
         self.Word_sort_clean_flag = False
 
-        self.word_letter_count = 0
+        
         self.number_of_analyzed_words = 0
         self.total_letters_in_analyzed_words = 0
         self.total_affix_length_in_signatures = 0
@@ -207,10 +336,14 @@ class CLexicon:
         self.Parses.clear()
 
     def get_signatures_sorted_by_affix_count(self, affix_type):
-        return sorted(self.Signatures.keys(), key = get_affix_count,reverse=True)
+        # this should also put a better signature higher than a worse signature of the same length. May 2021.
+        siglist = self.get_signatures_sorted_by_robustness()
+        return sorted(siglist,key = lambda x: get_affix_count(x[0]),reverse=True)
 
     def get_signatures_sorted_by_robustness(self):
-	return sorted(self.Signatures.items(),key= lambda f: get_robustnessf[1], reverse=True)
+	#return sorted(self.Signatures.items(),key= lambda f: get_robustness, reverse=True)
+        return sorted(self.Signatures.items(), key=lambda f:f[1].get_internal_robustness(), reverse=True)
+
 
     def sort_words(self):
         self.Word_list_forward_sort.sort()
@@ -449,7 +582,7 @@ class CLexicon:
         else:
             for prefix in self.Prefixes:
                 prefix_length = len(prefix)
-                self.PrefixToStem[prget_signatures_sorted_by_affix_countefix] = dict()
+                self.PrefixToStem[prefix] = dict()
                 (first_word, last_word) = self.get_words_start_with (prefix)
                 for i in range(first_word,last_word):
                     word = Words[i]
@@ -491,61 +624,10 @@ class CLexicon:
         frequency = dict()
         for affix in this_signature:
             frequency[affix] = counts[affix] / total
-  # ----------------------------------------------------------------------------------------------------------------------------#
 
 
 
-    # ----------------------------------------------------------------------------------------------------------------------------#
-    def produce_lexicon_report(self):
 
-        # remove this first part that uses member variables in Lexicon.
-        reportlist = list()
-        formatstring = "{0:20s}{1:20s}"
-        reportlist.append ("Information from Lexicon")
-
-        self.total_word_count = len(self.Word_counts_dict)
-        self.word_letter_count = 0
-        for word in self.Word_counts_dict:
-            self.word_letter_count += len(word)
-        self.number_of_analyzed_words =  len(self.WordToSig)
-        self.total_letters_in_analyzed_words = 0
-        for word in self.WordToSig:
-            self.total_letters_in_analyzed_words += len(word)
-        self.total_affix_length_in_signatures = 0
-        self.total_letters_in_stems = 0
-        for (sig, signature) in self.Signatures.items():
-            for affix in splitsignature(sig):
-                if affix == "NULL":
-                    continue
-                self.total_affix_length_in_signatures += len(affix)
-            StemListLetterLength = 0
-            for stem in signature.get_stems():
-                self.total_letters_in_stems += len(stem)
-
-        word_letter_count = 0
-        for word in self.Word_counts_dict:
-            word_letter_count += len(word)
-        total_letters_in_analyzed_words = 0
-        for word in self.WordToSig:
-            total_letters_in_analyzed_words += len(word)
-        total_affix_length_in_signatures = 0
-        total_stem_length_in_signatures = 0
-        for (sig, signature) in self.Signatures.items():
-            for affix in splitsignature(sig):
-                if affix == "NULL":
-                    continue
-                total_affix_length_in_signatures += len(affix)
-            StemListLetterLength = 0
-            for stem in signature.get_stems():
-                total_stem_length_in_signatures += len(stem)
- 
-        reportlist.append("Total word count:" + str(len(self.Word_counts_dict)))
-        reportlist.append("Total word letter count:" + str(word_letter_count))
-        reportlist.append("Number of analyzed words:" +  str(len(self.WordToSig)))
-        reportlist.append("Total analyzed word letter count:" + str(total_letters_in_analyzed_words))
-        reportlist.append("total_affix_length_in_signatures:" + str(total_affix_length_in_signatures))
-        reportlist.append("total_stem_length_in_signatures:" + str(total_affix_length_in_signatures))
-        return reportlist
 
 class Word:
     def __init__(self, key):

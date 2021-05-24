@@ -1,5 +1,6 @@
 import signaturefunctions as Sigfn
 import stringfunctions as Strfn
+from collections import defaultdict 
 import math
 ## -------                                                      ------- #
 ##              Class Signature                                 ------- #
@@ -21,7 +22,14 @@ class Signature:
         if self.affix_side != affix_side:
             return None
         self.stability_entropy = -1.0
-
+        self.top_letter = ""
+    def get_summary(self):
+        sigstring = self.get_affix_string()
+        affix_count = Sigfn.NumberOfAffixesInSigString(sigstring)
+        stem_count = self.get_stem_count()
+        robustness = self.get_internal_robustness()
+        entropy = self.get_stability_entropy()
+        return ((sigstring, affix_count,stem_count, robustness, entropy))
     def add_stem(self,stem, count = 1):
         if not self.stem_counts:
             self.stem_counts = dict()
@@ -48,10 +56,8 @@ class Signature:
             if item not in self.affixes_list:
                 return False
         return True
-
     def get_internal_robustness(self):
         if self.robustness_clean:
-	    #print 145, self.robustness
             return self.robustness
         else:
             robustness = 0
@@ -79,7 +85,7 @@ class Signature:
             return self.stability_entropy
         entropy = 0.0
         stem_list = self.get_stems()
-        frequency = dict()
+        frequency = defaultdict(int)
         templist = list()
         if self.affix_side == "prefix":
             for chunk in stem_list:
@@ -88,10 +94,7 @@ class Signature:
         for stem in stem_list:
             stem = Strfn.remove_label(stem)
             lastletter = stem[-1]
-            if lastletter not in frequency:
-                frequency[lastletter] = 1.0
-            else:
-                frequency[lastletter] += 1.0
+            frequency[lastletter] += 1.0
         for letter in frequency:
             frequency[letter] = frequency[letter] / len(stem_list)
             entropy += -1.0 * frequency[letter] * math.log(frequency[letter], 2)
@@ -101,3 +104,24 @@ class Signature:
         return "=".join(self.get_affix_list())
     def latex(self):
         return self.display() + " & " + str(self.get_stem_count()) + "\\\\"  
+    def get_top_letter(self):
+        if self.top_letter:
+            return self.top_letter
+        return (self.get_top_ngram(1))
+    def get_top_ngram(self,n):
+        stem_list = self.get_stems()
+        frequency = defaultdict(int)
+        if self.affix_side == "prefix":
+            for chunk in stem_list:
+                templist.append(chunk[::-1])
+            stemlist = templist
+        for stem in stem_list:
+            stem = Strfn.remove_label(stem)
+            lastngram = stem[-1*n:]
+            frequency[lastngram] += 1.0
+        for ngram in frequency:
+            frequency[ngram] = frequency[ngram] / len(stem_list)
+        sorted_list = sorted(frequency.items(),key = lambda x:x[0],reverse=True)
+        return (sorted_list[0][0])
+
+        

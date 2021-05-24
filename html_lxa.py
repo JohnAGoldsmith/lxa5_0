@@ -125,7 +125,7 @@ class Page:
     def print_signature (self,outfile,text, count, rowno, colno,stem_count  ):
         self.print_circle(outfile, rowno,colno,count,stem_count)
         self.print_text(outfile,rowno, colno, text)
-        #print_signature_box(self,outfile,this_signature_box,x,y)
+
 
     def print_box(self, outfile,  this_box,x,y):
         """ x and y are the lower left points of the box, in Page-logical units, where the origin of the Page is its lower left-hand corner

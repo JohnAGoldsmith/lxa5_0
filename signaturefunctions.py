@@ -154,6 +154,7 @@ def locallymorerobust(sig1, sig2):
     return 0
 
 
+
 def globallymorerobust(sig1, sig2):
     sig1_string = str(sig1[0])
     sig2_string = str(sig2[0])
@@ -183,8 +184,7 @@ def globallymorerobust(sig1, sig2):
     return robustness1 - robustness2
 
 
-def SortSignaturesByLocalRobustness(
-        siglist):  # if sig1 has more affixes than sig2, it is more locally robust; if two sigs have the same number of affixes, the one with more letters in the affixes is more locally
+def SortSignaturesByLocalRobustness(siglist):  # if sig1 has more affixes than sig2, it is more locally robust; if two sigs have the same number of affixes, the one with more letters in the affixes is more locally
     siglist.sort(cmp=locallymorerobust)
     return siglist
 

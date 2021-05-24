@@ -15,6 +15,7 @@ import time
 
 
 
+
 from collections import defaultdict
 from class_lexicon import *
 from dynamics import *
@@ -26,7 +27,7 @@ from crab import *
 from config import *
 from initialization import *
 from class_family import *
-
+from crab3_dropjoints import *
 # --------------------------------------------------------------------##
 def create_and_change_path (newpath):
 # --------------------------------------------------------------------##
@@ -156,6 +157,16 @@ if True:
     change_path(oldpath)
 
 # --------------------------------------------------------------------##
+ 
+# --------------------------------------------------------------------##
+
+# --------------------------------------------------------------------##
+if True:
+   dropJoints(Lexicon, config_lxa["affix_type"])
+   for line in Lexicon.produce_lexicon_report():
+       print line
+# --------------------------------------------------------------------##
+
 
 if True:
     newpath = "3_cut_up_affixes"
@@ -167,7 +178,9 @@ if True:
     Lexicon.printSignatures(config_lxa)
 
     change_path(oldpath)
-
+ 
+    for line in Lexicon.produce_lexicon_report():
+       print line
 # --------------------------------------------------------------------##
 
 if False:

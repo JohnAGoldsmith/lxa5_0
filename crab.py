@@ -7,9 +7,11 @@ from class_lexicon import *
 from class_morphemetosignature import *
 from crab3_splitmorphemes import Words_with_multiple_analyses_high_entropy
 from crab3_splitmorphemes import Words_with_multiple_analyses_low_entropy
+from crab3_splitmorphemes import Words_with_multiple_analyses
 #from ClassLexicon import Signature
 from SigLattice import *
 import stringfunctions as Strfn
+from collections import defaultdict
 
 formatstring1 = "  {:50s}{:>10,}"
 formatstring2 = "  {:50s}"
@@ -88,25 +90,25 @@ def MakeSignatures_Crab_1(Lexicon, affix_type, verboseflag = False):
 # ------------------------------------------------------------------------#
 def MakeSignatures_Crab_2(Lexicon, affix_type, verboseflag = False):
 # ------------------------------------------------------------------------#
-	replace_parse_pairs_from_current_signature_structure_crab(Lexicon,  affix_type )
-	widen_scope_of_signatures(Lexicon, affix_type, Lexicon.MinimumStemLength)
-	assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag)
-	MinimumStemCountInSignature = 1  # important! 
-	assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature, "crab2")
-        Lexicon.Families.create_families(Lexicon)
+    replace_parse_pairs_from_current_signature_structure_crab(Lexicon,  affix_type )
+    widen_scope_of_signatures(Lexicon, affix_type, Lexicon.MinimumStemLength)
+    assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag)
+    MinimumStemCountInSignature = 1  # important! 
+    assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature, "crab2")
+    Lexicon.Families.create_families(Lexicon)
 
 # ------------------------------------------------------------------------#
 def MakeSignatures_Crab_3(Lexicon, affix_type, verboseflag = False):
 # ------------------------------------------------------------------------#
 
-
-	Words_with_multiple_analyses_high_entropy (Lexicon, affix_type)
-	assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag)
-	MinimumStemCountInSignature = 2  #   
-	assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature, "crab3a")
-        Lexicon.Families.create_families(Lexicon)
+    Words_with_multiple_analyses (Lexicon, affix_type)
+    Words_with_multiple_analyses_high_entropy (Lexicon, affix_type)
+    assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag)
+    MinimumStemCountInSignature = 1  #  May 6, 2021 JG I had it at 2, that might have caused a bug by which many analyses from WidenSigs were being ignored.  
+    assign_signatures_to_each_stem_crab (Lexicon, affix_type, verboseflag,MinimumStemCountInSignature, "crab3a")
+    Lexicon.Families.create_families(Lexicon)
         
-	if False: 
+    if False: 
 
 		replace_parse_pairs_from_current_signature_structure_crab(Lexicon,  affix_type )
 		Words_with_multiple_analyses_low_entropy (Lexicon, affix_type)
@@ -155,10 +157,16 @@ def widen_scope_of_signatures(Lexicon, affix_type, minimum_stem_length):
 	affixes_to_stem = Lexicon.PrefixToStem
     
     for sig in signatures:
-        print >>thisfile, "\n", sig
-        sig_list = sort_signature_string_by_length(sig)
+        print >>thisfile, "\n", sig[0]
+        if sig[1].get_internal_robustness() < Lexicon.MinimumRobustness:
+            print >>thisfile, "\n Robustness too low: ", sig[1].get_internal_robustness()
+        sig_list = sort_signature_string_by_length(sig[0])
         affix_1 = sig_list[0]
+
+	    # May 12 2021: changed the following line, so that several different signatures can leave their imprint on a given stem: the new signature may be a combination of previous signatures
         stem_collection = [stem  for stem in affixes_to_stem[affix_1] if stem not in stems_assigned_to_signatures]
+        #stem_collection = [stem  for stem in affixes_to_stem[affix_1]]
+
         for i in range(1,len(sig)):
             for affix  in sig_list:
                 if affix == "NULL":
@@ -170,7 +178,7 @@ def widen_scope_of_signatures(Lexicon, affix_type, minimum_stem_length):
                 if stem in Lexicon.StemToSignature:
                     pass
                 else:
-                    print >>thisfile, sig, "New stem:", stem
+                    print >>thisfile, sig[0], "New stem:", stem
                     for affix in sig_list:
                         if affix_type == "suffix":
                             Lexicon.Parses[(stem, affix)] = 1
@@ -179,10 +187,13 @@ def widen_scope_of_signatures(Lexicon, affix_type, minimum_stem_length):
                             Lexicon.Parses[(affix, stem)] = 1
                             print >>thisfile,  affix, stem
                     print >>thisfile
+                    #this following line is not necessary, if we allow (as we do) stems to hook up with 2 or more signatures in this widening.
                     stems_assigned_to_signatures[stem] = 1
                     
+   
     print >>thisfile,  "Number of parses:", len(Lexicon.Parses)
     thisfile.close()
+
 #-----------------------------------------------------------------------------#
 def add_prefixal_stem_to_protostems1(Lexicon, contentlist,   verboseflag, previous_word, word, stem):
         Lexicon.WordBiographies[word].append(" Found stem " + stem)
@@ -326,6 +337,9 @@ def create_stem_affix_pairs(Lexicon,  affix_type, verboseflag):
                             affix = word[i:]
                             if not affix:
                                 continue
+                            #added May 2021; why wasn't this there before?
+                            if len(affix) > Lexicon.MaximumAffixLength:
+                                continue
                             Lexicon.Parses[(stem, affix)] = 1
                             if stem in Lexicon.Word_counts_dict:
                                 Lexicon.Parses[(stem, "NULL")] = 1
@@ -335,6 +349,9 @@ def create_stem_affix_pairs(Lexicon,  affix_type, verboseflag):
                             ii = len(word) - i
                             affix = word[:ii]
                             if not affix:
+                                continue
+                            #added May 2021
+                            if len(affix) > Lexicon.MaximumAffixLength:
                                 continue
        	                    Lexicon.Parses[(affix,stem)] = 1
                             if stem in Lexicon.Word_counts_dict:
@@ -346,11 +363,11 @@ def create_stem_affix_pairs(Lexicon,  affix_type, verboseflag):
                             if verboseflag:
                                 reportline = formatstring6.format(word, result , "is good.")
                                 contentlist.append(reportline)
-                        if len(affix) > Lexicon.MaximumAffixLength:
-                            Lexicon.WordBiographies[word].append(" The split " + result + " is suspicious; affix too long.")
-                            if verboseflag:
-                                reportline = formatstring6.format(word, result,  "affix is too long.")
-                                contentlist.append(reportline)
+                        #if len(affix) > Lexicon.MaximumAffixLength:
+                        #    Lexicon.WordBiographies[word].append(" The split " + result + " is suspicious; affix too long.")
+                        #    if verboseflag:
+                        #        reportline = formatstring6.format(word, result,  "affix is too long.")
+                        #        contentlist.append(reportline)
                          #-----------------------------------------------------------------------------------------
         if verboseflag:
                 print_report(filename, headerlist, contentlist)
@@ -379,8 +396,10 @@ def assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, label="")
             StemCorpusCounts
             WordToSig """
 
+        MINIMUM_AFFIXES_IN_SIGNATURE = 2
+
         Lexicon.StemCorpusCounts = dict()
-        Lexicon.Affixes = dict()
+        
         Lexicon.Signatures = dict()
         Lexicon.StemToSignature = dict()
         Lexicon.StemCorpusCounts = dict()
@@ -425,7 +444,18 @@ def assign_affixes_to_each_stem_crab(Lexicon, affix_type, verboseflag, label="")
             Affixes[affix] += 1
             if word not in Lexicon.WordBiographies:
                 Lexicon.WordBiographies[word] = list()
-            Lexicon.WordBiographies[word].append(label + "   affix to stem:" + word2 + " (tentative)")                
+            Lexicon.WordBiographies[word].append(label + "   affix to stem:" + word2 + " (tentative)")  
+        # Remove a stem if it has only one affix
+        badstems = list()
+        for stem in Lexicon.StemToAffix_dict:
+            if len(Lexicon.StemToAffix_dict[stem]) < MINIMUM_AFFIXES_IN_SIGNATURE:
+                badstems.append(stem)
+                for word in Lexicon.StemToWord[stem]:
+                    Lexicon.WordBiographies[word].append("Analysis dropped because only one affix found for stem.")
+                del Lexicon.StemCorpusCounts[stem]
+                del Lexicon.StemToWord[stem]
+        for stem in badstems:
+            del Lexicon.StemToAffix_dict[stem]
         if verboseflag:
             verbose_helper_assign_affixes(Lexicon,filename,headerlist,contentlist)
  # ----------------------------------------------------------------------------------------------------------------------------#
@@ -456,14 +486,15 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
             WordToSig """
 
         if affix_type == "suffix":
+            Lexicon.Suffixes = defaultdict(int)
             Affixes = Lexicon.Suffixes
             AffixToStem = Lexicon.SuffixToStem
         else:
+            Lexicon.Prefixes = defaultdict(int)
             Affixes = Lexicon.Prefixes
             AffixToStem = Lexicon.PrefixToStem
 
         Lexicon.StemCorpusCounts = dict()
-        Lexicon.Affixes = dict()
         Lexicon.StemCorpusCounts = dict()
 
         Lexicon.StemToSignature.clear()
@@ -480,14 +511,16 @@ def assign_signatures_to_each_stem_crab(Lexicon, affix_type,verboseflag, Minimum
  
         stemlist = Lexicon.StemToAffix_dict.keys()
         stemlist.sort()
-        temp_sig_dict = dict()
+        temp_sig_dict = defaultdict(int)
+        # New May 2021
+        temp_sig_robustness_dict = defaultdict(int)
         if verboseflag:
                 print "     Assign a signature to each stem (occasionally two)."
         for stem in stemlist:
                 sig = sig_dict_to_string(Lexicon.StemToAffix_dict[stem]) 
-                if sig not in temp_sig_dict:
-                        temp_sig_dict[sig] = 0
                 temp_sig_dict[sig] += 1
+                # New May 2021
+                temp_sig_robustness_dict[sig] += len(stem) * (NumberOfAffixesInSigString(sig) - 1) 
         temp_sigs_with_too_few_stems = [sig for sig in temp_sig_dict.keys() if temp_sig_dict[sig] < MinimumStemCountInSignature]
 
         for stem in stemlist:
